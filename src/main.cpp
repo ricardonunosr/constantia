@@ -1,25 +1,21 @@
 // clang-format off
-#include <glad/glad.h>
+#include <glad/gl.h>
 // clang-format on
 #include <GLFW/glfw3.h>
 
 #include <iostream>
 
-// void processInput(GLFWwindow* window) {
-//   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-//     glfwSetWindowShouldClose(window, true);
-//   }
-// }
+void processInput(GLFWwindow* window) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, true);
+  }
+}
 
 int main(void) {
   GLFWwindow* window;
 
   /* Initialize the library */
   if (!glfwInit()) return -1;
-
-  glfwWindowHint(GLFW_VERSION_MAJOR,4);
-  glfwWindowHint(GLFW_VERSION_MINOR,1);
-  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   /* Create a windowed mode window and its OpenGL context */
   window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
@@ -31,12 +27,15 @@ int main(void) {
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
 
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::cout << "Failed to initialize OpenGL context" << std::endl;
+  int version = gladLoadGL(glfwGetProcAddress);
+  if (version == 0) {
+    printf("Failed to initialize OpenGL context\n");
     return -1;
   }
 
-  printf("OpenGL Version: %s Renderer: %s \n", glGetString(GL_VERSION), glGetString(GL_RENDERER));
+  // Successfully loaded OpenGL
+  printf("Loaded OpenGL %d.%d\n", GLAD_VERSION_MAJOR(version),
+         GLAD_VERSION_MINOR(version));
 
   // Triangle positions
   float pos[] = {-0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f};
@@ -46,11 +45,15 @@ int main(void) {
 
   unsigned int vbo;
   glGenBuffers(1, &vbo);
+  glBindVertexArray(vao);
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  //glNamedBufferData(vbo, sizeof(pos), pos, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(pos), pos, GL_STATIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
 
   // clang-format off
   const char* vertexShaderSource = "#version 330 core\n"
