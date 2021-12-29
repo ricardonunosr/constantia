@@ -1,9 +1,12 @@
 // clang-format off
-#include <glad/gl.h>
+#include "core.h"
 // clang-format on
+
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+
+#include "shader.h"
 
 void processInput(GLFWwindow* window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -38,8 +41,20 @@ int main(void) {
          GLAD_VERSION_MINOR(version));
 
   // Triangle positions
-  float pos[] = {-0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f};
+  // clang-format off
+  float pos[] = {
+    -0.5f,-0.5f,0.0f, // bottom-left
+    -0.5f, 0.5f,0.0f, // top-left
+     0.5f, 0.5f,0.0f, // top-right
+     0.5f,-0.5f,0.0f  // bottom-right
+    };
 
+  unsigned int indices[] = {
+    0,1,3, // traingle below
+    1,2,3 // triangle above
+  };
+
+  // clang-format on
   unsigned int vao;
   glGenVertexArrays(1, &vao);
 
@@ -47,84 +62,42 @@ int main(void) {
   glGenBuffers(1, &vbo);
   glBindVertexArray(vao);
 
+  unsigned int ebo;
+  glGenBuffers(1, &ebo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+               GL_STATIC_DRAW);
+
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(pos), pos, GL_STATIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
-  // clang-format off
-  const char* vertexShaderSource = "#version 330 core\n"
-      "layout(location = 0) in vec3 aPos;\n"
-      "void main()\n"
-      "{\n" 
-      "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-      "}\0";
+  Shader* shader = new Shader("../data/shaders/basic.vert", "../data/shaders/basic.frag");
 
-  // clang-format on
-  unsigned int vertexshader;
-  vertexshader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexshader, 1, &vertexShaderSource, NULL);
-  glCompileShader(vertexshader);
-
-  // Check if shader was compiled successufully
-  int success;
-  char infoLog[512];
-  glGetShaderiv(vertexshader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    glGetShaderInfoLog(vertexshader, 512, NULL, infoLog);
-    std::cout << "ERROR COMPILING VERTEX SHADER: \n" << infoLog << std::endl;
-  }
-
-  // clang-format off
-  const char* fragmentShaderSource = "#version 330 core\n"
-  "out vec4 FragColor;\n"
-  "void main()\n"
-  "{\n"
-  " FragColor = vec4(1.0f,0.5f,0.2f,1.0f);\n"
-  "}\0";
-  // clang-format on
-  unsigned int fragmentshader;
-  fragmentshader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragmentshader, 1, &fragmentShaderSource, NULL);
-  glCompileShader(fragmentshader);
-
-  glGetShaderiv(fragmentshader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    glGetShaderInfoLog(fragmentshader, 512, NULL, infoLog);
-    std::cout << "ERROR COMPILING FRAGMENT SHADER: \n" << infoLog << std::endl;
-  }
-
-  unsigned int shaderprogram;
-  shaderprogram = glCreateProgram();
-  glAttachShader(shaderprogram, vertexshader);
-  glAttachShader(shaderprogram, fragmentshader);
-  glLinkProgram(shaderprogram);
-
-  glGetProgramiv(shaderprogram, GL_LINK_STATUS, &success);
-  if (!success) {
-    glGetProgramInfoLog(shaderprogram, 512, NULL, infoLog);
-    std::cout << "ERROR LINKING SHADERS: \n" << infoLog << std::endl;
-  }
-
-  glUseProgram(shaderprogram);
-  glDeleteShader(vertexshader);
-  glDeleteShader(fragmentshader);
+  // glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window)) {
-    // processInput(window);
+    processInput(window);
 
     /* Render here */
     glClearColor(0.2f, 0.4f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(shaderprogram);
-    glBindVertexArray(vao);
+    shader->Bind();
+    double time = glfwGetTime();
+    float greenValue = sin(time) / 2.0f + 0.5f;
+    shader->SetUniform4f("ourColor", 0, greenValue, 0, 0);
 
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);
