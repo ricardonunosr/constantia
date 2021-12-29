@@ -22,16 +22,19 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glfw)
+add_subdirectory(lib/spdlog)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC lib/glad/include
     PUBLIC lib/glfw/include
+    PUBLIC lib/spdlog/include
 )
 
 target_link_libraries(${PROJECT_NAME}
     PUBLIC 
         glad
         glfw
+        spdlog
 )
 
 

@@ -37,8 +37,8 @@ int main(void) {
   }
 
   // Successfully loaded OpenGL
-  printf("Loaded OpenGL %d.%d\n", GLAD_VERSION_MAJOR(version),
-         GLAD_VERSION_MINOR(version));
+  spdlog::info("Loaded OpenGL", GLAD_VERSION_MAJOR(version),
+               GLAD_VERSION_MINOR(version));
 
   // Triangle positions
   // clang-format off
@@ -77,7 +77,8 @@ int main(void) {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
 
-  Shader* shader = new Shader("../data/shaders/basic.vert", "../data/shaders/basic.frag");
+  Shader* shader =
+      new Shader("../data/shaders/basic.vert", "../data/shaders/basic.frag");
 
   // glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 
