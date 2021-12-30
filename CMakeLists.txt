@@ -16,6 +16,8 @@ set(SOURCES
     src/shader.cpp
     src/shader.h
     src/core.h
+    src/camera.cpp
+    src/camera.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -28,6 +30,8 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC lib/glad/include
     PUBLIC lib/glfw/include
     PUBLIC lib/spdlog/include
+    PUBLIC lib/glm
+    Public lib/stb
 )
 
 target_link_libraries(${PROJECT_NAME}

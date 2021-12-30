@@ -23,6 +23,16 @@ void Shader::Bind() { glUseProgram(id); }
 
 void Shader::Unbind() { glUseProgram(0); }
 
+void Shader::SetUniform1i(const std::string& name, int value) {
+  auto location_iter = uniform_cache.find(name);
+  if (location_iter != uniform_cache.end()) {
+    auto location = location_iter->second;
+    glUniform1i(location, value);
+  } else {
+    spdlog::error("Couldn't find cached uniform {}", name);
+  }
+}
+
 void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2,
                           float v3) {
   auto location_iter = uniform_cache.find(name);
@@ -30,7 +40,7 @@ void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2,
     auto location = location_iter->second;
     glUniform4f(location, v0, v1, v2, v3);
   } else {
-    spdlog::error("Couldn't find cached uniform");
+    spdlog::error("Couldn't find cached uniform {}", name);
   }
 }
 

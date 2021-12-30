@@ -1,4 +1,4 @@
-BasedOnStyle: Google
+BasedOnStyle: Microsoft
 
 DerivePointerAlignment: false
 PointerAlignment: Left
