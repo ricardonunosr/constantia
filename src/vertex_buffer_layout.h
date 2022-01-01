@@ -54,7 +54,7 @@ struct VertexBufferElement
     DataType type;
     uint32_t size;
     bool normalized;
-    unsigned int offset;
+    size_t offset;
 
     VertexBufferElement() = default;
 

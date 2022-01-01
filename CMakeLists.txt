@@ -23,6 +23,8 @@ set(SOURCES
     src/vertex_buffer.cpp
     src/vertex_array.h
     src/vertex_array.cpp
+    src/texture.h
+    src/texture.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
