@@ -4,6 +4,9 @@
 
 #include <GLFW/glfw3.h>
 #define STB_IMAGE_IMPLEMENTATION
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -11,6 +14,7 @@
 
 #include "shader.h"
 #include "stb_image.h"
+#include "vertex_array.h"
 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
@@ -28,12 +32,25 @@ float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 float fov = 45.0f;
 
+bool enabled = true;
+bool editor = false;
+
 void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
-        glfwSetWindowShouldClose(window, true);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        editor = false;
+        enabled = true;
     }
+
+    if (glfwGetKey(window, GLFW_KEY_GRAVE_ACCENT) == GLFW_PRESS)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        editor = true;
+        enabled = false;
+    }
+
     float cameraSpeed = 2.5f * deltaTime; // adjust accordingly
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cameraPos += cameraSpeed * cameraFront;
@@ -45,8 +62,19 @@ void processInput(GLFWwindow* window)
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
 
+void imguiRender()
+{
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
+    if (!enabled)
+        return;
     if (firstMouse)
     {
         lastX = xpos;
@@ -80,6 +108,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+    if (!enabled)
+        return;
     fov -= (float)yoffset;
     if (fov < 1.0f)
         fov = 1.0f;
@@ -99,7 +129,7 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        /* Create a windowed mode window and its OpenGL context */
+    /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(800, 600, "Hello World", NULL, NULL);
     if (!window)
     {
@@ -121,7 +151,15 @@ int main(void)
     }
 
     // Successfully loaded OpenGL
-    spdlog::info("Loaded OpenGL {} {}", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+    spdlog::info("Loaded OpenGL {}.{}", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 130");
 
     Shader shader("../data/shaders/basic.vert", "../data/shaders/basic.frag");
 
@@ -177,24 +215,15 @@ int main(void)
   };
 
     // clang-format on
-    unsigned int vao, vbo, ebo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
+
     // glGenBuffers(1, &ebo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
     // glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    // glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    std::unique_ptr<VertexArray> vao = std::make_unique<VertexArray>();
+    VertexBufferLayout layout{{"aPos", DataType::Float3}, {"aTexCoords", DataType::Float2}};
+    std::unique_ptr<VertexBuffer> vbo = std::make_unique<VertexBuffer>(layout, vertices,sizeof(vertices));
+    vao->AddBuffer(*vbo);
 
     // load and create a texture
     // -------------------------
@@ -293,7 +322,7 @@ int main(void)
 
         glm::mat4 model = glm::mat4(1.0f);
 
-        glBindVertexArray(vao);
+        vao->Bind();
         for (unsigned int i = 0; i < 10; i++)
         {
             glm::mat4 model = glm::mat4(1.0f);
@@ -305,6 +334,9 @@ int main(void)
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
+        if (editor)
+            imguiRender();
+
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
@@ -312,9 +344,9 @@ int main(void)
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
-    // glDeleteBuffers(1, &ebo);
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwTerminate();
     return 0;

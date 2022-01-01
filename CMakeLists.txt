@@ -18,6 +18,11 @@ set(SOURCES
     src/core.h
     src/camera.cpp
     src/camera.h
+    src/vertex_buffer_layout.h
+    src/vertex_buffer.h
+    src/vertex_buffer.cpp
+    src/vertex_array.h
+    src/vertex_array.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -25,13 +30,16 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glfw)
 add_subdirectory(lib/spdlog)
+add_subdirectory(lib/imgui)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC lib/glad/include
     PUBLIC lib/glfw/include
     PUBLIC lib/spdlog/include
     PUBLIC lib/glm
-    Public lib/stb
+    PUBLIC lib/stb
+    PUBLIC lib/imgui
+
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -39,6 +47,7 @@ target_link_libraries(${PROJECT_NAME}
         glad
         glfw
         spdlog
+        imgui
 )
 
 

@@ -1,0 +1,5 @@
+class IndexBuffer
+{
+  public:
+    IndexBuffer();
+};
