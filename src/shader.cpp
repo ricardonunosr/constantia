@@ -36,7 +36,7 @@ void Shader::SetUniform1i(const std::string& name, int value)
     }
     else
     {
-        spdlog::error("Couldn't find cached uniform {}", name);
+        spdlog::error("Couldn't find cached uniform:{}", name);
     }
 }
 
@@ -122,7 +122,7 @@ void Shader::LinkProgram(unsigned int vertexShader, unsigned int fragmentShader)
     int success;
     int length;
     glGetProgramiv(id, GL_LINK_STATUS, &success);
-    glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+    glGetProgramiv(id, GL_INFO_LOG_LENGTH, &length);
     char* message = (char*)malloc(length * sizeof(char));
 
     if (!success)
