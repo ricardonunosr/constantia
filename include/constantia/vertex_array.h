@@ -9,7 +9,7 @@ class VertexArray
     void Bind();
     void Unbind();
 
-    void AddBuffer(VertexBuffer &buffer);
+    void AddBuffer(VertexBuffer& buffer);
 
   private:
     unsigned int id;

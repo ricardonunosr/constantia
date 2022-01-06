@@ -1,9 +1,0 @@
-ToDos:
-    ✔ Logging @done(21-12-29 17:28)
-    ✔ Camera @done(21-12-30 16:26)
-    ✔ 3D Cube With Textures @done(21-12-30 16:26)
-    ☐ Editor mode with imgui
-    ☐ Change entity properties
-
-Later:
-    ☐ Cmake refactor in lib

@@ -32,7 +32,7 @@ static GLenum ShaderDataTypeToOpenGLBaseType(DataType type)
     return 0;
 }
 
-VertexArray::VertexArray() : id{0} ,enabledAttribs{0}
+VertexArray::VertexArray() : id{0}, enabledAttribs{0}
 {
     glGenVertexArrays(1, &id);
 }
@@ -52,7 +52,7 @@ void VertexArray::Unbind()
     glBindVertexArray(0);
 }
 
-void VertexArray::AddBuffer(VertexBuffer &buffer)
+void VertexArray::AddBuffer(VertexBuffer& buffer)
 {
     Bind();
     buffer.Bind();

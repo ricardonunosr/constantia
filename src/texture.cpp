@@ -38,7 +38,7 @@ Texture::Texture(const char* path) : id{0}, width{0}, height{0}, nrChannels{0}
 
 Texture::~Texture()
 {
-    //glDeleteTextures(1, &id);
+    // glDeleteTextures(1, &id);
 }
 
 void Texture::Bind(unsigned int slot /*= 0*/)
