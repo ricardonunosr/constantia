@@ -20,6 +20,10 @@ class Camera
         return projectionMatrix;
     }
 
+    const glm::vec3& GetCameraPosition() const{
+        return cameraPos;
+    }
+
     bool GetEditorFlag()
     {
         return editor;

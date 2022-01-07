@@ -36,7 +36,35 @@ void Shader::SetUniform1i(const std::string& name, int value)
     }
     else
     {
-        spdlog::error("Couldn't find cached uniform:{}", name);
+        spdlog::error("Couldn't find cached uniform:{} in shader with id {}", name, id);
+    }
+}
+
+void Shader::SetUniform3f(const std::string& name, float v0, float v1, float v2)
+{
+    auto location_iter = uniform_cache.find(name);
+    if (location_iter != uniform_cache.end())
+    {
+        auto location = location_iter->second;
+        glUniform3f(location, v0, v1, v2);
+    }
+    else
+    {
+        spdlog::error("Couldn't find cached uniform {}", name);
+    }
+}
+
+void Shader::SetUniform3f(const std::string& name, const glm::vec3& value)
+{
+    auto location_iter = uniform_cache.find(name);
+    if (location_iter != uniform_cache.end())
+    {
+        auto location = location_iter->second;
+        glUniform3fv(location, 1,&value[0]);
+    }
+    else
+    {
+        spdlog::error("Couldn't find cached uniform {}", name);
     }
 }
 
@@ -64,7 +92,7 @@ void Shader::SetUniformMat4(const std::string& name, const glm::mat4& matrix)
     }
     else
     {
-        spdlog::error("Couldn't find cached uniform {}", name);
+        spdlog::error("Couldn't find cached uniform {} in shader with id {}", name, id);
     }
 }
 
@@ -82,8 +110,10 @@ std::string Shader::ReadShaderSourceFromFile(const std::string& shaderPath)
             result.append(line + "\n");
         }
         filestream.close();
-    }else{
-        spdlog::error("Failed to read {}! File doesn't exist.",shaderPath);
+    }
+    else
+    {
+        spdlog::error("Failed to read {}! File doesn't exist.", shaderPath);
     }
 
     return result;

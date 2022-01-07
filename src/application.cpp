@@ -3,19 +3,19 @@
 #include "editor.h"
 #include "model.h"
 #include "renderer.h"
+#include <filesystem>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <filesystem>
 #include <iostream>
 
 Application* Application::instance = nullptr;
 
 Shader* shader;
+Shader* lightShader;
 Model* cube;
 Camera* camera;
-
-
+Model* light;
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -37,11 +37,13 @@ Application::Application(int width, int height, const std::string& name)
 
     Init();
 
-    //Move to spdlog
+    // Move to spdlog
     std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
-    
-    shader = new Shader("../../data/shaders/basic.vert", "../../data/shaders/basic.frag");
-    cube = new Model("../../data/cube/cube.obj");
+
+    shader = new Shader("../data/shaders/basic.vert", "../data/shaders/basic.frag");
+    lightShader = new Shader("../data/shaders/light.vert", "../data/shaders/light.frag");
+    cube = new Model("../data/cube/cube.obj");
+    light = new Model("../data/cube/cube.obj");
     camera = new Camera();
 }
 
@@ -66,9 +68,12 @@ void Application::Update()
         lastFrame = currentFrame;
 
         camera->ProcessInput(window->GetNativeWindow(), deltaTime);
-        Renderer::SetClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        Renderer::SetClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        glm::mat4 model = glm::mat4(1.0f);
+        float lightX = 2.0f * sin(glfwGetTime());
+        float lightY = 0.0f;
+        float lightZ = 1.5f * cos(glfwGetTime());
+        glm::vec3 lightPos = glm::vec3(lightX, lightY, lightZ);
 
         shader->Bind();
 
@@ -76,7 +81,24 @@ void Application::Update()
 
         shader->SetUniformMat4("view", camera->GetViewMatrix());
 
-        shader->SetUniformMat4("model", model);
+        glm::mat4 cubeTransform = glm::mat4(1.0f);
+        shader->SetUniformMat4("model", cubeTransform);
+
+        shader->SetUniform3f("objectColor", 1.0f, 0.5f, 0.31f);
+        shader->SetUniform3f("lightColor", 1.0f, 1.0f, 1.0f);
+        shader->SetUniform3f("lightPos", lightPos);
+        shader->SetUniform3f("viewPos", camera->GetCameraPosition());
+
+        lightShader->Bind();
+        lightShader->SetUniformMat4("projection", camera->GetProjectionMatrix());
+        lightShader->SetUniformMat4("view", camera->GetViewMatrix());
+
+        glm::mat4 lightTransform = glm::mat4(1.0f);
+        lightTransform = glm::translate(lightTransform, lightPos);
+        lightTransform = glm::scale(lightTransform, glm::vec3(0.2f));
+        lightShader->SetUniformMat4("model", lightTransform);
+
+        light->Draw(*lightShader);
 
         cube->Draw(*shader);
 

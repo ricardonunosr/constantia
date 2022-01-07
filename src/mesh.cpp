@@ -21,6 +21,7 @@ void Mesh::setupMesh()
 
 void Mesh::Draw(Shader& shader)
 {
+    shader.Bind();
     for (size_t i = 0; i < textures.size(); i++)
     {
         Texture texture = textures[i];
@@ -34,4 +35,5 @@ void Mesh::Draw(Shader& shader)
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
     vao->Unbind();
     ibo->Unbind();
+    shader.Unbind();
 }
