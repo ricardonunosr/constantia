@@ -1,9 +1,8 @@
-#version 330 core
+#version 410 core
 out vec4 FragColor;
 
 in vec2 TexCoord;
 
-// texture samplers
 uniform sampler2D Image;
 
 void main()

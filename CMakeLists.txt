@@ -1,13 +1,19 @@
 cmake_minimum_required(VERSION 3.21.1)
-
-project(Example)
-
+set(LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
+
+project(Constantia LANGUAGES ${LANGUAGES})
+
 #GLFW additions
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+#ASSIMP
+#set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
+#set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF)
+#set(ASSIMP_BUILD_OBJ_IMPORTER ON)
 
 set(SOURCES 
     src/main.cpp
@@ -44,14 +50,10 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC lib/assimp/include/assimp
 )
 
-target_link_libraries(${PROJECT_NAME}
-    PUBLIC 
+target_link_libraries(${PROJECT_NAME} 
         glad
         glfw
         spdlog
         imgui
         assimp
 )
-
-
-

@@ -56,7 +56,7 @@ void VertexArray::AddBuffer(VertexBuffer& buffer)
 {
     Bind();
     buffer.Bind();
-    auto& layout = buffer.GetLayout().GetElements();
+    const auto& layout = buffer.GetLayout().GetElements();
     for (size_t i = 0; i < layout.size(); i++)
     {
         const auto& element = layout[i];

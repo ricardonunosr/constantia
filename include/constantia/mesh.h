@@ -1,4 +1,4 @@
-#include "Texture.h"
+#include "texture.h"
 #include "index_buffer.h"
 #include "shader.h"
 #include "vertex_array.h"

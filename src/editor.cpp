@@ -13,7 +13,7 @@ void ImGuiInit(GLFWwindow* window)
     (void)io;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 130");
+    ImGui_ImplOpenGL3_Init("#version 330");
 }
 
 void ImGuiCleanup()

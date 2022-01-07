@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <filesystem>
+#include <iostream>
 
 Application* Application::instance = nullptr;
 
@@ -13,12 +15,7 @@ Shader* shader;
 Model* cube;
 Camera* camera;
 
-void messageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message,
-                     const void* userParam)
-{
-    spdlog::error("GL CALLBACK: {} type = {}, severity = {}, message = {}\n",
-                  (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
-}
+
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -40,8 +37,11 @@ Application::Application(int width, int height, const std::string& name)
 
     Init();
 
-    shader = new Shader("../../../data/shaders/basic.vert", "../../../data/shaders/basic.frag");
-    cube = new Model("../../../data/cube/cube.obj");
+    //Move to spdlog
+    std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
+    
+    shader = new Shader("../../data/shaders/basic.vert", "../../data/shaders/basic.frag");
+    cube = new Model("../../data/cube/cube.obj");
     camera = new Camera();
 }
 
@@ -55,8 +55,6 @@ void Application::Init()
     ImGuiInit(window->GetNativeWindow());
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(messageCallback, 0);
 }
 
 void Application::Update()

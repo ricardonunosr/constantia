@@ -9,12 +9,12 @@ class VertexBuffer
     void Bind();
     void Unbind();
 
-    VertexBufferLayout GetLayout() const
+    const VertexBufferLayout& GetLayout() const
     {
         return layout;
     }
 
   private:
     unsigned int id;
-    const VertexBufferLayout& layout;
+    VertexBufferLayout layout;
 };

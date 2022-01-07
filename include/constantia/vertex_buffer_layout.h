@@ -43,6 +43,8 @@ static uint32_t DataTypeSize(DataType type)
         return 4 * 4;
     case DataType::Bool:
         return 1;
+    case DataType::None:
+        return 0;
     }
 
     return 0;
@@ -89,6 +91,8 @@ struct VertexBufferElement
             return 4;
         case DataType::Bool:
             return 1;
+        case DataType::None:
+            return 0;
         }
 
         return 0;
@@ -103,12 +107,12 @@ class VertexBufferLayout
         CalculateOffsetAndStride();
     };
 
-    std::vector<VertexBufferElement> GetElements()
+    const std::vector<VertexBufferElement>& GetElements() const
     {
         return elements;
     }
 
-    unsigned int GetStride()
+    const unsigned int GetStride() const
     {
         return stride;
     }

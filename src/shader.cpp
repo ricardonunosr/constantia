@@ -82,6 +82,8 @@ std::string Shader::ReadShaderSourceFromFile(const std::string& shaderPath)
             result.append(line + "\n");
         }
         filestream.close();
+    }else{
+        spdlog::error("Failed to read {}! File doesn't exist.",shaderPath);
     }
 
     return result;
