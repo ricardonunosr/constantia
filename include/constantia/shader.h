@@ -12,6 +12,7 @@ class Shader
     void Unbind();
 
     void SetUniform1i(const std::string& name, int value);
+    void SetUniform1f(const std::string& name, float value);
     void SetUniform3f(const std::string& name, float v0, float v1, float v2);
     void SetUniform3f(const std::string& name, const glm::vec3& value);
     void SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
@@ -26,4 +27,5 @@ class Shader
     unsigned int CompileShader(unsigned int type, const char* source);
     void LinkProgram(unsigned int vertexShader, unsigned int fragmentShader);
     void CacheUniforms();
+    int GetLocationFromCache(const std::string& name);
 };

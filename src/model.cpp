@@ -1,4 +1,5 @@
 #include "model.h"
+#include <algorithm>
 #include <iostream>
 
 void Model::Draw(Shader& shader)
@@ -112,7 +113,8 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
         bool skip = false;
         for (unsigned int j = 0; j < textures_loaded.size(); j++)
         {
-            if (std::strcmp(textures_loaded[j].GetPath().data(), str.C_Str()) == 0)
+            auto texturepath = textures_loaded[j].GetPath().data();
+            if (std::strcmp(texturepath, str.C_Str()) == 0)
             {
                 textures.push_back(textures_loaded[j]);
                 skip = true;
@@ -123,10 +125,13 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
         {
             // if texture hasn't been loaded already, load it
             std::string fileName = std::string(str.data);
+            std::replace(fileName.begin(), fileName.end(), '\\', '/');
             std::string filePath = directory + "/" + fileName;
-            // Texture texture(filePath.c_str());
-            textures.emplace_back(std::move(filePath.c_str()));
-            // textures_loaded.push_back(texture); // add to loaded textures
+            Texture texture(filePath.c_str());
+            texture.SetType(typeName);
+            texture.SetPath(str.C_Str());
+            textures.emplace_back(std::move(texture));
+            textures_loaded.push_back(texture); // add to loaded textures
         }
     }
     return textures;

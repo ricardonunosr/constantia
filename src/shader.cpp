@@ -28,72 +28,38 @@ void Shader::Unbind()
 
 void Shader::SetUniform1i(const std::string& name, int value)
 {
-    auto location_iter = uniform_cache.find(name);
-    if (location_iter != uniform_cache.end())
-    {
-        auto location = location_iter->second;
-        glUniform1i(location, value);
-    }
-    else
-    {
-        spdlog::error("Couldn't find cached uniform:{} in shader with id {}", name, id);
-    }
+    int location= GetLocationFromCache(name);
+    glUniform1i(location, value);
+}
+
+void Shader::SetUniform1f(const std::string& name, float value)
+{
+    int location= GetLocationFromCache(name);
+    glUniform1f(location, value);
 }
 
 void Shader::SetUniform3f(const std::string& name, float v0, float v1, float v2)
 {
-    auto location_iter = uniform_cache.find(name);
-    if (location_iter != uniform_cache.end())
-    {
-        auto location = location_iter->second;
-        glUniform3f(location, v0, v1, v2);
-    }
-    else
-    {
-        spdlog::error("Couldn't find cached uniform {}", name);
-    }
+    int location= GetLocationFromCache(name);
+    glUniform3f(location, v0, v1, v2);
 }
 
 void Shader::SetUniform3f(const std::string& name, const glm::vec3& value)
 {
-    auto location_iter = uniform_cache.find(name);
-    if (location_iter != uniform_cache.end())
-    {
-        auto location = location_iter->second;
-        glUniform3fv(location, 1,&value[0]);
-    }
-    else
-    {
-        spdlog::error("Couldn't find cached uniform {}", name);
-    }
+    int location= GetLocationFromCache(name);
+    glUniform3fv(location, 1,&value[0]);
 }
 
 void Shader::SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3)
 {
-    auto location_iter = uniform_cache.find(name);
-    if (location_iter != uniform_cache.end())
-    {
-        auto location = location_iter->second;
-        glUniform4f(location, v0, v1, v2, v3);
-    }
-    else
-    {
-        spdlog::error("Couldn't find cached uniform {}", name);
-    }
+    int location= GetLocationFromCache(name);
+    glUniform4f(location, v0, v1, v2, v3);
 }
 
 void Shader::SetUniformMat4(const std::string& name, const glm::mat4& matrix)
 {
-    auto location_iter = uniform_cache.find(name);
-    if (location_iter != uniform_cache.end())
-    {
-        auto location = location_iter->second;
-        glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
-    }
-    else
-    {
-        spdlog::error("Couldn't find cached uniform {} in shader with id {}", name, id);
-    }
+    int location= GetLocationFromCache(name);
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
 std::string Shader::ReadShaderSourceFromFile(const std::string& shaderPath)
@@ -182,4 +148,19 @@ void Shader::CacheUniforms()
         int location = glGetUniformLocation(id, name);
         uniform_cache[std::string(name)] = location;
     }
+}
+int Shader::GetLocationFromCache(const std::string& name)
+{
+    auto location_iter = uniform_cache.find(name);
+    if (location_iter != uniform_cache.end())
+    {
+        auto location = location_iter->second;
+        return location;
+    }
+    else
+    {
+        spdlog::error("Couldn't find cached uniform:{} in shader with id {}", name, id);
+    }
+
+    return 0;
 }

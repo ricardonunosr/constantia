@@ -9,7 +9,26 @@ class Texture
     void Bind(unsigned int slot = 0);
     void Unbind();
 
-    std::string GetPath();
+    const std::string& GetPath()
+    {
+        return path;
+    }
+
+    const std::string& GetType()
+    {
+        return type;
+    }
+
+    void SetPath(const std::string& newPath)
+    {
+        path=newPath;
+    }
+
+    void SetType(const std::string& typeName)
+    {
+        type=typeName;
+    }
+
 
   private:
     unsigned int id;
@@ -17,4 +36,5 @@ class Texture
     int height;
     int nrChannels;
     std::string path;
+    std::string type;
 };

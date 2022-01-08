@@ -22,10 +22,18 @@ void Mesh::setupMesh()
 void Mesh::Draw(Shader& shader)
 {
     shader.Bind();
+    unsigned int diffuseNr = 1;
+    unsigned int specularNr = 1;
     for (size_t i = 0; i < textures.size(); i++)
     {
         Texture texture = textures[i];
-        shader.SetUniform1i("Image", i);
+        std::string number;
+        std::string name = texture.GetType();
+        if (name == "texture_diffuse")
+            number = std::to_string(diffuseNr++);
+        else
+            number = std::to_string(specularNr++);
+        shader.SetUniform1i("material."+name+number, i);
         texture.Bind(i);
     }
     glActiveTexture(GL_TEXTURE0);

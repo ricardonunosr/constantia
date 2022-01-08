@@ -4,7 +4,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Texture::Texture(const char* path) : id{0}, width{0}, height{0}, nrChannels{0}
+Texture::Texture(const char* path) : id{0}, width{0}, height{0}, nrChannels{0}, path{""}, type{"texture_diffuse"}
 {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
@@ -31,7 +31,7 @@ Texture::Texture(const char* path) : id{0}, width{0}, height{0}, nrChannels{0}
     }
     else
     {
-        spdlog::error("Failed to load texture reason: {}", stbi_failure_reason());
+        spdlog::error("Failed to load texture({}) reason: {}", path,stbi_failure_reason());
     }
     stbi_image_free(data);
 }
@@ -49,9 +49,4 @@ void Texture::Bind(unsigned int slot /*= 0*/)
 void Texture::Unbind()
 {
     glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-std::string Texture::GetPath()
-{
-    return path;
 }
