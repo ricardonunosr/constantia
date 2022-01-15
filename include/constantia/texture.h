@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 
 class Texture
@@ -21,14 +23,13 @@ class Texture
 
     void SetPath(const std::string& newPath)
     {
-        path=newPath;
+        path = newPath;
     }
 
     void SetType(const std::string& typeName)
     {
-        type=typeName;
+        type = typeName;
     }
-
 
   private:
     unsigned int id;

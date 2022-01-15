@@ -1,3 +1,5 @@
+#pragma once
+
 #include "vertex_buffer.h"
 
 class VertexArray

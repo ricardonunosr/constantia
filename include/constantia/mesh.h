@@ -1,3 +1,5 @@
+#pragma once
+
 #include "index_buffer.h"
 #include "shader.h"
 #include "texture.h"

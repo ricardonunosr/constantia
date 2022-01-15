@@ -1,3 +1,5 @@
+#pragma once
+
 #include "core.h"
 
 #include <GLFW/glfw3.h>

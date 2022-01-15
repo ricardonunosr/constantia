@@ -1,3 +1,5 @@
+#pragma once
+
 #include "mesh.h"
 #include <string>
 #include <tiny_obj_loader.h>
