@@ -3,7 +3,7 @@
 
 IndexBuffer::IndexBuffer(const void* indices, unsigned int count) : id{0}, count{count}
 {
-    glGenBuffers(1, &id);
+    glCreateBuffers(1, &id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), indices, GL_STATIC_DRAW);
 }

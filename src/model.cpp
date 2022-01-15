@@ -1,6 +1,9 @@
 #include "model.h"
 #include <algorithm>
 #include <iostream>
+#include <unordered_map>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
 
 void Model::Draw(Shader& shader)
 {
@@ -10,129 +13,142 @@ void Model::Draw(Shader& shader)
     }
 }
 
+namespace std
+{
+template <> struct hash<Vertex>
+{
+    size_t operator()(Vertex const& vertex) const
+    {
+        return ((hash<glm::vec3>()(vertex.position))) ^ (hash<glm::vec2>()(vertex.texCoords) << 1);
+    }
+};
+} // namespace std
+
 void Model::loadModel(const std::string& path)
 {
-    Assimp::Importer import;
-    const aiScene* scene =
-        import.ReadFile(path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs);
-
-    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-    {
-        std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
-        return;
-    }
     directory = path.substr(0, path.find_last_of('/'));
 
-    processNode(scene->mRootNode, scene);
-}
+    tinyobj::ObjReaderConfig reader_config;
+    reader_config.mtl_search_path = directory;
+    tinyobj::ObjReader reader;
 
-void Model::processNode(aiNode* node, const aiScene* scene)
-{
-    // process all the node's meshes (if any)
-    for (unsigned int i = 0; i < node->mNumMeshes; i++)
+    if (!reader.ParseFromFile(path, reader_config))
     {
-        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        meshes.push_back(processMesh(mesh, scene));
-    }
-    // then do the same for each of its children
-    for (unsigned int i = 0; i < node->mNumChildren; i++)
-    {
-        processNode(node->mChildren[i], scene);
-    }
-}
-
-Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
-{
-
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-    std::vector<Texture> textures;
-
-    for (unsigned int i = 0; i < mesh->mNumVertices; i++)
-    {
-        Vertex vertex;
-        glm::vec3 vector;
-        // Position
-        vector.x = mesh->mVertices[i].x;
-        vector.y = mesh->mVertices[i].y;
-        vector.z = mesh->mVertices[i].z;
-        vertex.position = vector;
-        // Normals
-        if (mesh->HasNormals())
+        if (!reader.Error().empty())
         {
-            vector.x = mesh->mNormals[i].x;
-            vector.y = mesh->mNormals[i].y;
-            vector.z = mesh->mNormals[i].z;
-            vertex.normal = vector;
+            spdlog::error("TinyObjReader: {}", reader.Error());
         }
+        exit(1);
+    }
 
-        // Texture Coords
-        if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
+    if (!reader.Warning().empty())
+    {
+        spdlog::warn("TinyObjReader: {}", reader.Warning());
+    }
+
+    auto& attrib = reader.GetAttrib();
+    auto& shapes = reader.GetShapes();
+    auto& materials = reader.GetMaterials();
+
+    /*  We are grouping every mesh that was the same material.
+     *  This way we can group every mesh into one draw call instead of multiple for the same mesh.
+     *  +1 for an unknown material (index 0 is the unknown material)
+     */
+    std::vector<MeshMaterialGroup> groups(materials.size() + 1);
+
+    for (size_t i = 0; i < materials.size(); i++)
+    {
+        if (materials[i].diffuse_texname != "")
         {
-            glm::vec2 vec;
-            // a vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't
-            // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
-            vec.x = mesh->mTextureCoords[0][i].x;
-            vec.y = mesh->mTextureCoords[0][i].y;
-            vertex.texCoords = vec;
+            groups[i + 1].diffuse_path = directory + "/" + materials[i].diffuse_texname;
         }
-        else
-            vertex.texCoords = glm::vec2(0.0f, 0.0f);
-
-        vertices.push_back(vertex);
-    }
-
-    // process indices
-    for (unsigned int i = 0; i < mesh->mNumFaces; i++)
-    {
-        aiFace face = mesh->mFaces[i];
-        for (unsigned int j = 0; j < face.mNumIndices; j++)
-            indices.push_back(face.mIndices[j]);
-    }
-
-    // process material
-    if (mesh->mMaterialIndex >= 0)
-    {
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-        std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
-        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
-        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-    }
-
-    return Mesh(vertices, indices, textures);
-}
-
-std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type, std::string typeName)
-{
-    std::vector<Texture> textures;
-    for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
-    {
-        aiString str;
-        mat->GetTexture(type, i, &str);
-        bool skip = false;
-        for (unsigned int j = 0; j < textures_loaded.size(); j++)
+        if (materials[i].specular_texname != "")
         {
-            auto texturepath = textures_loaded[j].GetPath().data();
-            if (std::strcmp(texturepath, str.C_Str()) == 0)
+            groups[i + 1].specular_path = directory + "/" + materials[i].specular_texname;
+        }
+        else if (materials[i].bump_texname != "")
+        {
+            groups[i + 1].specular_path = directory + "/" + materials[i].bump_texname;
+        }
+    }
+
+    std::vector<std::unordered_map<Vertex, uint32_t>> uniqueVerticesPerGroup(materials.size() + 1);
+
+    auto appendVertex = [&uniqueVerticesPerGroup, &groups](const Vertex& vertex, int material_id) {
+        // 0 for unknown material
+        auto& unique_vertices = uniqueVerticesPerGroup[material_id + 1];
+        auto& group = groups[material_id + 1];
+        if (unique_vertices.count(vertex) == 0)
+        {
+            unique_vertices[vertex] = group.vertices.size(); // auto incrementing size
+            group.vertices.push_back(vertex);
+        }
+        group.indices.push_back(static_cast<unsigned int>(unique_vertices[vertex]));
+    };
+
+    for (const auto& shape : shapes)
+    {
+
+        size_t indexOffset = 0;
+        for (size_t n = 0; n < shape.mesh.num_face_vertices.size(); n++)
+        {
+            // per face
+            auto ngon = shape.mesh.num_face_vertices[n];
+            auto material_id = shape.mesh.material_ids[n];
+            for (size_t f = 0; f < ngon; f++)
             {
-                textures.push_back(textures_loaded[j]);
-                skip = true;
-                break;
+                const auto& index = shape.mesh.indices[indexOffset + f];
+
+                Vertex vertex;
+
+                vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
+                                   attrib.vertices[3 * index.vertex_index + 1],
+                                   attrib.vertices[3 * index.vertex_index + 2]};
+
+                // Check if it has texture coordinates
+                if (index.texcoord_index >= 0)
+                {
+                    vertex.texCoords = {attrib.texcoords[2 * index.texcoord_index + 0],
+                                        1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
+                }
+
+                // Check if it has normals
+                if (index.normal_index >= 0)
+                {
+                    vertex.normal = {attrib.normals[3 * index.normal_index + 0],
+                                     attrib.normals[3 * index.normal_index + 1],
+                                     attrib.normals[3 * index.normal_index + 2]};
+                }
+                appendVertex(vertex, material_id);
             }
-        }
-        if (!skip)
-        {
-            // if texture hasn't been loaded already, load it
-            std::string fileName = std::string(str.data);
-            std::replace(fileName.begin(), fileName.end(), '\\', '/');
-            std::string filePath = directory + "/" + fileName;
-            Texture texture(filePath.c_str());
-            texture.SetType(typeName);
-            texture.SetPath(str.C_Str());
-            textures.emplace_back(std::move(texture));
-            textures_loaded.push_back(texture); // add to loaded textures
+            indexOffset += ngon;
         }
     }
-    return textures;
+
+    for (size_t g = 0; g < groups.size(); g++)
+    {
+        // Check if MeshMaterialGroup has anything
+        if (groups[g].vertices.size() != 0)
+        {
+            std::vector<Texture> textures{};
+            if (!groups[g].diffuse_path.empty())
+            {
+
+                Texture diffuseTexture(groups[g].diffuse_path.c_str());
+                diffuseTexture.SetPath(groups[g].diffuse_path);
+                diffuseTexture.SetType("texture_diffuse");
+                textures.push_back(diffuseTexture);
+            }
+            // if (!groups[g].specular_path.empty())
+            if (false)
+            {
+                Texture specularTexture(groups[g].specular_path.c_str());
+                specularTexture.SetPath(groups[g].specular_path);
+                specularTexture.SetType("texture_specular");
+                textures.push_back(specularTexture);
+            }
+
+            meshes.push_back({groups[g].vertices, groups[g].indices, textures});
+        }
+    }
 }

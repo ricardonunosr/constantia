@@ -1,6 +1,6 @@
-#include "texture.h"
 #include "index_buffer.h"
 #include "shader.h"
+#include "texture.h"
 #include "vertex_array.h"
 #include <glm/glm.hpp>
 #include <memory>
@@ -12,6 +12,11 @@ struct Vertex
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 texCoords;
+
+    bool operator==(const Vertex& other) const
+    {
+        return position == other.position && texCoords == other.texCoords;
+    }
 };
 
 class Mesh

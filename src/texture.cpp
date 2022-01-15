@@ -13,7 +13,6 @@ Texture::Texture(const char* path) : id{0}, width{0}, height{0}, nrChannels{0}, 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    stbi_set_flip_vertically_on_load(true);
     unsigned char* data = stbi_load(path, &width, &height, &nrChannels, 0);
     if (data)
     {
@@ -31,7 +30,7 @@ Texture::Texture(const char* path) : id{0}, width{0}, height{0}, nrChannels{0}, 
     }
     else
     {
-        spdlog::error("Failed to load texture({}) reason: {}", path,stbi_failure_reason());
+        spdlog::error("Failed to load texture({}) reason: {}", path, stbi_failure_reason());
     }
     stbi_image_free(data);
 }

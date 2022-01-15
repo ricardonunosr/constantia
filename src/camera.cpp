@@ -1,10 +1,11 @@
 #include "camera.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <spdlog/spdlog.h>
 
 Camera::Camera()
 {
-    cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
-    cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    cameraPos = glm::vec3(-25.0f, 3.0f, 0.0f);
+    cameraFront = glm::vec3(1.0f, 0.0f, 0.0f);
     cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
     projectionMatrix = glm::perspective(glm::radians(45.0f), (float)1280 / (float)720, 0.1f, 100.0f);
     viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);

@@ -1,0 +1,60 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base",
+      "description": "For more information: http://aka.ms/cmakepresetsvs",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "installDir": "${sourceDir}/build/install/${presetName}"
+    },
+    {
+      "name": "x64-Debug",
+      "displayName": "x64-Debug",
+      "description": "Target Windows with the Visual Studio development environment.",
+      "inherits": "base",
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [ "Windows" ]
+        }
+      }
+    },
+    {
+      "name": "x64-Release",
+      "displayName": "x64-Release",
+      "description": "Target Windows with the Visual Studio development environment.",
+      "inherits": "base",
+      "generator": "Visual Studio 17 2022",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+      },
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": {
+          "hostOS": [ "Windows" ]
+        }
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "x64-Debug",
+      "configurePreset": "x64-Debug"
+    },
+    {
+      "name": "x64-Release",
+      "configurePreset": "x64-Release"
+    }
+  ]
+}

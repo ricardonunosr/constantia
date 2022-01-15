@@ -27,6 +27,29 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
     camera->Zoom(xoffset, yoffset);
 }
 
+void messageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message,
+                     const void* userParam)
+{
+    switch (severity)
+    {
+    case GL_DEBUG_SEVERITY_HIGH:
+        spdlog::error("GL CALLBACK: {} type = {}, severity = {}, message = {}\n",
+                      (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
+        break;
+    case GL_DEBUG_SEVERITY_MEDIUM:
+        spdlog::warn("GL CALLBACK: {} type = {}, severity = {}, message = {}\n",
+                     (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
+        break;
+    case GL_DEBUG_SEVERITY_LOW:
+        spdlog::debug("GL CALLBACK: {} type = {}, severity = {}, message = {}\n",
+                      (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
+        break;
+    default:
+        spdlog::trace("GL CALLBACK: {} type = {}, severity = {}, message = {}\n",
+                      (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""), type, severity, message);
+    }
+}
+
 Application::Application(int width, int height, const std::string& name)
 {
     instance = this;
@@ -40,10 +63,10 @@ Application::Application(int width, int height, const std::string& name)
     // Move to spdlog
     std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
 
-    shader = new Shader("../data/shaders/basic.vert", "../data/shaders/basic.frag");
-    lightShader = new Shader("../data/shaders/light.vert", "../data/shaders/light.frag");
-    cube = new Model("../data/dragon.obj");
-    light = new Model("../data/cube/cube.obj");
+    shader = new Shader("../../../data/shaders/basic.vert", "../../../data/shaders/basic.frag");
+    lightShader = new Shader("../../../data/shaders/light.vert", "../../../data/shaders/light.frag");
+    cube = new Model("../../../data/sponza/sponza.obj");
+    light = new Model("../../../data/cube/cube.obj");
     camera = new Camera();
 }
 
@@ -56,24 +79,13 @@ void Application::Init()
 {
     ImGuiInit(window->GetNativeWindow());
 
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(messageCallback, 0);
     glEnable(GL_DEPTH_TEST);
 }
 
 void Application::Update()
 {
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f),
-        glm::vec3( 2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f,  2.0f, -2.5f),
-        glm::vec3( 1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
-
     while (!window->ShouldClose())
     {
         float currentFrame = glfwGetTime();
@@ -98,8 +110,8 @@ void Application::Update()
         shader->SetUniform1f("material.shininess", 64.0f);
 
         shader->SetUniform3f("light.position", lightPos);
-        shader->SetUniform3f("light.ambient", 0.2f, 0.2f, 0.2f);
-        shader->SetUniform3f("light.diffuse", 0.5f, 0.5f, 0.5f);
+        shader->SetUniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
+        shader->SetUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
         shader->SetUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
 
         shader->SetUniform1f("light.constant", 1.0f);
@@ -119,10 +131,9 @@ void Application::Update()
 
         shader->Bind();
         glm::mat4 model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(0.02f));
         shader->SetUniformMat4("model", model);
         cube->Draw(*shader);
-
-
 
         bool editor = camera->GetEditorFlag();
         EditorImGuiRender(editor);

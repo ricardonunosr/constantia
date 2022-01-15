@@ -144,11 +144,14 @@ void Shader::CacheUniforms()
     char* name = (char*)malloc(longestUniformMaxLengthName * sizeof(char));
     for (size_t i = 0; i < numUniforms; i++)
     {
-        glGetActiveUniform(id, i, longestUniformMaxLengthName, NULL, NULL, NULL, name);
+        int size;
+        unsigned int type;
+        glGetActiveUniform(id, i, longestUniformMaxLengthName, NULL, &size, &type, name);
         int location = glGetUniformLocation(id, name);
         uniform_cache[std::string(name)] = location;
     }
 }
+
 int Shader::GetLocationFromCache(const std::string& name)
 {
     auto location_iter = uniform_cache.find(name);

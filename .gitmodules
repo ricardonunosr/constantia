@@ -13,6 +13,6 @@
 [submodule "lib/imgui"]
 	path = lib/imgui
 	url = https://github.com/ricardonunosr/imgui
-[submodule "lib/assimp"]
-	path = lib/assimp
-	url = https://github.com/ricardonunosr/assimp
+[submodule "lib/tinyobjloader"]
+	path = lib/tinyobjloader
+	url = https://github.com/ricardonunosr/tinyobjloader

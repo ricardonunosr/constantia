@@ -10,11 +10,6 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-#ASSIMP
-#set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF)
-#set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF)
-#set(ASSIMP_BUILD_OBJ_IMPORTER ON)
-
 set(SOURCES 
     src/main.cpp
     src/application.cpp
@@ -31,13 +26,30 @@ set(SOURCES
     src/editor.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+set(HEADERS
+    include/constantia/application.h
+    include/constantia/camera.h
+    include/constantia/core.h
+    include/constantia/editor.h
+    include/constantia/index_buffer.h
+    include/constantia/mesh.h
+    include/constantia/model.h
+    include/constantia/renderer.h
+    include/constantia/shader.h
+    include/constantia/texture.h
+    include/constantia/vertex_array.h
+    include/constantia/vertex_buffer.h
+    include/constantia/vertex_buffer_layout.h
+    include/constantia/window.h
+)
+
+add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glfw)
 add_subdirectory(lib/spdlog)
 add_subdirectory(lib/imgui)
-add_subdirectory(lib/assimp)
+add_subdirectory(lib/tinyobjloader)
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC include/constantia
@@ -47,7 +59,7 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC lib/glm
     PUBLIC lib/stb
     PUBLIC lib/imgui
-    PUBLIC lib/assimp/include/assimp
+    PUBLIC lib/tinyobjloader/tiny_obj_loader.h
 )
 
 target_link_libraries(${PROJECT_NAME} 
@@ -55,5 +67,5 @@ target_link_libraries(${PROJECT_NAME}
         glfw
         spdlog
         imgui
-        assimp
+        tinyobjloader
 )
