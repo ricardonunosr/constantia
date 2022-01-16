@@ -53,8 +53,14 @@ void main()
     specular *= attenuation;
 
     vec3 result = ambient + diffuse + specular;
-    FragColor = vec4(result, 1.0);
-    //FragColor = texture(material.texture_diffuse, TexCoord);
+    float alpha = texture(material.texture_diffuse, TexCoord).a;
+    if(alpha < 0.1)
+        discard;
+    FragColor = vec4(result, alpha);
+    //vec4 texColor = texture(material.texture_diffuse, TexCoord);
+    //if(texColor.a < 0.1)
+    //    discard;
+    //FragColor = texColor;
     //FragColor = vec4(diffuse,1.0);
     //FragColor.rgb = Normal;
     //FragColor.a = 1.0f;
