@@ -65,13 +65,13 @@ Application::Application(int width, int height, const std::string& name)
     // Move to spdlog
     std::cout << "Current working directory: " << std::filesystem::current_path() << std::endl;
 
-    shader = new Shader("../../../data/shaders/basic.vert", "../../../data/shaders/basic.frag");
-    lightShader = new Shader("../../../data/shaders/light.vert", "../../../data/shaders/light.frag");
-    outlineShader = new Shader("../../../data/shaders/light.vert", "../../../data/shaders/outline.frag");
+    shader = new Shader("./data/shaders/basic.vert", "./data/shaders/basic.frag");
+    lightShader = new Shader("./data/shaders/light.vert", "./data/shaders/light.frag");
+    outlineShader = new Shader("./data/shaders/light.vert", "./data/shaders/outline.frag");
     postprocessing =
-        new Shader("../../../data/shaders/postprocessing.vert", "../../../data/shaders/postprocessing.frag");
-    cube = new Model("../../../data/sponza/sponza.obj");
-    light = new Model("../../../data/cube/cube.obj");
+        new Shader("./data/shaders/postprocessing.vert", "./data/shaders/postprocessing.frag");
+    cube = new Model("./data/cube/cube.obj");
+    light = new Model("./data/cube/cube.obj");
     camera = new Camera();
 }
 
@@ -85,7 +85,7 @@ void Application::Init()
     ImGuiInit(window->GetNativeWindow());
 
     glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(messageCallback, 0);
+    //glDebugMessageCallback(messageCallback, 0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -170,7 +170,7 @@ void Application::Update()
         glStencilMask(0x00);
         shader->Bind();
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(0.02f));
+        //model = glm::scale(model, glm::vec3(0.02f));
         shader->SetUniformMat4("model", model);
         cube->Draw(*shader);
 

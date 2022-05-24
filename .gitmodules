@@ -1,18 +1,18 @@
 [submodule "lib/glfw"]
 	path = lib/glfw
-	url = https://github.com/ricardonunosr/glfw
+	url = https://github.com/glfw/glfw
 [submodule "lib/spdlog"]
 	path = lib/spdlog
-	url = https://github.com/ricardonunosr/spdlog
+	url = https://github.com/gabime/spdlog
 [submodule "lib/glm"]
 	path = lib/glm
-	url = https://github.com/ricardonunosr/glm.git
+	url = https://github.com/g-truc/glm.git
 [submodule "lib/stb"]
 	path = lib/stb
-	url = https://github.com/ricardonunosr/stb
+	url = https://github.com/nothings/stb
 [submodule "lib/imgui"]
 	path = lib/imgui
-	url = https://github.com/ricardonunosr/imgui
+	url = https://github.com/ocornut/imgui
 [submodule "lib/tinyobjloader"]
 	path = lib/tinyobjloader
-	url = https://github.com/ricardonunosr/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader

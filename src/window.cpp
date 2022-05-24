@@ -13,6 +13,8 @@ Window::Window(int width, int height, const std::string& name) : width{width}, h
     if (!glfwInit())
         return;
 
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
     if (!window)
     {

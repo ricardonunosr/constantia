@@ -10,6 +10,22 @@
       "installDir": "${sourceDir}/build/install/${presetName}"
     },
     {
+      "name": "x64-Debug-Mac",
+      "displayName": "x64-Debug-Mac",
+      "description": "Target Mac with the Make development environment.",
+      "inherits": "base",
+      "generator": "Unix Makefiles",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+		"CMAKE_C_COMPILER": "gcc",
+		"CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
       "name": "x64-Debug",
       "displayName": "x64-Debug",
       "description": "Target Windows with the Visual Studio development environment.",
@@ -48,6 +64,10 @@
     }
   ],
   "buildPresets": [
+    {
+      "name": "x64-Debug-Mac",
+      "configurePreset": "x64-Debug-Mac"
+    },
     {
       "name": "x64-Debug",
       "configurePreset": "x64-Debug"
