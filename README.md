@@ -17,7 +17,8 @@ Dependencies
 - [stb](https://github.com/nothings/stb)
 
 # Screenshots
-![cube-screenshot](/data/cube-screenshot.png)
+![cube-screenshot](./data/cube-screenshot.png)
+![sponza-screenshot](./data/sponza-screenshot.png)
 
 # Getting started
 

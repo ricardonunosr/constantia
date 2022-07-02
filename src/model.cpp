@@ -4,6 +4,8 @@
 #include <unordered_map>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
 
 void Model::Draw(Shader& shader)
 {
@@ -60,15 +62,21 @@ void Model::loadModel(const std::string& path)
     {
         if (materials[i].diffuse_texname != "")
         {
-            groups[i + 1].diffuse_path = directory + "/" + materials[i].diffuse_texname;
+            std::string diffusePath(materials[i].diffuse_texname);
+            std::replace(diffusePath.begin(), diffusePath.end(), '\\', '/');
+            groups[i + 1].diffuse_path = directory + "/" + diffusePath;
         }
         if (materials[i].specular_texname != "")
         {
-            groups[i + 1].specular_path = directory + "/" + materials[i].specular_texname;
+            std::string specularPath(materials[i].specular_texname);
+            std::replace(specularPath.begin(), specularPath.end(), '\\', '/');
+            groups[i + 1].specular_path = directory + "/" + specularPath;
         }
         else if (materials[i].bump_texname != "")
         {
-            groups[i + 1].specular_path = directory + "/" + materials[i].bump_texname;
+            std::string bumpPath(materials[i].bump_texname);
+            std::replace(bumpPath.begin(), bumpPath.end(), '\\', '/');
+            groups[i + 1].specular_path = directory + "/" + bumpPath;
         }
     }
 
@@ -139,8 +147,8 @@ void Model::loadModel(const std::string& path)
                 diffuseTexture.SetType("texture_diffuse");
                 textures.push_back(diffuseTexture);
             }
-            // if (!groups[g].specular_path.empty())
-            if (false)
+            if (!groups[g].specular_path.empty())
+            // if (false)
             {
                 Texture specularTexture(groups[g].specular_path.c_str());
                 specularTexture.SetPath(groups[g].specular_path);
