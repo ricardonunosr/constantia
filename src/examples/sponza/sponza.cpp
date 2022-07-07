@@ -1,6 +1,5 @@
 #include "sponza.h"
 #include "renderer.h"
-//#include "renderer.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -42,10 +41,10 @@ void SponzaLayer::Update(float delta_time)
 
     shader->Bind();
 
-    shader->SetUniformMat4("projection", Application::Get().GetCamera().GetProjectionMatrix());
-    shader->SetUniformMat4("view", Application::Get().GetCamera().GetViewMatrix());
-
-    shader->SetUniform3f("viewPos", Application::Get().GetCamera().GetCameraPosition());
+    Camera& camera = Application::Get().GetCamera();
+    shader->SetUniformMat4("projection", camera.GetProjectionMatrix());
+    shader->SetUniformMat4("view", camera.GetViewMatrix());
+    shader->SetUniform3f("viewPos", camera.GetCameraPosition());
     shader->SetUniform1f("material.shininess", 64.0f);
 
     shader->SetUniform3f("light.position", lightPos);

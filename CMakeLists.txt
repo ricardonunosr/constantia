@@ -24,8 +24,8 @@ set(SOURCES
         src/renderer.cpp
         src/editor.cpp
         # Examples
-        src/examples/sponza/sponza.cpp
-        #src/examples/framebuffers/framebuffers.cpp
+        #src/examples/sponza/sponza.cpp
+        src/examples/framebuffers/framebuffers.cpp
         )
 
 set(HEADERS
