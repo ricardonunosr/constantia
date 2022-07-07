@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core.h"
+#include "camera.h"
+#include "layer.h"
 #include "window.h"
 
 class Application
@@ -9,12 +11,38 @@ class Application
     Application(int width, int height, const std::string& name);
     ~Application();
 
-    void Init();
-    void Update();
-    void Cleanup();
+    void Run();
+
+    static Application& Get()
+    {
+        return *instance;
+    }
+    Window& GetWindow()
+    {
+        return *window;
+    }
+
+    static Camera& GetCamera()
+    {
+        return *camera;
+    }
+
+    static void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+    {
+        camera->MoveCamera(xpos, ypos);
+    }
+
+    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+    {
+        camera->Zoom(xoffset, yoffset);
+    }
 
   private:
     static Application* instance;
     std::unique_ptr<Window> window;
-    float deltaTime = 0, lastFrame = 0;
+    float delta_time = 0, lastFrame = 0;
+    static Camera* camera;
+
+  protected:
+    std::vector<Layer*> layers;
 };

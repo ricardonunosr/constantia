@@ -9,9 +9,9 @@
 
 void Model::Draw(Shader& shader)
 {
-    for (unsigned int i = 0; i < meshes.size(); i++)
+    for (auto & mesh : meshes)
     {
-        meshes[i].Draw(shader);
+        mesh.Draw(shader);
     }
 }
 
@@ -60,19 +60,19 @@ void Model::loadModel(const std::string& path)
 
     for (size_t i = 0; i < materials.size(); i++)
     {
-        if (materials[i].diffuse_texname != "")
+        if (!materials[i].diffuse_texname.empty())
         {
             std::string diffusePath(materials[i].diffuse_texname);
             std::replace(diffusePath.begin(), diffusePath.end(), '\\', '/');
             groups[i + 1].diffuse_path = directory + "/" + diffusePath;
         }
-        if (materials[i].specular_texname != "")
+        if (!materials[i].specular_texname.empty())
         {
             std::string specularPath(materials[i].specular_texname);
             std::replace(specularPath.begin(), specularPath.end(), '\\', '/');
             groups[i + 1].specular_path = directory + "/" + specularPath;
         }
-        else if (materials[i].bump_texname != "")
+        else if (!materials[i].bump_texname.empty())
         {
             std::string bumpPath(materials[i].bump_texname);
             std::replace(bumpPath.begin(), bumpPath.end(), '\\', '/');
@@ -107,7 +107,7 @@ void Model::loadModel(const std::string& path)
             {
                 const auto& index = shape.mesh.indices[indexOffset + f];
 
-                Vertex vertex;
+                Vertex vertex{};
 
                 vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
                                    attrib.vertices[3 * index.vertex_index + 1],
@@ -136,7 +136,7 @@ void Model::loadModel(const std::string& path)
     for (size_t g = 0; g < groups.size(); g++)
     {
         // Check if MeshMaterialGroup has anything
-        if (groups[g].vertices.size() != 0)
+        if (!groups[g].vertices.empty())
         {
             std::vector<Texture> textures{};
             if (!groups[g].diffuse_path.empty())
@@ -156,7 +156,7 @@ void Model::loadModel(const std::string& path)
                 textures.push_back(specularTexture);
             }
 
-            meshes.push_back({groups[g].vertices, groups[g].indices, textures});
+            meshes.emplace_back(groups[g].vertices, groups[g].indices, textures);
         }
     }
 }
