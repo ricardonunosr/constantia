@@ -1,16 +1,11 @@
 #include "sponza.h"
+#include "model.h"
 #include "renderer.h"
+#include "application.h"
+#include "camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#define WIDTH 1280
-#define HEIGHT 720
-
-int main(int argc, char** argv)
-{
-    std::unique_ptr<SponzaApplication> app = std::make_unique<SponzaApplication>(WIDTH, HEIGHT, "Sponza");
-    app->Run();
-}
+#include <GLFW/glfw3.h>
 
 SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
 {

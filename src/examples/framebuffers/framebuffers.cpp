@@ -1,18 +1,27 @@
 #include "framebuffers.h"
 
+#include "vertex_buffer_layout.h"
+#include "vertex_array.h"
+#include "vertex_buffer.h"
+#include "core.h"
 #include "renderer.h"
+#include "camera.h"
+#include "shader.h"
+#include "model.h"
+#include "application.h"
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #define WIDTH 1280
 #define HEIGHT 720
 
-int main(int argc, char** argv)
-{
-    std::unique_ptr<FrameBuffersApplication> app =
-        std::make_unique<FrameBuffersApplication>(WIDTH, HEIGHT, "Framebuffers");
-    app->Run();
-}
+//int main(int argc, char** argv)
+//{
+//    std::unique_ptr<FrameBuffersApplication> app =
+//        std::make_unique<FrameBuffersApplication>(WIDTH, HEIGHT, "Framebuffers");
+//    app->Run();
+//}
 
 FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
 {

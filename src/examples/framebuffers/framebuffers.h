@@ -1,9 +1,11 @@
 #pragma once
 
-#include "application.h"
-#include "model.h"
-#include "shader.h"
-#include "camera.h"
+#include "layer.h"
+#include <string>
+
+struct Model;
+struct Shader;
+struct VertexArray;
 
 class FrameBuffersLayer : public Layer
 {
@@ -24,13 +26,4 @@ class FrameBuffersLayer : public Layer
     std::unique_ptr<Shader> light_shader;
     std::unique_ptr<VertexArray> vao;
     unsigned int framebuffer, textureColorbuffer;
-};
-
-class FrameBuffersApplication: public Application
-{
-  public:
-    FrameBuffersApplication(int width, int height, const std::string& name) : Application(width,height,name)
-    {
-        layers.push_back(new FrameBuffersLayer(name));
-    }
 };

@@ -1,7 +1,6 @@
+#include "core.h"
 #include "window.h"
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -15,6 +14,8 @@ Window::Window(int width, int height, const std::string& name) : width{width}, h
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
     window = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
     if (!window)
     {

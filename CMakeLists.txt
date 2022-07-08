@@ -11,6 +11,7 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 set(SOURCES
+        src/main.cpp
         src/application.cpp
         src/shader.cpp
         src/vertex_array.cpp
@@ -24,7 +25,7 @@ set(SOURCES
         src/renderer.cpp
         src/editor.cpp
         # Examples
-        #src/examples/sponza/sponza.cpp
+        src/examples/sponza/sponza.cpp
         src/examples/framebuffers/framebuffers.cpp
         )
 
@@ -46,7 +47,7 @@ set(HEADERS
         include/constantia/layer.h
         # Examples
         src/examples/sponza/sponza.h
-        #src/examples/framebuffers/framebuffers.h
+        src/examples/framebuffers/framebuffers.h
         )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})

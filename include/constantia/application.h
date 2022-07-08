@@ -1,9 +1,8 @@
 #pragma once
 
-#include "core.h"
 #include "camera.h"
-#include "layer.h"
 #include "window.h"
+#include "layer.h"
 
 class Application
 {
@@ -27,6 +26,11 @@ class Application
         return *camera;
     }
 
+    static std::vector<Layer*>& GetLayers()
+    {
+        return layers;
+    }
+
     static void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     {
         camera->MoveCamera(xpos, ypos);
@@ -44,5 +48,5 @@ class Application
     static Camera* camera;
 
   protected:
-    std::vector<Layer*> layers;
+    static std::vector<Layer*> layers;
 };

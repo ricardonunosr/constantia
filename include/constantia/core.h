@@ -1,6 +1,3 @@
-#ifndef CORE_H
-#define CORE_H
+#pragma once
 #include <glad/gl.h>
-
 #include "spdlog/spdlog.h"
-#endif // CORE_H

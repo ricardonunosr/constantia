@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core.h"
-
 #include <GLFW/glfw3.h>
 #include <string>
 
@@ -19,12 +17,12 @@ class Window
         return window;
     }
 
-    int GetWidth()
+    int GetWidth() const
     {
         return width;
     }
 
-    int GetHeight()
+    int GetHeight() const
     {
         return height;
     }

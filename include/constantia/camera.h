@@ -1,7 +1,8 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+
+struct GLFWwindow;
 
 class Camera
 {
@@ -27,7 +28,7 @@ class Camera
         return cameraPos;
     }
 
-    bool GetEditorFlag()
+    bool GetEditorFlag() const
     {
         return editor;
     }
@@ -43,8 +44,8 @@ class Camera
     float lastY = 720.0 / 2.0;
     float fov = 45.0f;
 
-    bool enabled = true;
-    bool editor = false;
+    bool enabled = false;
+    bool editor = true;
 
     bool firstMouse = true;
     float yaw = -90.0f; // yaw is initialized to -90.0 degrees since a yaw of 0.0 results in a direction vector pointing

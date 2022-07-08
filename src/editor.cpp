@@ -1,9 +1,15 @@
 #include "editor.h"
+#include "core.h"
+
+#include "application.h"
+#include "examples/framebuffers/framebuffers.h"
+#include "examples/sponza/sponza.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-float test[3]{1.0f, 1.0f, 1.0f};
+static bool examples = true;
+static bool showDemo = false;
 
 void ImGuiInit(GLFWwindow* window)
 {
@@ -13,7 +19,7 @@ void ImGuiInit(GLFWwindow* window)
     (void)io;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330");
+    ImGui_ImplOpenGL3_Init("#version 150");
 }
 
 void ImGuiCleanup()
@@ -29,8 +35,6 @@ void EditorImGuiRender(bool editor)
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    static bool scene = false;
-    static bool showDemo = false;
     if (showDemo)
         ImGui::ShowDemoWindow(&showDemo);
 
@@ -40,64 +44,33 @@ void EditorImGuiRender(bool editor)
         {
             if (ImGui::BeginMenu("Editor"))
             {
-                ImGui::MenuItem("Scene", NULL, &scene);
+                ImGui::MenuItem("Examples", NULL, &examples);
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
         }
 
-        if (scene)
+        if (examples)
         {
             ImGui::SetNextWindowSize(ImVec2(430, 450), ImGuiCond_FirstUseEver);
-            if (!ImGui::Begin("Scene", &scene))
+            ImGui::Begin("Scene", &examples);
+            if (ImGui::Button("FrameBuffers"))
             {
-                ImGui::End();
-                return;
+                auto* layer = new FrameBuffersLayer("Framebuffers");
+                layer->Init();
+                Application::Get().GetLayers().push_back(layer);
             }
-
-            ImGuiTreeNodeFlags flags = (true ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
-            flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-            bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)3, flags, "Test");
-            if (ImGui::IsItemClicked())
+            if (ImGui::Button("Sponza"))
             {
-                // m_SelectionContext = entity;
+                auto* layer = new SponzaLayer("Sponza");
+                layer->Init();
+                Application::Get().GetLayers().push_back(layer);
             }
-
-            bool entityDeleted = false;
-            if (ImGui::BeginPopupContextItem())
-            {
-                if (ImGui::MenuItem("Delete Entity"))
-                    entityDeleted = true;
-
-                ImGui::EndPopup();
-            }
-
-            if (opened)
-            {
-                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-                bool opened = ImGui::TreeNodeEx((void*)9817239, flags, "Test");
-                if (opened)
-                    ImGui::TreePop();
-                ImGui::TreePop();
-            }
-
-            if (entityDeleted)
-            {
-                /*m_Context->DestroyEntity(entity);
-                if (m_SelectionContext == entity)
-                    m_SelectionContext = {};*/
-            }
-
-            ImGui::Separator();
-
-            ImGui::DragFloat3("Position", &test[0], 0.1f, 0.0f, 0.0f, "%.2f");
-            ImGui::DragFloat3("Rotation", &test[0], 0.1f, 0.0f, 0.0f, "%.2f");
-            ImGui::DragFloat3("Scale", &test[0], 0.1f, 0.0f, 0.0f, "%.2f");
-
             ImGui::End();
         }
     }
 
     ImGui::Render();
+    glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

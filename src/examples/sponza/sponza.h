@@ -1,13 +1,15 @@
 #pragma once
 
-#include "application.h"
-#include "camera.h"
-#include "model.h"
+#include "layer.h"
+#include <string>
+
+struct Model;
+struct Shader;
 
 class SponzaLayer : public Layer
 {
   public:
-    explicit SponzaLayer(const std::string& name);
+    SponzaLayer(const std::string& name);
     ~SponzaLayer();
 
     void Init() override;
@@ -19,13 +21,4 @@ class SponzaLayer : public Layer
     std::unique_ptr<Model> sponza;
     std::unique_ptr<Shader> shader;
     std::unique_ptr<Shader> light_shader;
-};
-
-class SponzaApplication : public Application
-{
-  public:
-    SponzaApplication(int width, int height, const std::string& name) : Application(width,height,name)
-    {
-        layers.push_back(new SponzaLayer(name));
-    }
 };

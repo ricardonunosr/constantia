@@ -1,10 +1,13 @@
+#include "core.h"
 #include "application.h"
 #include "camera.h"
 #include "editor.h"
 #include <filesystem>
+#include <vector>
 
 Application* Application::instance = nullptr;
 Camera* Application::camera = nullptr;
+std::vector<Layer*> Application::layers;
 
 Application::Application(int width, int height, const std::string& name)
 {
@@ -29,11 +32,6 @@ Application::~Application()
 
 void Application::Run()
 {
-    for (Layer* layer : layers)
-    {
-        layer->Init();
-    }
-
     while (!window->ShouldClose())
     {
         float current_frame = glfwGetTime();
@@ -41,12 +39,12 @@ void Application::Run()
         lastFrame = current_frame;
 
         camera->ProcessInput(Application::Get().GetWindow().GetNativeWindow(), delta_time);
+        bool editor = camera->GetEditorFlag();
+        EditorImGuiRender(editor);
         for (Layer* layer : layers)
         {
             layer->Update(current_frame);
         }
-        /*bool editor = camera->GetEditorFlag();
-        EditorImGuiRender(editor);*/
         window->Update();
     }
 }
