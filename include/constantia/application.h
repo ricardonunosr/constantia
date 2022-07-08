@@ -1,8 +1,8 @@
 #pragma once
 
 #include "camera.h"
-#include "window.h"
 #include "layer.h"
+#include "window.h"
 
 class Application
 {

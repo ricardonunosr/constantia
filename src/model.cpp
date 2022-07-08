@@ -9,7 +9,7 @@
 
 void Model::Draw(Shader& shader)
 {
-    for (auto & mesh : meshes)
+    for (auto& mesh : meshes)
     {
         mesh.Draw(shader);
     }
@@ -148,7 +148,6 @@ void Model::loadModel(const std::string& path)
                 textures.push_back(diffuseTexture);
             }
             if (!groups[g].specular_path.empty())
-            // if (false)
             {
                 Texture specularTexture(groups[g].specular_path.c_str());
                 specularTexture.SetPath(groups[g].specular_path);

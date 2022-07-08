@@ -1,5 +1,4 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
 
 #include "index_buffer.h"
 #include "shader.h"
@@ -38,4 +37,3 @@ class Mesh
     std::unique_ptr<IndexBuffer> ibo;
     void setupMesh();
 };
-#endif // MESH_H
