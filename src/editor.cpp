@@ -56,15 +56,19 @@ void EditorImGuiRender(bool editor)
             ImGui::Begin("Scene", &examples);
             if (ImGui::Button("FrameBuffers"))
             {
+                std::vector<Layer*>& layers = Application::Get().GetLayers();
+                layers.clear();
                 auto* layer = new FrameBuffersLayer("Framebuffers");
                 layer->Init();
-                Application::Get().GetLayers().push_back(layer);
+                layers.push_back(layer);
             }
             if (ImGui::Button("Sponza"))
             {
+                std::vector<Layer*>& layers = Application::Get().GetLayers();
+                layers.clear();
                 auto* layer = new SponzaLayer("Sponza");
                 layer->Init();
-                Application::Get().GetLayers().push_back(layer);
+                layers.push_back(layer);
             }
             ImGui::End();
         }
