@@ -39,12 +39,12 @@ void Application::Run()
         lastFrame = current_frame;
 
         camera->ProcessInput(Application::Get().GetWindow().GetNativeWindow(), delta_time);
-        bool editor = camera->GetEditorFlag();
-        EditorImGuiRender(editor);
         for (Layer* layer : layers)
         {
             layer->Update(current_frame);
         }
+        bool editor = camera->GetEditorFlag();
+        EditorImGuiRender(editor);
         window->Update();
     }
 }

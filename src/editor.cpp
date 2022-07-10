@@ -71,6 +71,5 @@ void EditorImGuiRender(bool editor)
     }
 
     ImGui::Render();
-    glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

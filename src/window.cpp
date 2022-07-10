@@ -46,8 +46,8 @@ Window::~Window()
 
 void Window::Update()
 {
-    glfwSwapBuffers(window);
     glfwPollEvents();
+    glfwSwapBuffers(window);
 }
 
 bool Window::ShouldClose()
