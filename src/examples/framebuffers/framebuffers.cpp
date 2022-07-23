@@ -16,13 +16,6 @@
 #define WIDTH 1280
 #define HEIGHT 720
 
-// int main(int argc, char** argv)
-//{
-//     std::unique_ptr<FrameBuffersApplication> app =
-//         std::make_unique<FrameBuffersApplication>(WIDTH, HEIGHT, "Framebuffers");
-//     app->Run();
-// }
-
 FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
 {
 }
@@ -31,7 +24,7 @@ FrameBuffersLayer::~FrameBuffersLayer()
 }
 void FrameBuffersLayer::Init()
 {
-    std::string basePathAssets = "../../data/";
+    std::string basePathAssets = "./data/";
     cube = std::make_unique<Model>(basePathAssets + "cube/cube.obj");
     light = std::make_unique<Model>(basePathAssets + "cube/cube.obj");
     outline_shader =
