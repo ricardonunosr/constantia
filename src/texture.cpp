@@ -4,7 +4,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-Texture::Texture(const char* path) : id{0}, width{0}, height{0}, nrChannels{0}, path{""}, type{"texture_diffuse"}
+Texture::Texture(const char* path, const char* type) : id{0}, width{0}, height{0}, nrChannels{0}, path{path}, type{type}
 {
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);

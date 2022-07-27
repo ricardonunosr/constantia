@@ -16,6 +16,11 @@ Shader::Shader(const std::string& vertexShaderPath, const std::string& fragmentS
     CacheUniforms();
 }
 
+Shader::~Shader()
+{
+	glDeleteProgram(id);
+}
+
 void Shader::Bind()
 {
     glUseProgram(id);
@@ -104,8 +109,10 @@ unsigned int Shader::CompileShader(unsigned int type, const char* source)
         glGetShaderInfoLog(shader, 512, &length, message);
         spdlog::error("Failed to compile {} shader! {}", (type == GL_VERTEX_SHADER ? "vertex" : "fragment"), message);
         glDeleteShader(shader);
+        free(message);
         return 0;
     }
+    free(message);
 
     return shader;
 }
@@ -127,11 +134,13 @@ void Shader::LinkProgram(unsigned int vertexShader, unsigned int fragmentShader)
     {
         glGetProgramInfoLog(id, 512, &length, message);
         spdlog::error("Failed to link shaders! {}", message);
+        free(message);
     }
 
     glUseProgram(id);
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+    free(message);
 }
 
 void Shader::CacheUniforms()
@@ -150,6 +159,7 @@ void Shader::CacheUniforms()
         int location = glGetUniformLocation(id, name);
         uniform_cache[std::string(name)] = location;
     }
+    free(name);
 }
 
 int Shader::GetLocationFromCache(const std::string& name)

@@ -5,7 +5,7 @@
 class Texture
 {
   public:
-    Texture(const char* path);
+    Texture(const char* path, const char* type);
     ~Texture();
 
     void Bind(unsigned int slot = 0);

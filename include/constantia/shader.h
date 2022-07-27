@@ -10,6 +10,7 @@ class Shader
 {
   public:
     Shader(const std::string& vertexShaderPath, const std::string& fragmentShaderPath);
+    ~Shader();
     void Bind();
     void Unbind();
 
@@ -22,7 +23,6 @@ class Shader
 
   private:
     unsigned int id;
-
     std::unordered_map<std::string, int> uniform_cache;
 
     std::string ReadShaderSourceFromFile(const std::string& shaderPath);

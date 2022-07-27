@@ -1,4 +1,6 @@
 #include "model.h"
+
+#include "core.h"
 #include <algorithm>
 #include <iostream>
 #include <unordered_map>
@@ -9,9 +11,25 @@
 
 void Model::Draw(Shader& shader)
 {
-    for (auto& mesh : meshes)
+    for (int i = 1; i < meshes.size(); i++)
     {
-        mesh.Draw(shader);
+        auto& mesh = meshes[i];
+        shader.Bind();
+        for (size_t i = 0; i < mesh.textures.size(); i++)
+        {
+            Texture& texture = mesh.textures[i];
+            std::string name = texture.GetType();
+            shader.SetUniform1i("material." + name, i);
+            texture.Bind(i);
+        }
+        glActiveTexture(GL_TEXTURE0);
+
+        mesh.vao->Bind();
+        mesh.ibo->Bind();
+        glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+        mesh.vao->Unbind();
+        mesh.ibo->Unbind();
+        shader.Unbind();
     }
 }
 
@@ -56,47 +74,37 @@ void Model::loadModel(const std::string& path)
      *  This way we can group every mesh into one draw call instead of multiple for the same mesh.
      *  +1 for an unknown material (index 0 is the unknown material)
      */
-    std::vector<MeshMaterialGroup> groups(materials.size() + 1);
+    meshes.resize(materials.size() + 1);
 
     for (size_t i = 0; i < materials.size(); i++)
     {
+        auto& mesh = meshes[i + 1];
         if (!materials[i].diffuse_texname.empty())
         {
             std::string diffusePath(materials[i].diffuse_texname);
             std::replace(diffusePath.begin(), diffusePath.end(), '\\', '/');
-            groups[i + 1].diffuse_path = directory + "/" + diffusePath;
+            std::string diffuse_path_final = directory + "/" + diffusePath;
+            mesh.textures.emplace_back(diffuse_path_final.c_str(), "texture_diffuse");
         }
         if (!materials[i].specular_texname.empty())
         {
             std::string specularPath(materials[i].specular_texname);
             std::replace(specularPath.begin(), specularPath.end(), '\\', '/');
-            groups[i + 1].specular_path = directory + "/" + specularPath;
+            std::string specular_path_final = directory + "/" + specularPath;
+            mesh.textures.emplace_back(specular_path_final.c_str(), "texture_specular");
         }
         else if (!materials[i].bump_texname.empty())
         {
             std::string bumpPath(materials[i].bump_texname);
             std::replace(bumpPath.begin(), bumpPath.end(), '\\', '/');
-            groups[i + 1].specular_path = directory + "/" + bumpPath;
+            std::string bump_path_final = directory + "/" + bumpPath;
+            mesh.textures.emplace_back(bump_path_final.c_str(), "texture_specular");
         }
     }
 
     std::vector<std::unordered_map<Vertex, uint32_t>> uniqueVerticesPerGroup(materials.size() + 1);
-
-    auto appendVertex = [&uniqueVerticesPerGroup, &groups](const Vertex& vertex, int material_id) {
-        // 0 for unknown material
-        auto& unique_vertices = uniqueVerticesPerGroup[material_id + 1];
-        auto& group = groups[material_id + 1];
-        if (unique_vertices.count(vertex) == 0)
-        {
-            unique_vertices[vertex] = group.vertices.size(); // auto incrementing size
-            group.vertices.push_back(vertex);
-        }
-        group.indices.push_back(static_cast<unsigned int>(unique_vertices[vertex]));
-    };
-
     for (const auto& shape : shapes)
     {
-
         size_t indexOffset = 0;
         for (size_t n = 0; n < shape.mesh.num_face_vertices.size(); n++)
         {
@@ -127,35 +135,34 @@ void Model::loadModel(const std::string& path)
                                      attrib.normals[3 * index.normal_index + 1],
                                      attrib.normals[3 * index.normal_index + 2]};
                 }
-                appendVertex(vertex, material_id);
+
+                // 0 for unknown material
+                auto& unique_vertices = uniqueVerticesPerGroup[material_id + 1];
+                auto& group = meshes[material_id + 1];
+                if (unique_vertices.count(vertex) == 0)
+                {
+                    unique_vertices[vertex] = group.vertices.size(); // auto incrementing size
+                    group.vertices.push_back(vertex);
+                }
+                group.indices.push_back(static_cast<unsigned int>(unique_vertices[vertex]));
             }
             indexOffset += ngon;
         }
     }
 
-    for (size_t g = 0; g < groups.size(); g++)
+    for (size_t g = 0; g < meshes.size(); g++)
     {
+        MeshMaterialGroup& mesh = meshes[g];
         // Check if MeshMaterialGroup has anything
-        if (!groups[g].vertices.empty())
+        if (!mesh.vertices.empty())
         {
-            std::vector<Texture> textures{};
-            if (!groups[g].diffuse_path.empty())
-            {
-
-                Texture diffuseTexture(groups[g].diffuse_path.c_str());
-                diffuseTexture.SetPath(groups[g].diffuse_path);
-                diffuseTexture.SetType("texture_diffuse");
-                textures.push_back(diffuseTexture);
-            }
-            if (!groups[g].specular_path.empty())
-            {
-                Texture specularTexture(groups[g].specular_path.c_str());
-                specularTexture.SetPath(groups[g].specular_path);
-                specularTexture.SetType("texture_specular");
-                textures.push_back(specularTexture);
-            }
-
-            meshes.emplace_back(groups[g].vertices, groups[g].indices, textures);
+            mesh.vao = std::make_unique<VertexArray>();
+            VertexBufferLayout layout = {
+                {"aPos", DataType::Float3}, {"aNormals", DataType::Float3}, {"aTexCoords", DataType::Float2}};
+            mesh.vbo = std::make_unique<VertexBuffer>(layout, &mesh.vertices[0], mesh.vertices.size() * sizeof(Vertex));
+            mesh.ibo = std::make_unique<IndexBuffer>((const void*)&mesh.indices[0], mesh.indices.size());
+            mesh.vao->AddBuffer(*mesh.vbo);
+            mesh.vao->Unbind();
         }
     }
 }

@@ -19,7 +19,6 @@ set(SOURCES
         src/index_buffer.cpp
         src/texture.cpp
         src/camera.cpp
-        src/mesh.cpp
         src/model.cpp
         src/window.cpp
         src/renderer.cpp
@@ -35,7 +34,6 @@ set(HEADERS
         include/constantia/core.h
         include/constantia/editor.h
         include/constantia/index_buffer.h
-        include/constantia/mesh.h
         include/constantia/model.h
         include/constantia/renderer.h
         include/constantia/shader.h
