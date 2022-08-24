@@ -11,6 +11,11 @@
 static bool examples = true;
 static bool showDemo = false;
 
+struct Metrics
+{
+    uint32_t vertexCount;
+};
+
 void ImGuiInit(GLFWwindow* window)
 {
     IMGUI_CHECKVERSION();
@@ -29,7 +34,7 @@ void ImGuiCleanup()
     ImGui::DestroyContext();
 }
 
-void EditorImGuiRender(bool editor)
+void EditorImGuiRender(bool editor, float delta_time)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -40,6 +45,22 @@ void EditorImGuiRender(bool editor)
 
     if (editor)
     {
+        if (ImGui::Begin("Dear ImGui Metrics/Debugger"))
+        {
+
+            // Basic info
+            ImGui::Text("Dear ImGui %s", ImGui::GetVersion());
+
+            ImGui::Text("Application average %.3f ms/frame ( FPS)", delta_time * 1000.0f);
+            // ImGui::Text("%d vertices, %d indices (%d triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices,
+            //             io.MetricsRenderIndices / 3);
+            // ImGui::Text("%d visible windows, %d active allocations", io.MetricsRenderWindows,
+            // io.MetricsActiveAllocations);
+
+            ImGui::Separator();
+            ImGui::End();
+        }
+
         if (ImGui::BeginMainMenuBar())
         {
             if (ImGui::BeginMenu("Editor"))

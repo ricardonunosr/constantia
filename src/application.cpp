@@ -1,4 +1,5 @@
 #include "core.h"
+
 #include "application.h"
 #include "camera.h"
 #include "editor.h"
@@ -44,7 +45,7 @@ void Application::Run()
             layer->Update(current_frame);
         }
         bool editor = camera->GetEditorFlag();
-        EditorImGuiRender(editor);
+        EditorImGuiRender(editor, delta_time);
         window->Update();
     }
 }

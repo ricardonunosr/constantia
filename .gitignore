@@ -1,7 +1,6 @@
 /build
 /out
 .idea
-.vscode
 .vs
 cmake-build-debug
 .DS_Store
