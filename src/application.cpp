@@ -7,14 +7,16 @@
 #include <vector>
 
 Application* Application::instance = nullptr;
-Camera* Application::camera = nullptr;
+std::unique_ptr<Camera> Application::camera = nullptr;
 std::vector<Layer*> Application::layers;
+Metrics Application::metrics;
 
 Application::Application(int width, int height, const std::string& name)
 {
     instance = this;
     window = std::make_unique<Window>(width, height, name);
-    camera = new Camera();
+    metrics = {};
+    camera = std::make_unique<Camera>();
     glfwSetScrollCallback(window->GetNativeWindow(), scroll_callback);
     glfwSetCursorPosCallback(window->GetNativeWindow(), mouse_callback);
 

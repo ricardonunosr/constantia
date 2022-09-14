@@ -11,17 +11,13 @@
 static bool examples = true;
 static bool showDemo = false;
 
-struct Metrics
-{
-    uint32_t vertexCount;
-};
-
 void ImGuiInit(GLFWwindow* window)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
+    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
@@ -40,23 +36,22 @@ void EditorImGuiRender(bool editor, float delta_time)
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    // Dockspace
+    // ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
     if (showDemo)
         ImGui::ShowDemoWindow(&showDemo);
 
     if (editor)
     {
-        if (ImGui::Begin("Dear ImGui Metrics/Debugger"))
+        if (ImGui::Begin("Metrics/Debugger"))
         {
+            Metrics& metrics = Application::Get().GetMetrics();
 
-            // Basic info
-            ImGui::Text("Dear ImGui %s", ImGui::GetVersion());
-
-            ImGui::Text("Application average %.3f ms/frame ( FPS)", delta_time * 1000.0f);
-            // ImGui::Text("%d vertices, %d indices (%d triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices,
-            //             io.MetricsRenderIndices / 3);
-            // ImGui::Text("%d visible windows, %d active allocations", io.MetricsRenderWindows,
-            // io.MetricsActiveAllocations);
-
+            ImGui::Text("Application average %.3f ms/frame (%.3f FPS)", delta_time * 1000.0f,
+                        1000.0f / (1000.0f * delta_time));
+            ImGui::Text("%d vertices, %d indices (%d triangles)", metrics.vertexCount, metrics.indicesCount,
+                        metrics.indicesCount / 3);
             ImGui::Separator();
             ImGui::End();
         }
