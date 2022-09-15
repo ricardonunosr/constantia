@@ -18,12 +18,6 @@
 
 FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
 {
-}
-FrameBuffersLayer::~FrameBuffersLayer()
-{
-}
-void FrameBuffersLayer::Init()
-{
     std::string basePathAssets = "./data/";
     cube = std::make_unique<Model>(basePathAssets + "cube/cube.obj");
     light = std::make_unique<Model>(basePathAssets + "cube/cube.obj");
@@ -71,6 +65,12 @@ void FrameBuffersLayer::Init()
 
     vao->AddBuffer(*vbo);
     vao->Unbind();
+}
+FrameBuffersLayer::~FrameBuffersLayer()
+{
+}
+void FrameBuffersLayer::Init()
+{
 }
 void FrameBuffersLayer::DeInit()
 {

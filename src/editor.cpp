@@ -11,6 +11,10 @@
 static bool examples = true;
 static bool showDemo = false;
 
+std::vector<Layer*>& layers = Application::Get().GetLayers();
+FrameBuffersLayer* framebuffers = nullptr;
+SponzaLayer* sponza = nullptr;
+
 void ImGuiInit(GLFWwindow* window)
 {
     IMGUI_CHECKVERSION();
@@ -21,10 +25,14 @@ void ImGuiInit(GLFWwindow* window)
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
+    framebuffers = new FrameBuffersLayer("FrameBuffers");
+    sponza = new SponzaLayer("Sponza");
 }
 
 void ImGuiCleanup()
 {
+    delete framebuffers;
+    delete sponza;
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -72,19 +80,13 @@ void EditorImGuiRender(bool editor, float delta_time)
             ImGui::Begin("Scene", &examples);
             if (ImGui::Button("FrameBuffers"))
             {
-                std::vector<Layer*>& layers = Application::Get().GetLayers();
                 layers.clear();
-                auto* layer = new FrameBuffersLayer("Framebuffers");
-                layer->Init();
-                layers.push_back(layer);
+                layers.push_back(framebuffers);
             }
             if (ImGui::Button("Sponza"))
             {
-                std::vector<Layer*>& layers = Application::Get().GetLayers();
                 layers.clear();
-                auto* layer = new SponzaLayer("Sponza");
-                layer->Init();
-                layers.push_back(layer);
+                layers.push_back(sponza);
             }
             ImGui::End();
         }

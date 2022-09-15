@@ -9,18 +9,18 @@
 
 SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
 {
-}
-
-SponzaLayer::~SponzaLayer() = default;
-
-void SponzaLayer::Init()
-{
     std::string basePathAssets = "./data/";
     sponza = std::make_unique<Model>(basePathAssets + "sponza/sponza.obj");
     light = std::make_unique<Model>(basePathAssets + "cube/cube.obj");
     shader = std::make_unique<Shader>(basePathAssets + "shaders/basic.vert", basePathAssets + "shaders/basic.frag");
     light_shader =
         std::make_unique<Shader>(basePathAssets + "shaders/light.vert", basePathAssets + "shaders/light.frag");
+}
+
+SponzaLayer::~SponzaLayer() = default;
+
+void SponzaLayer::Init()
+{
 }
 void SponzaLayer::DeInit()
 {
