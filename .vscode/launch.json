@@ -5,7 +5,7 @@
             "name": "(macOS) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/x64-Debug-Mac/constantia",
+            "program": "${workspaceFolder}/build/constantia",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

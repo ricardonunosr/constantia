@@ -1,6 +1,10 @@
 # Constantia
 
-This project is my personal general 3D engine to learn graphics and game engine related stuff. This project is originated from my first project in 3D engine development named [Valiance](https://github.com/ricardonunosr/valiance) that was very much copied/inspired from [Hazel](https://github.com/TheCherno/Hazel) and i wanted to start fresh and relearn the basics.
+This project is my personal general 3D engine to learn graphics and game engine
+related stuff. This project is originated from my first project in 3D engine
+development named [Valiance](https://github.com/ricardonunosr/valiance) that was
+very much copied/inspired from [Hazel](https://github.com/TheCherno/Hazel) and i
+wanted to start fresh and relearn the basics.
 
 Requeriments
 
@@ -17,6 +21,7 @@ Dependencies
 - [stb](https://github.com/nothings/stb)
 
 # Screenshots
+
 ![cube-screenshot](./data/cube-screenshot.png)
 ![sponza-screenshot](./data/sponza-screenshot.png)
 
@@ -40,11 +45,11 @@ git submodule update --init
 cd constantia
 ```
 
-- Use CMake to build repo ( using CMakePresets )
+- Use CMake to build repo
 
 ```bash
 mkdir build
-cmake --preset x64-Debug      #Change to x64-Debug-Mac for OSX build
-cmake --build --preset x64-Debug
-./build/x64-Debug/Debug/Constantia.exe
+cd build
+cmake .. 
+make
 ```

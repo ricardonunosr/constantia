@@ -3,7 +3,7 @@
         {
             "type": "shell",
             "label": "Build Engine",
-            "command": "cmake --build --preset x64-Debug-Mac",
+            "command": "cmake -S . -B build",
             "options": {
                 "cwd": "${workspaceFolder}"
             },
