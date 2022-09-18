@@ -8,8 +8,8 @@ class Texture
     Texture(const char* path, const char* type);
     ~Texture();
 
-    void Bind(unsigned int slot = 0);
-    void Unbind();
+    void Bind(unsigned int slot = 0) const;
+    static void Unbind();
 
     const std::string& GetPath()
     {

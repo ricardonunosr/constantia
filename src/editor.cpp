@@ -68,7 +68,7 @@ void EditorImGuiRender(bool editor, float delta_time)
         {
             if (ImGui::BeginMenu("Editor"))
             {
-                ImGui::MenuItem("Examples", NULL, &examples);
+                ImGui::MenuItem("Examples", nullptr, &examples);
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();

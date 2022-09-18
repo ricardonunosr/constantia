@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 
 enum class DataType
@@ -56,18 +57,18 @@ struct VertexBufferElement
 {
     const std::string name;
     DataType type;
-    uint32_t size;
-    bool normalized;
-    size_t offset;
+    uint32_t size{};
+    bool normalized{};
+    size_t offset{};
 
     VertexBufferElement() = default;
 
-    VertexBufferElement(const std::string& name, DataType type, bool normalized = false)
-        : name{name}, type{type}, size(DataTypeSize(type)), normalized{normalized}, offset{0}
+    VertexBufferElement(std::string  name, DataType type, bool normalized = false)
+        : name{std::move(name)}, type{type}, size(DataTypeSize(type)), normalized{normalized}, offset{0}
     {
     }
 
-    uint32_t GetComponentCount() const
+    [[nodiscard]] uint32_t GetComponentCount() const
     {
         switch (type)
         {
@@ -109,27 +110,26 @@ class VertexBufferLayout
         CalculateOffsetAndStride();
     };
 
-    const std::vector<VertexBufferElement>& GetElements() const
+    [[nodiscard]] const std::vector<VertexBufferElement>& GetElements() const
     {
         return elements;
     }
 
-    const unsigned int GetStride() const
+    [[nodiscard]] unsigned int GetStride() const
     {
         return stride;
     }
 
   private:
     std::vector<VertexBufferElement> elements;
-    unsigned int stride;
+    unsigned int stride{};
 
     void CalculateOffsetAndStride()
     {
         size_t offset = 0;
         stride = 0;
-        for (size_t i = 0; i < elements.size(); i++)
+        for (auto & element : elements)
         {
-            auto& element = elements[i];
             stride += element.size;
             element.offset = offset;
             offset += element.size;

@@ -17,12 +17,12 @@ class Window
         return window;
     }
 
-    int GetWidth() const
+    [[nodiscard]] int GetWidth() const
     {
         return width;
     }
 
-    int GetHeight() const
+    [[nodiscard]] int GetHeight() const
     {
         return height;
     }

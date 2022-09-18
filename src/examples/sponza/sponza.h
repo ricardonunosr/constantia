@@ -9,7 +9,7 @@ struct Shader;
 class SponzaLayer : public Layer
 {
   public:
-    SponzaLayer(const std::string& name);
+    explicit SponzaLayer(const std::string& name);
     ~SponzaLayer();
 
     void Init() override;

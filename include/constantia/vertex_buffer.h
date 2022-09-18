@@ -5,18 +5,18 @@
 class VertexBuffer
 {
   public:
-    VertexBuffer(const VertexBufferLayout& layout, const void* data, size_t size);
+    VertexBuffer(VertexBufferLayout layout, const void* data, size_t size);
     ~VertexBuffer();
 
-    void Bind();
-    void Unbind();
+    void Bind() const;
+    static void Unbind();
 
-    const VertexBufferLayout& GetLayout() const
+    [[nodiscard]] const VertexBufferLayout& GetLayout() const
     {
         return layout;
     }
 
   private:
-    unsigned int id;
+    unsigned int id{};
     VertexBufferLayout layout;
 };

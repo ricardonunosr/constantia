@@ -6,8 +6,8 @@ class IndexBuffer
     IndexBuffer(const void* indices, unsigned int count);
     ~IndexBuffer();
 
-    void Bind();
-    void Unbind();
+    void Bind() const;
+    static void Unbind();
 
   private:
     unsigned int id;

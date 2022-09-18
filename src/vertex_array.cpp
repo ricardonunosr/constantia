@@ -27,6 +27,8 @@ static GLenum ShaderDataTypeToOpenGLBaseType(DataType type)
         return GL_INT;
     case DataType::Bool:
         return GL_BOOL;
+    case DataType::None:
+        break;
     }
 
     return 0;
@@ -42,7 +44,7 @@ VertexArray::~VertexArray()
     glDeleteVertexArrays(1, &id);
 }
 
-void VertexArray::Bind()
+void VertexArray::Bind() const
 {
     glBindVertexArray(id);
 }
@@ -57,9 +59,8 @@ void VertexArray::AddBuffer(VertexBuffer& buffer)
     Bind();
     buffer.Bind();
     const auto& layout = buffer.GetLayout().GetElements();
-    for (size_t i = 0; i < layout.size(); i++)
+    for (const auto& element : layout)
     {
-        const auto& element = layout[i];
         glVertexAttribPointer(enabledAttribs, element.GetComponentCount(), ShaderDataTypeToOpenGLBaseType(element.type),
                               element.normalized, buffer.GetLayout().GetStride(), (const void*)element.offset);
         glEnableVertexAttribArray(enabledAttribs);

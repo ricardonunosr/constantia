@@ -10,7 +10,7 @@ struct VertexArray;
 class FrameBuffersLayer : public Layer
 {
   public:
-    FrameBuffersLayer(const std::string& name);
+    explicit FrameBuffersLayer(const std::string& name);
     ~FrameBuffersLayer();
 
     void Init() override;
@@ -25,5 +25,5 @@ class FrameBuffersLayer : public Layer
     std::unique_ptr<Shader> post_processing_shader;
     std::unique_ptr<Shader> light_shader;
     std::unique_ptr<VertexArray> vao;
-    unsigned int framebuffer, textureColorbuffer;
+    unsigned int framebuffer{}, textureColorbuffer{};
 };

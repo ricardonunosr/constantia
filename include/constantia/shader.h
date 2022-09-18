@@ -11,8 +11,8 @@ class Shader
   public:
     Shader(const std::string& vertexShaderPath, const std::string& fragmentShaderPath);
     ~Shader();
-    void Bind();
-    void Unbind();
+    void Bind() const;
+    static void Unbind();
 
     void SetUniform1i(const std::string& name, int value);
     void SetUniform1f(const std::string& name, float value);
@@ -22,11 +22,11 @@ class Shader
     void SetUniformMat4(const std::string& name, const glm::mat4& matrix);
 
   private:
-    unsigned int id;
+    unsigned int id{};
     std::unordered_map<std::string, int> uniform_cache;
 
-    std::string ReadShaderSourceFromFile(const std::string& shaderPath);
-    unsigned int CompileShader(unsigned int type, const char* source);
+    static std::string ReadShaderSourceFromFile(const std::string& shaderPath);
+    static unsigned int CompileShader(unsigned int type, const char* source);
     void LinkProgram(unsigned int vertexShader, unsigned int fragmentShader);
     void CacheUniforms();
     int GetLocationFromCache(const std::string& name);

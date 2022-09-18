@@ -1,11 +1,12 @@
 #pragma once
 
 #include <string>
+#include <utility>
 
 class Layer
 {
   public:
-    explicit Layer(const std::string& name) : name(name)
+    explicit Layer(std::string name) : name(std::move(name))
     {
     }
     ~Layer() = default;

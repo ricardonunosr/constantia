@@ -18,10 +18,10 @@ Shader::Shader(const std::string& vertexShaderPath, const std::string& fragmentS
 
 Shader::~Shader()
 {
-	glDeleteProgram(id);
+    glDeleteProgram(id);
 }
 
-void Shader::Bind()
+void Shader::Bind() const
 {
     glUseProgram(id);
 }
@@ -72,7 +72,7 @@ std::string Shader::ReadShaderSourceFromFile(const std::string& shaderPath)
     std::string result;
     std::ifstream filestream;
 
-    std::string line = "";
+    std::string line;
     filestream.open(shaderPath);
     if (filestream.is_open())
     {
@@ -97,7 +97,7 @@ unsigned int Shader::CompileShader(unsigned int type, const char* source)
     glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
 
-    // Check if shader was compiled successufully
+    // Check if shader was compiled successfully
     int success;
     int length;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
@@ -135,6 +135,7 @@ void Shader::LinkProgram(unsigned int vertexShader, unsigned int fragmentShader)
         glGetProgramInfoLog(id, 512, &length, message);
         spdlog::error("Failed to link shaders! {}", message);
         free(message);
+        return;
     }
 
     glUseProgram(id);
@@ -174,6 +175,5 @@ int Shader::GetLocationFromCache(const std::string& name)
     {
         spdlog::error("Couldn't find cached uniform:{} in shader with id {}", name, id);
     }
-
     return 0;
 }

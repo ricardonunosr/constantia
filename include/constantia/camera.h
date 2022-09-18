@@ -23,22 +23,22 @@ class Camera
         return projectionMatrix;
     }
 
-    const glm::vec3& GetCameraPosition() const
+    [[nodiscard]] const glm::vec3& GetCameraPosition() const
     {
         return cameraPos;
     }
 
-    bool GetEditorFlag() const
+    [[nodiscard]] bool GetEditorFlag() const
     {
         return editor;
     }
 
   private:
-    glm::vec3 cameraPos;
-    glm::vec3 cameraFront;
-    glm::vec3 cameraUp;
-    glm::mat4 viewMatrix;
-    glm::mat4 projectionMatrix;
+    glm::vec3 cameraPos{};
+    glm::vec3 cameraFront{};
+    glm::vec3 cameraUp{};
+    glm::mat4 viewMatrix{};
+    glm::mat4 projectionMatrix{};
 
     float lastX = 1280.0f / 2.0;
     float lastY = 720.0 / 2.0;

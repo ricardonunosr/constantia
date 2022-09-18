@@ -34,7 +34,7 @@ class Model
     };
 
   public:
-    Model(const std::string& path)
+    explicit Model(const std::string& path)
     {
         loadModel(path);
     }

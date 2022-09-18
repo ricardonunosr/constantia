@@ -8,8 +8,8 @@ class VertexArray
     VertexArray();
     ~VertexArray();
 
-    void Bind();
-    void Unbind();
+    void Bind() const;
+    static void Unbind();
 
     void AddBuffer(VertexBuffer& buffer);
 

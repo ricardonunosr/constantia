@@ -66,9 +66,7 @@ FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
     vao->AddBuffer(*vbo);
     vao->Unbind();
 }
-FrameBuffersLayer::~FrameBuffersLayer()
-{
-}
+FrameBuffersLayer::~FrameBuffersLayer() = default;
 void FrameBuffersLayer::Init()
 {
 }

@@ -2,7 +2,6 @@
 
 #include "core.h"
 #include <algorithm>
-#include <iostream>
 #include <unordered_map>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
@@ -11,11 +10,10 @@
 
 void Model::Draw(Shader& shader)
 {
-    for (int i = 1; i < meshes.size(); i++)
+    for (auto& mesh : meshes)
     {
-        auto& mesh = meshes[i];
         shader.Bind();
-        for (size_t i = 0; i < mesh.textures.size(); i++)
+        for (int i = 0; i < mesh.textures.size(); i++)
         {
             Texture& texture = mesh.textures[i];
             std::string name = texture.GetType();
@@ -29,7 +27,7 @@ void Model::Draw(Shader& shader)
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
         mesh.vao->Unbind();
         mesh.ibo->Unbind();
-        shader.Unbind();
+        Shader::Unbind();
     }
 }
 
@@ -150,9 +148,8 @@ void Model::loadModel(const std::string& path)
         }
     }
 
-    for (size_t g = 0; g < meshes.size(); g++)
+    for (auto& mesh : meshes)
     {
-        MeshMaterialGroup& mesh = meshes[g];
         // Check if MeshMaterialGroup has anything
         if (!mesh.vertices.empty())
         {
