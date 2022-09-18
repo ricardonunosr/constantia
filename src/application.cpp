@@ -62,6 +62,19 @@ void Application::Run()
             if (layers.empty())
                 EditorImGuiRender(editor, delta_time);
 
+            ImGui::ShowDemoWindow();
+
+            if (ImGui::Begin("Metrics/Debugger"))
+            {
+                spdlog::info("glfwGetTime Ms: {}", delta_time * 1000.0f);
+                ImGui::Text("Application average %.3f ms/frame (%.3f FPS)", delta_time * 1000.0f,
+                            1000.0f / (1000.0f * delta_time));
+                ImGui::Text("%d vertices, %d indices (%d triangles)", metrics.vertexCount, metrics.indicesCount,
+                            metrics.indicesCount / 3);
+                ImGui::Separator();
+
+                ImGui::End();
+            }
             if (ImGui::BeginMainMenuBar())
             {
                 if (ImGui::BeginMenu("Editor"))

@@ -3,17 +3,19 @@
 
 #include "application.h"
 #include "examples/framebuffers/framebuffers.h"
+#include "examples/ray-tracing/ray_tracing.h"
 #include "examples/sponza/sponza.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
 static bool examples = true;
-static bool showDemo = false;
+static bool showDemo = true;
 
 std::vector<Layer*>& layers = Application::Get().GetLayers();
 FrameBuffersLayer* framebuffers = nullptr;
 SponzaLayer* sponza = nullptr;
+RayTracingLayer* raytracing = nullptr;
 
 void ImGuiInit(GLFWwindow* window)
 {
@@ -33,6 +35,7 @@ void ImGuiCleanup()
 {
     delete framebuffers;
     delete sponza;
+    delete raytracing;
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -43,48 +46,25 @@ void EditorImGuiRender(bool editor, float delta_time)
     // Dockspace
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
-    if (showDemo)
-        ImGui::ShowDemoWindow(&showDemo);
-
     if (editor)
     {
-        if (ImGui::Begin("Metrics/Debugger"))
+        ImGui::SetNextWindowSize(ImVec2(430, 450), ImGuiCond_FirstUseEver);
+        ImGui::Begin("Scene");
+        if (ImGui::Button("FrameBuffers"))
         {
-            Metrics& metrics = Application::Get().GetMetrics();
-
-            ImGui::Text("Application average %.3f ms/frame (%.3f FPS)", delta_time * 1000.0f,
-                        1000.0f / (1000.0f * delta_time));
-            ImGui::Text("%d vertices, %d indices (%d triangles)", metrics.vertexCount, metrics.indicesCount,
-                        metrics.indicesCount / 3);
-            ImGui::Separator();
-            ImGui::End();
+            layers.clear();
+            layers.push_back(framebuffers);
         }
-
-        if (ImGui::BeginMainMenuBar())
+        if (ImGui::Button("Sponza"))
         {
-            if (ImGui::BeginMenu("Editor"))
-            {
-                ImGui::MenuItem("Examples", nullptr, &examples);
-                ImGui::EndMenu();
-            }
-            ImGui::EndMainMenuBar();
+            layers.clear();
+            layers.push_back(sponza);
         }
-
-        if (examples)
+        if (ImGui::Button("RayTracing"))
         {
-            ImGui::SetNextWindowSize(ImVec2(430, 450), ImGuiCond_FirstUseEver);
-            ImGui::Begin("Scene", &examples);
-            if (ImGui::Button("FrameBuffers"))
-            {
-                layers.clear();
-                layers.push_back(framebuffers);
-            }
-            if (ImGui::Button("Sponza"))
-            {
-                layers.clear();
-                layers.push_back(sponza);
-            }
-            ImGui::End();
+            layers.clear();
+            layers.push_back(raytracing);
         }
+        ImGui::End();
     }
 }

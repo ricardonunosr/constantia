@@ -27,7 +27,9 @@ Window::Window(int width, int height, const std::string& name) : width{width}, h
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
-
+    // Disable V-Sync
+    glfwSwapInterval(0);
+    
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0)
     {
