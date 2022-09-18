@@ -10,15 +10,16 @@
 
 void Model::Draw(Shader& shader)
 {
-    for (auto& mesh : meshes)
+    for (int i = 1; i < meshes.size(); i++)
     {
+        auto& mesh = meshes[i];
         shader.Bind();
-        for (int i = 0; i < mesh.textures.size(); i++)
+        for (uint32_t k = 0; k < mesh.textures.size(); k++)
         {
-            Texture& texture = mesh.textures[i];
+            Texture& texture = mesh.textures[k];
             std::string name = texture.GetType();
-            shader.SetUniform1i("material." + name, i);
-            texture.Bind(i);
+            shader.SetUniform1i("material." + name, k);
+            texture.Bind(k);
         }
         glActiveTexture(GL_TEXTURE0);
 

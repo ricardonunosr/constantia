@@ -3,6 +3,9 @@
 #include "application.h"
 #include "camera.h"
 #include "editor.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 #include <filesystem>
 #include <vector>
 
@@ -35,6 +38,7 @@ Application::~Application()
 
 void Application::Run()
 {
+    // Main Loop
     while (!window->ShouldClose())
     {
         float current_frame = glfwGetTime();
@@ -43,11 +47,38 @@ void Application::Run()
 
         camera->ProcessInput(Application::Get().GetWindow().GetNativeWindow(), delta_time);
         for (Layer* layer : layers)
-        {
             layer->Update(current_frame);
+
+        // UI Scope
+        {
+            bool editor = camera->GetEditorFlag();
+
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+            for (Layer* layer : layers)
+                layer->OnUIRender();
+
+            if (layers.empty())
+                EditorImGuiRender(editor, delta_time);
+
+            if (ImGui::BeginMainMenuBar())
+            {
+                if (ImGui::BeginMenu("Editor"))
+                {
+                    if (ImGui::Button("Go Back"))
+                    {
+                        layers.clear();
+                    }
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMainMenuBar();
+            }
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
-        bool editor = camera->GetEditorFlag();
-        EditorImGuiRender(editor, delta_time);
+
         window->Update();
     }
 }

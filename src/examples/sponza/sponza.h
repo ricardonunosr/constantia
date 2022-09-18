@@ -15,6 +15,7 @@ class SponzaLayer : public Layer
     void Init() override;
     void DeInit() override;
     void Update(float delta_time) override;
+    void OnUIRender() override;
 
   private:
     std::unique_ptr<Model> light;

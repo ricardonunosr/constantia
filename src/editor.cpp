@@ -21,7 +21,7 @@ void ImGuiInit(GLFWwindow* window)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
-    // io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
@@ -40,12 +40,8 @@ void ImGuiCleanup()
 
 void EditorImGuiRender(bool editor, float delta_time)
 {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
     // Dockspace
-    // ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
     if (showDemo)
         ImGui::ShowDemoWindow(&showDemo);
@@ -91,7 +87,4 @@ void EditorImGuiRender(bool editor, float delta_time)
             ImGui::End();
         }
     }
-
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

@@ -20,6 +20,9 @@ class Layer
     virtual void Update(float delta_time)
     {
     }
+    virtual void OnUIRender()
+    {
+    }
 
   private:
     std::string name;

@@ -1,11 +1,15 @@
 #include "sponza.h"
+
 #include "model.h"
-#include "renderer.h"
+
 #include "application.h"
 #include "camera.h"
+#include "imgui.h"
+
+#include "renderer.h"
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <GLFW/glfw3.h>
 
 SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
 {
@@ -25,6 +29,13 @@ void SponzaLayer::Init()
 void SponzaLayer::DeInit()
 {
 }
+
+void SponzaLayer::OnUIRender()
+{
+    ImGui::Begin("test");
+    ImGui::End();
+}
+
 void SponzaLayer::Update(float delta_time)
 {
     Renderer::SetClearColor(0.1f, 0.1f, 0.1f, 1.0f);
