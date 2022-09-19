@@ -10,14 +10,13 @@
 #include "imgui_impl_opengl3.h"
 
 static bool examples = true;
-static bool showDemo = true;
 
-std::vector<Layer*>& layers = Application::Get().GetLayers();
+std::vector<Layer*>& layers = Application::get().get_layers();
 FrameBuffersLayer* framebuffers = nullptr;
 SponzaLayer* sponza = nullptr;
 RayTracingLayer* raytracing = nullptr;
 
-void ImGuiInit(GLFWwindow* window)
+void im_gui_init(GLFWwindow* window)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -31,7 +30,7 @@ void ImGuiInit(GLFWwindow* window)
     sponza = new SponzaLayer("Sponza");
 }
 
-void ImGuiCleanup()
+void im_gui_cleanup()
 {
     delete framebuffers;
     delete sponza;
@@ -41,9 +40,8 @@ void ImGuiCleanup()
     ImGui::DestroyContext();
 }
 
-void EditorImGuiRender(bool editor, float delta_time)
+void editor_im_gui_render(bool editor)
 {
-    // Dockspace
     ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
     if (editor)

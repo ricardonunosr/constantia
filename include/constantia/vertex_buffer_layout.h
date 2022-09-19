@@ -20,7 +20,7 @@ enum class DataType
     Bool
 };
 
-static uint32_t DataTypeSize(DataType type)
+static uint32_t data_type_size(DataType type)
 {
     switch (type)
     {
@@ -51,7 +51,7 @@ static uint32_t DataTypeSize(DataType type)
     }
 
     return 0;
-};
+}
 
 struct VertexBufferElement
 {
@@ -63,12 +63,12 @@ struct VertexBufferElement
 
     VertexBufferElement() = default;
 
-    VertexBufferElement(std::string  name, DataType type, bool normalized = false)
-        : name{std::move(name)}, type{type}, size(DataTypeSize(type)), normalized{normalized}, offset{0}
+    VertexBufferElement(std::string name, DataType type, bool normalized = false)
+        : name{std::move(name)}, type{type}, size(data_type_size(type)), normalized{normalized}, offset{0}
     {
     }
 
-    [[nodiscard]] uint32_t GetComponentCount() const
+    [[nodiscard]] uint32_t get_component_count() const
     {
         switch (type)
         {
@@ -105,32 +105,32 @@ struct VertexBufferElement
 class VertexBufferLayout
 {
   public:
-    VertexBufferLayout(std::initializer_list<VertexBufferElement> elements) : elements{elements}
+    VertexBufferLayout(std::initializer_list<VertexBufferElement> elements) : m_elements{elements}
     {
-        CalculateOffsetAndStride();
+        calculate_offset_and_stride();
     };
 
-    [[nodiscard]] const std::vector<VertexBufferElement>& GetElements() const
+    [[nodiscard]] const std::vector<VertexBufferElement>& get_elements() const
     {
-        return elements;
+        return m_elements;
     }
 
-    [[nodiscard]] unsigned int GetStride() const
+    [[nodiscard]] unsigned int get_stride() const
     {
-        return stride;
+        return m_stride;
     }
 
   private:
-    std::vector<VertexBufferElement> elements;
-    unsigned int stride{};
+    std::vector<VertexBufferElement> m_elements;
+    unsigned int m_stride{};
 
-    void CalculateOffsetAndStride()
+    void calculate_offset_and_stride()
     {
         size_t offset = 0;
-        stride = 0;
-        for (auto & element : elements)
+        m_stride = 0;
+        for (auto& element : m_elements)
         {
-            stride += element.size;
+            m_stride += element.size;
             element.offset = offset;
             offset += element.size;
         }

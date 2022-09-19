@@ -6,8 +6,8 @@
 
 struct Metrics
 {
-    uint32_t vertexCount;
-    uint32_t indicesCount;
+    uint32_t vertex_count;
+    uint32_t indices_count;
 };
 
 class Application
@@ -16,48 +16,48 @@ class Application
     Application(int width, int height, const std::string& name);
     ~Application();
 
-    void Run();
+    void run();
 
-    static Application& Get()
+    static Application& get()
     {
-        return *instance;
+        return *s_instance;
     }
-    Window& GetWindow()
+    Window& get_window()
     {
-        return *window;
-    }
-
-    static Camera& GetCamera()
-    {
-        return *camera;
+        return *m_window;
     }
 
-    static std::vector<Layer*>& GetLayers()
+    static Camera& get_camera()
+    {
+        return *s_camera;
+    }
+
+    static std::vector<Layer*>& get_layers()
     {
         return layers;
     }
 
-    static Metrics& GetMetrics()
+    static Metrics& get_metrics()
     {
-        return metrics;
+        return s_metrics;
     }
 
-    static void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+    static void mouse_callback(GLFWwindow* /*window*/, double xpos, double ypos)
     {
-        camera->MoveCamera(xpos, ypos);
+        s_camera->move_camera(xpos, ypos);
     }
 
-    static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+    static void scroll_callback(GLFWwindow* /*window*/, double xoffset, double yoffset)
     {
-        camera->Zoom(xoffset, yoffset);
+        s_camera->zoom(xoffset, yoffset);
     }
 
   private:
-    static Application* instance;
-    std::unique_ptr<Window> window;
-    float delta_time = 0, lastFrame = 0;
-    static std::unique_ptr<Camera> camera;
-    static Metrics metrics;
+    static Application* s_instance;
+    std::unique_ptr<Window> m_window;
+    float m_delta_time = 0, m_last_frame = 0;
+    static std::unique_ptr<Camera> s_camera;
+    static Metrics s_metrics;
 
   protected:
     static std::vector<Layer*> layers;

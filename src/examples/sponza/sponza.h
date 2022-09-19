@@ -12,14 +12,14 @@ class SponzaLayer : public Layer
     explicit SponzaLayer(const std::string& name);
     ~SponzaLayer();
 
-    void Init() override;
-    void DeInit() override;
-    void Update(float delta_time) override;
-    void OnUIRender() override;
+    void init() override;
+    void de_init() override;
+    void update(float delta_time) override;
+    void on_ui_render() override;
 
   private:
-    std::unique_ptr<Model> light;
-    std::unique_ptr<Model> sponza;
-    std::unique_ptr<Shader> shader;
-    std::unique_ptr<Shader> light_shader;
+    std::unique_ptr<Model> m_light;
+    std::unique_ptr<Model> m_sponza;
+    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_light_shader;
 };

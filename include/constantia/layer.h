@@ -6,24 +6,24 @@
 class Layer
 {
   public:
-    explicit Layer(std::string name) : name(std::move(name))
+    explicit Layer(std::string name) : m_name(std::move(name))
     {
     }
     ~Layer() = default;
 
-    virtual void Init()
+    virtual void init()
     {
     }
-    virtual void DeInit()
+    virtual void de_init()
     {
     }
-    virtual void Update(float delta_time)
+    virtual void update(float delta_time)
     {
     }
-    virtual void OnUIRender()
+    virtual void on_ui_render()
     {
     }
 
   private:
-    std::string name;
+    std::string m_name;
 };

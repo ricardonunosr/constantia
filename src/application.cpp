@@ -9,21 +9,21 @@
 #include <filesystem>
 #include <vector>
 
-Application* Application::instance = nullptr;
-std::unique_ptr<Camera> Application::camera = nullptr;
+Application* Application::s_instance = nullptr;
+std::unique_ptr<Camera> Application::s_camera = nullptr;
 std::vector<Layer*> Application::layers;
-Metrics Application::metrics;
+Metrics Application::s_metrics;
 
 Application::Application(int width, int height, const std::string& name)
 {
-    instance = this;
-    window = std::make_unique<Window>(width, height, name);
-    metrics = {};
-    camera = std::make_unique<Camera>();
-    glfwSetScrollCallback(window->GetNativeWindow(), scroll_callback);
-    glfwSetCursorPosCallback(window->GetNativeWindow(), mouse_callback);
+    s_instance = this;
+    m_window = std::make_unique<Window>(width, height, name);
+    s_metrics = {};
+    s_camera = std::make_unique<Camera>();
+    glfwSetScrollCallback(m_window->get_native_window(), scroll_callback);
+    glfwSetCursorPosCallback(m_window->get_native_window(), mouse_callback);
 
-    ImGuiInit(window->GetNativeWindow());
+    im_gui_init(m_window->get_native_window());
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -33,44 +33,44 @@ Application::Application(int width, int height, const std::string& name)
 
 Application::~Application()
 {
-    ImGuiCleanup();
+    im_gui_cleanup();
 }
 
-void Application::Run()
+void Application::run()
 {
     // Main Loop
-    while (!window->ShouldClose())
+    while (!m_window->should_close())
     {
         float current_frame = glfwGetTime();
-        delta_time = current_frame - lastFrame;
-        lastFrame = current_frame;
+        m_delta_time = current_frame - m_last_frame;
+        m_last_frame = current_frame;
 
-        camera->ProcessInput(Application::Get().GetWindow().GetNativeWindow(), delta_time);
+        s_camera->process_input(Application::get().get_window().get_native_window(), m_delta_time);
         for (Layer* layer : layers)
-            layer->Update(current_frame);
+            layer->update(current_frame);
 
         // UI Scope
         {
-            bool editor = camera->GetEditorFlag();
+            bool editor = s_camera->get_editor_flag();
 
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             for (Layer* layer : layers)
-                layer->OnUIRender();
+                layer->on_ui_render();
 
             if (layers.empty())
-                EditorImGuiRender(editor, delta_time);
+                editor_im_gui_render(editor);
 
             ImGui::ShowDemoWindow();
 
             if (ImGui::Begin("Metrics/Debugger"))
             {
-                spdlog::info("glfwGetTime Ms: {}", delta_time * 1000.0f);
-                ImGui::Text("Application average %.3f ms/frame (%.3f FPS)", delta_time * 1000.0f,
-                            1000.0f / (1000.0f * delta_time));
-                ImGui::Text("%d vertices, %d indices (%d triangles)", metrics.vertexCount, metrics.indicesCount,
-                            metrics.indicesCount / 3);
+                spdlog::info("glfwGetTime Ms: {}", m_delta_time * 1000.0f);
+                ImGui::Text("Application average %.3f ms/frame (%.3f FPS)", m_delta_time * 1000.0f,
+                            1000.0f / (1000.0f * m_delta_time));
+                ImGui::Text("%d vertices, %d indices (%d triangles)", s_metrics.vertex_count, s_metrics.indices_count,
+                            s_metrics.indices_count / 3);
                 ImGui::Separator();
 
                 ImGui::End();
@@ -92,6 +92,6 @@ void Application::Run()
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
 
-        window->Update();
+        m_window->update();
     }
 }

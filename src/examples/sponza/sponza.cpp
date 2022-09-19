@@ -13,63 +13,64 @@
 
 SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
 {
-    std::string basePathAssets = "./data/";
-    sponza = std::make_unique<Model>(basePathAssets + "sponza/sponza.obj");
-    light = std::make_unique<Model>(basePathAssets + "cube/cube.obj");
-    shader = std::make_unique<Shader>(basePathAssets + "shaders/basic.vert", basePathAssets + "shaders/basic.frag");
-    light_shader =
-        std::make_unique<Shader>(basePathAssets + "shaders/light.vert", basePathAssets + "shaders/light.frag");
+    std::string base_path_assets = "./data/";
+    m_sponza = std::make_unique<Model>(base_path_assets + "sponza/sponza.obj");
+    m_light = std::make_unique<Model>(base_path_assets + "cube/cube.obj");
+    m_shader =
+        std::make_unique<Shader>(base_path_assets + "shaders/basic.vert", base_path_assets + "shaders/basic.frag");
+    m_light_shader =
+        std::make_unique<Shader>(base_path_assets + "shaders/light.vert", base_path_assets + "shaders/light.frag");
 }
 
 SponzaLayer::~SponzaLayer() = default;
 
-void SponzaLayer::Init()
+void SponzaLayer::init()
 {
 }
-void SponzaLayer::DeInit()
+void SponzaLayer::de_init()
 {
 }
 
-void SponzaLayer::OnUIRender()
+void SponzaLayer::on_ui_render()
 {
     ImGui::Begin("test");
     ImGui::End();
 }
 
-void SponzaLayer::Update(float delta_time)
+void SponzaLayer::update(float /*delta_time*/)
 {
-    Renderer::SetClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    Renderer::set_clear_color(0.1f, 0.1f, 0.1f, 1.0f);
 
-    float lightX = 2.0f * sin(glfwGetTime());
-    float lightY = 1.0f;
-    float lightZ = 1.5f * cos(glfwGetTime());
-    glm::vec3 lightPos = glm::vec3(lightX, lightY, lightZ);
+    float light_x = 2.0f * sin(glfwGetTime());
+    float light_y = 1.0f;
+    float light_z = 1.5f * cos(glfwGetTime());
+    glm::vec3 light_pos = glm::vec3(light_x, light_y, light_z);
 
-    shader->Bind();
+    m_shader->bind();
 
-    Camera& camera = Application::Get().GetCamera();
-    shader->SetUniformMat4("projection", camera.GetProjectionMatrix());
-    shader->SetUniformMat4("view", camera.GetViewMatrix());
-    shader->SetUniform3f("viewPos", camera.GetCameraPosition());
-    shader->SetUniform1f("material.shininess", 64.0f);
+    Camera& camera = Application::get().get_camera();
+    m_shader->set_uniform_mat4("projection", camera.get_projection_matrix());
+    m_shader->set_uniform_mat4("view", camera.get_view_matrix());
+    m_shader->set_uniform3f("viewPos", camera.get_camera_position());
+    m_shader->set_uniform1f("material.shininess", 64.0f);
 
-    shader->SetUniform3f("light.position", lightPos);
-    shader->SetUniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
-    shader->SetUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
-    shader->SetUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
+    m_shader->set_uniform3f("light.position", light_pos);
+    m_shader->set_uniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
+    m_shader->set_uniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
+    m_shader->set_uniform3f("light.specular", 1.0f, 1.0f, 1.0f);
 
-    shader->SetUniform1f("light.constant", 1.0f);
-    shader->SetUniform1f("light.linear", 0.09f);
-    shader->SetUniform1f("light.quadratic", 0.032f);
+    m_shader->set_uniform1f("light.constant", 1.0f);
+    m_shader->set_uniform1f("light.linear", 0.09f);
+    m_shader->set_uniform1f("light.quadratic", 0.032f);
 
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(0.02f));
-    shader->SetUniformMat4("model", model);
-    sponza->Draw(*shader);
+    m_shader->set_uniform_mat4("model", model);
+    m_sponza->draw(*m_shader);
 
-    glm::mat4 lightTransform = glm::mat4(1.0f);
-    lightTransform = glm::translate(lightTransform, lightPos);
-    lightTransform = glm::scale(lightTransform, glm::vec3(0.2f));
-    light_shader->SetUniformMat4("model", lightTransform);
-    light->Draw(*light_shader);
+    glm::mat4 light_transform = glm::mat4(1.0f);
+    light_transform = glm::translate(light_transform, light_pos);
+    light_transform = glm::scale(light_transform, glm::vec3(0.2f));
+    m_light_shader->set_uniform_mat4("model", light_transform);
+    m_light->draw(*m_light_shader);
 }

@@ -6,10 +6,10 @@ class IndexBuffer
     IndexBuffer(const void* indices, unsigned int count);
     ~IndexBuffer();
 
-    void Bind() const;
-    static void Unbind();
+    void bind() const;
+    static void unbind();
 
   private:
-    unsigned int id;
-    unsigned int count;
+    unsigned int m_id;
+    unsigned int m_count;
 };

@@ -9,25 +9,25 @@ class Window
     Window(int width, int height, const std::string& name);
     ~Window();
 
-    void Update();
-    bool ShouldClose();
+    void update();
+    bool should_close();
 
-    GLFWwindow* GetNativeWindow()
+    GLFWwindow* get_native_window()
     {
-        return window;
+        return m_window;
     }
 
-    [[nodiscard]] int GetWidth() const
+    [[nodiscard]] int get_width() const
     {
-        return width;
+        return m_width;
     }
 
-    [[nodiscard]] int GetHeight() const
+    [[nodiscard]] int get_height() const
     {
-        return height;
+        return m_height;
     }
 
   private:
-    GLFWwindow* window;
-    int width, height;
+    GLFWwindow* m_window;
+    int m_width, m_height;
 };

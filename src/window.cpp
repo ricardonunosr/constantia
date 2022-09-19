@@ -2,34 +2,34 @@
 
 #include "window.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow* /*window*/, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
 
-Window::Window(int width, int height, const std::string& name) : width{width}, height{height}
+Window::Window(int width, int height, const std::string& name) : m_width{width}, m_height{height}
 {
-    if (!glfwInit())
+    if (glfwInit() == 0)
         return;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);           // Required on Mac
-    window = glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
-    if (!window)
+    m_window = glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
+    if (m_window == nullptr)
     {
         glfwTerminate();
         return;
     }
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
+    glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     /* Make the window's context current */
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(m_window);
     // Disable V-Sync
     glfwSwapInterval(0);
-    
+
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0)
     {
@@ -46,13 +46,13 @@ Window::~Window()
     glfwTerminate();
 }
 
-void Window::Update()
+void Window::update()
 {
     glfwPollEvents();
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(m_window);
 }
 
-bool Window::ShouldClose()
+bool Window::should_close()
 {
-    return glfwWindowShouldClose(window);
+    return glfwWindowShouldClose(m_window) != 0;
 }

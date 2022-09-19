@@ -8,15 +8,15 @@ class VertexBuffer
     VertexBuffer(VertexBufferLayout layout, const void* data, size_t size);
     ~VertexBuffer();
 
-    void Bind() const;
-    static void Unbind();
+    void bind() const;
+    static void unbind();
 
-    [[nodiscard]] const VertexBufferLayout& GetLayout() const
+    [[nodiscard]] const VertexBufferLayout& get_layout() const
     {
-        return layout;
+        return m_layout;
     }
 
   private:
-    unsigned int id{};
-    VertexBufferLayout layout;
+    unsigned int m_id{};
+    VertexBufferLayout m_layout;
 };

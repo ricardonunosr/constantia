@@ -13,17 +13,17 @@ class FrameBuffersLayer : public Layer
     explicit FrameBuffersLayer(const std::string& name);
     ~FrameBuffersLayer();
 
-    void Init() override;
-    void DeInit() override;
-    void Update(float delta_time) override;
+    void init() override;
+    void de_init() override;
+    void update(float delta_time) override;
 
   private:
-    std::unique_ptr<Model> light;
-    std::unique_ptr<Model> cube;
-    std::unique_ptr<Shader> shader;
-    std::unique_ptr<Shader> outline_shader;
-    std::unique_ptr<Shader> post_processing_shader;
-    std::unique_ptr<Shader> light_shader;
-    std::unique_ptr<VertexArray> vao;
-    unsigned int framebuffer{}, textureColorbuffer{};
+    std::unique_ptr<Model> m_light;
+    std::unique_ptr<Model> m_cube;
+    std::unique_ptr<Shader> m_shader;
+    std::unique_ptr<Shader> m_outline_shader;
+    std::unique_ptr<Shader> m_post_processing_shader;
+    std::unique_ptr<Shader> m_light_shader;
+    std::unique_ptr<VertexArray> m_vao;
+    unsigned int m_framebuffer{}, m_texture_colorbuffer{};
 };

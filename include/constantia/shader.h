@@ -9,25 +9,25 @@
 class Shader
 {
   public:
-    Shader(const std::string& vertexShaderPath, const std::string& fragmentShaderPath);
+    Shader(const std::string& vertex_shader_path, const std::string& fragment_shader_path);
     ~Shader();
-    void Bind() const;
-    static void Unbind();
+    void bind() const;
+    static void unbind();
 
-    void SetUniform1i(const std::string& name, int value);
-    void SetUniform1f(const std::string& name, float value);
-    void SetUniform3f(const std::string& name, float v0, float v1, float v2);
-    void SetUniform3f(const std::string& name, const glm::vec3& value);
-    void SetUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
-    void SetUniformMat4(const std::string& name, const glm::mat4& matrix);
+    void set_uniform1i(const std::string& name, int value);
+    void set_uniform1f(const std::string& name, float value);
+    void set_uniform3f(const std::string& name, float v0, float v1, float v2);
+    void set_uniform3f(const std::string& name, const glm::vec3& value);
+    void set_uniform4f(const std::string& name, float v0, float v1, float v2, float v3);
+    void set_uniform_mat4(const std::string& name, const glm::mat4& matrix);
 
   private:
-    unsigned int id{};
-    std::unordered_map<std::string, int> uniform_cache;
+    unsigned int m_id{};
+    std::unordered_map<std::string, int> m_uniform_cache;
 
-    static std::string ReadShaderSourceFromFile(const std::string& shaderPath);
-    static unsigned int CompileShader(unsigned int type, const char* source);
-    void LinkProgram(unsigned int vertexShader, unsigned int fragmentShader);
-    void CacheUniforms();
-    int GetLocationFromCache(const std::string& name);
+    static std::string read_shader_source_from_file(const std::string& shader_path);
+    static unsigned int compile_shader(unsigned int type, const char* source);
+    void link_program(unsigned int vertex_shader, unsigned int fragment_shader);
+    void cache_uniforms();
+    int get_location_from_cache(const std::string& name);
 };

@@ -9,9 +9,9 @@ class RayTracingLayer : public Layer
     explicit RayTracingLayer(const std::string& name);
     ~RayTracingLayer();
 
-    void Init() override;
-    void DeInit() override;
-    void Update(float delta_time) override;
+    void init() override;
+    void de_init() override;
+    void update(float delta_time) override;
 
   private:
 };

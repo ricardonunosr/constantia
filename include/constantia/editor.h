@@ -2,6 +2,6 @@
 
 struct GLFWwindow;
 
-void ImGuiInit(GLFWwindow* window);
-void ImGuiCleanup();
-void EditorImGuiRender(bool editor, float delta_time);
+void im_gui_init(GLFWwindow* window);
+void im_gui_cleanup();
+void editor_im_gui_render(bool editor);

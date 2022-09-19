@@ -8,12 +8,12 @@ class VertexArray
     VertexArray();
     ~VertexArray();
 
-    void Bind() const;
-    static void Unbind();
+    void bind() const;
+    static void unbind();
 
-    void AddBuffer(VertexBuffer& buffer);
+    void add_buffer(VertexBuffer& buffer);
 
   private:
-    unsigned int id;
-    unsigned int enabledAttribs;
+    unsigned int m_id;
+    unsigned int m_enabled_attribs;
 };

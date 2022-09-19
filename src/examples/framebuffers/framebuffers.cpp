@@ -18,30 +18,31 @@
 
 FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
 {
-    std::string basePathAssets = "./data/";
-    cube = std::make_unique<Model>(basePathAssets + "cube/cube.obj");
-    light = std::make_unique<Model>(basePathAssets + "cube/cube.obj");
-    outline_shader =
-        std::make_unique<Shader>(basePathAssets + "shaders/light.vert", basePathAssets + "shaders/outline.frag");
-    post_processing_shader = std::make_unique<Shader>(basePathAssets + "shaders/postprocessing.vert",
-                                                      basePathAssets + "shaders/postprocessing.frag");
-    shader = std::make_unique<Shader>(basePathAssets + "shaders/basic.vert", basePathAssets + "shaders/basic.frag");
-    light_shader =
-        std::make_unique<Shader>(basePathAssets + "shaders/light.vert", basePathAssets + "shaders/light.frag");
+    std::string base_path_assets = "./data/";
+    m_cube = std::make_unique<Model>(base_path_assets + "cube/cube.obj");
+    m_light = std::make_unique<Model>(base_path_assets + "cube/cube.obj");
+    m_outline_shader =
+        std::make_unique<Shader>(base_path_assets + "shaders/light.vert", base_path_assets + "shaders/outline.frag");
+    m_post_processing_shader = std::make_unique<Shader>(base_path_assets + "shaders/postprocessing.vert",
+                                                        base_path_assets + "shaders/postprocessing.frag");
+    m_shader =
+        std::make_unique<Shader>(base_path_assets + "shaders/basic.vert", base_path_assets + "shaders/basic.frag");
+    m_light_shader =
+        std::make_unique<Shader>(base_path_assets + "shaders/light.vert", base_path_assets + "shaders/light.frag");
 
-    glGenFramebuffers(1, &framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glGenFramebuffers(1, &m_framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
 
     // generate texture
-    glGenTextures(1, &textureColorbuffer);
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glGenTextures(1, &m_texture_colorbuffer);
+    glBindTexture(GL_TEXTURE_2D, m_texture_colorbuffer);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1280, 720, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // attach it to currently bound framebuffer object
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorbuffer, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture_colorbuffer, 0);
 
     unsigned int rbo;
     glGenRenderbuffers(1, &rbo);
@@ -55,83 +56,84 @@ FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
         spdlog::error("ERROR::FRAMEBUFFER:: Framebuffer is not complete!");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    float quadVertices[] = {// positions   // texCoords
-                            -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 1.0f, 0.0f,
-                            -1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  -1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f};
+    float quad_vertices[] = {// positions   // texCoords
+                             -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 1.0f, 0.0f,
+                             -1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  -1.0f, 1.0f, 0.0f, 1.0f, 1.0f,  1.0f, 1.0f};
 
-    vao = std::make_unique<VertexArray>();
+    m_vao = std::make_unique<VertexArray>();
     VertexBufferLayout layout = {{"aPos", DataType::Float2}, {"aTexCoords", DataType::Float2}};
-    std::unique_ptr<VertexBuffer> vbo = std::make_unique<VertexBuffer>(layout, &quadVertices[0], sizeof(quadVertices));
+    std::unique_ptr<VertexBuffer> vbo =
+        std::make_unique<VertexBuffer>(layout, &quad_vertices[0], sizeof(quad_vertices));
 
-    vao->AddBuffer(*vbo);
-    vao->Unbind();
+    m_vao->add_buffer(*vbo);
+    m_vao->unbind();
 }
 FrameBuffersLayer::~FrameBuffersLayer() = default;
-void FrameBuffersLayer::Init()
+void FrameBuffersLayer::init()
 {
 }
-void FrameBuffersLayer::DeInit()
+void FrameBuffersLayer::de_init()
 {
 }
-void FrameBuffersLayer::Update(float delta_time)
+void FrameBuffersLayer::update(float /*delta_time*/)
 {
     // First pass
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    Renderer::SetClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+    Renderer::set_clear_color(0.1f, 0.1f, 0.1f, 1.0f);
 
-    float lightX = 2.0f * sin(glfwGetTime());
-    float lightY = 1.0f;
-    float lightZ = 1.5f * cos(glfwGetTime());
-    glm::vec3 lightPos = glm::vec3(lightX, lightY, lightZ);
+    float light_x = 2.0f * sin(glfwGetTime());
+    float light_y = 1.0f;
+    float light_z = 1.5f * cos(glfwGetTime());
+    glm::vec3 light_pos = glm::vec3(light_x, light_y, light_z);
 
-    Camera& camera = Application::Get().GetCamera();
-    shader->Bind();
-    shader->SetUniformMat4("projection", camera.GetProjectionMatrix());
-    shader->SetUniformMat4("view", camera.GetViewMatrix());
-    shader->SetUniform3f("viewPos", camera.GetCameraPosition());
-    shader->SetUniform1f("material.shininess", 64.0f);
-    shader->SetUniform3f("light.position", lightPos);
-    shader->SetUniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
-    shader->SetUniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
-    shader->SetUniform3f("light.specular", 1.0f, 1.0f, 1.0f);
-    shader->SetUniform1f("light.constant", 1.0f);
-    shader->SetUniform1f("light.linear", 0.09f);
-    shader->SetUniform1f("light.quadratic", 0.032f);
+    Camera& camera = Application::get().get_camera();
+    m_shader->bind();
+    m_shader->set_uniform_mat4("projection", camera.get_projection_matrix());
+    m_shader->set_uniform_mat4("view", camera.get_view_matrix());
+    m_shader->set_uniform3f("viewPos", camera.get_camera_position());
+    m_shader->set_uniform1f("material.shininess", 64.0f);
+    m_shader->set_uniform3f("light.position", light_pos);
+    m_shader->set_uniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
+    m_shader->set_uniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
+    m_shader->set_uniform3f("light.specular", 1.0f, 1.0f, 1.0f);
+    m_shader->set_uniform1f("light.constant", 1.0f);
+    m_shader->set_uniform1f("light.linear", 0.09f);
+    m_shader->set_uniform1f("light.quadratic", 0.032f);
 
     glStencilMask(0x00);
-    shader->Bind();
+    m_shader->bind();
     glm::mat4 model = glm::mat4(1.0f);
-    shader->SetUniformMat4("model", model);
-    cube->Draw(*shader);
+    m_shader->set_uniform_mat4("model", model);
+    m_cube->draw(*m_shader);
 
-    light_shader->Bind();
-    light_shader->SetUniformMat4("projection", camera.GetProjectionMatrix());
-    light_shader->SetUniformMat4("view", camera.GetViewMatrix());
+    m_light_shader->bind();
+    m_light_shader->set_uniform_mat4("projection", camera.get_projection_matrix());
+    m_light_shader->set_uniform_mat4("view", camera.get_view_matrix());
 
     glm::mat4 light_transform = glm::mat4(1.0f);
-    light_transform = glm::translate(light_transform, lightPos);
+    light_transform = glm::translate(light_transform, light_pos);
     light_transform = glm::scale(light_transform, glm::vec3(0.2f));
-    light_shader->SetUniformMat4("model", light_transform);
+    m_light_shader->set_uniform_mat4("model", light_transform);
 
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
-    light->Draw(*light_shader);
+    m_light->draw(*m_light_shader);
 
     // Scaled(outline)
-    outline_shader->Bind();
-    outline_shader->SetUniformMat4("projection", camera.GetProjectionMatrix());
-    outline_shader->SetUniformMat4("view", camera.GetViewMatrix());
+    m_outline_shader->bind();
+    m_outline_shader->set_uniform_mat4("projection", camera.get_projection_matrix());
+    m_outline_shader->set_uniform_mat4("view", camera.get_view_matrix());
 
-    glm::mat4 lightOutlineTransform = glm::mat4(1.0f);
-    lightOutlineTransform = glm::translate(lightOutlineTransform, lightPos);
-    lightOutlineTransform = glm::scale(lightOutlineTransform, glm::vec3(0.24f));
-    outline_shader->SetUniformMat4("model", lightOutlineTransform);
+    glm::mat4 light_outline_transform = glm::mat4(1.0f);
+    light_outline_transform = glm::translate(light_outline_transform, light_pos);
+    light_outline_transform = glm::scale(light_outline_transform, glm::vec3(0.24f));
+    m_outline_shader->set_uniform_mat4("model", light_outline_transform);
 
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
     glStencilMask(0x00);
     glDisable(GL_DEPTH_TEST);
 
-    light->Draw(*outline_shader);
+    m_light->draw(*m_outline_shader);
     glStencilMask(0xFF);
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glEnable(GL_DEPTH_TEST);
@@ -141,10 +143,10 @@ void FrameBuffersLayer::Update(float delta_time)
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    post_processing_shader->Bind();
-    vao->Bind();
+    m_post_processing_shader->bind();
+    m_vao->bind();
     glDisable(GL_DEPTH_TEST);
-    glBindTexture(GL_TEXTURE_2D, textureColorbuffer);
+    glBindTexture(GL_TEXTURE_2D, m_texture_colorbuffer);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glEnable(GL_DEPTH_TEST);
 }

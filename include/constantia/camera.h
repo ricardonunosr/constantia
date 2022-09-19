@@ -9,45 +9,45 @@ class Camera
   public:
     Camera();
 
-    void ProcessInput(GLFWwindow* window, float deltaTime);
-    void MoveCamera(double xpos, double ypos);
-    void Zoom(double xoffset, double yoffset);
+    void process_input(GLFWwindow* window, float delta_time);
+    void move_camera(double xpos, double ypos);
+    void zoom(double xoffset, double yoffset);
 
-    glm::mat4 GetViewMatrix()
+    glm::mat4 get_view_matrix()
     {
-        return viewMatrix;
+        return m_view_matrix;
     }
 
-    glm::mat4 GetProjectionMatrix()
+    glm::mat4 get_projection_matrix()
     {
-        return projectionMatrix;
+        return m_projection_matrix;
     }
 
-    [[nodiscard]] const glm::vec3& GetCameraPosition() const
+    [[nodiscard]] const glm::vec3& get_camera_position() const
     {
-        return cameraPos;
+        return m_camera_pos;
     }
 
-    [[nodiscard]] bool GetEditorFlag() const
+    [[nodiscard]] bool get_editor_flag() const
     {
-        return editor;
+        return m_editor;
     }
 
   private:
-    glm::vec3 cameraPos{};
-    glm::vec3 cameraFront{};
-    glm::vec3 cameraUp{};
-    glm::mat4 viewMatrix{};
-    glm::mat4 projectionMatrix{};
+    glm::vec3 m_camera_pos{};
+    glm::vec3 m_camera_front{};
+    glm::vec3 m_camera_up{};
+    glm::mat4 m_view_matrix{};
+    glm::mat4 m_projection_matrix{};
 
-    float lastX = 1280.0f / 2.0;
-    float lastY = 720.0 / 2.0;
-    float fov = 45.0f;
+    float m_last_x = 1280.0f / 2.0;
+    float m_last_y = 720.0 / 2.0;
+    float m_fov = 45.0f;
 
-    bool enabled = false;
-    bool editor = true;
+    bool m_enabled = false;
+    bool m_editor = true;
 
-    bool firstMouse = true;
-    float yaw = 0.0f;
-    float pitch = 0.0f;
+    bool m_first_mouse = true;
+    float m_yaw = 0.0f;
+    float m_pitch = 0.0f;
 };

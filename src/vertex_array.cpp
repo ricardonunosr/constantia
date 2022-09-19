@@ -1,7 +1,7 @@
 #include "vertex_array.h"
 #include "core.h"
 
-static GLenum ShaderDataTypeToOpenGLBaseType(DataType type)
+static GLenum shader_data_type_to_open_gl_base_type(DataType type)
 {
     switch (type)
     {
@@ -34,36 +34,37 @@ static GLenum ShaderDataTypeToOpenGLBaseType(DataType type)
     return 0;
 }
 
-VertexArray::VertexArray() : id{0}, enabledAttribs{0}
+VertexArray::VertexArray() : m_id{0}, m_enabled_attribs{0}
 {
-    glGenVertexArrays(1, &id);
+    glGenVertexArrays(1, &m_id);
 }
 
 VertexArray::~VertexArray()
 {
-    glDeleteVertexArrays(1, &id);
+    glDeleteVertexArrays(1, &m_id);
 }
 
-void VertexArray::Bind() const
+void VertexArray::bind() const
 {
-    glBindVertexArray(id);
+    glBindVertexArray(m_id);
 }
 
-void VertexArray::Unbind()
+void VertexArray::unbind()
 {
     glBindVertexArray(0);
 }
 
-void VertexArray::AddBuffer(VertexBuffer& buffer)
+void VertexArray::add_buffer(VertexBuffer& buffer)
 {
-    Bind();
-    buffer.Bind();
-    const auto& layout = buffer.GetLayout().GetElements();
+    bind();
+    buffer.bind();
+    const auto& layout = buffer.get_layout().get_elements();
     for (const auto& element : layout)
     {
-        glVertexAttribPointer(enabledAttribs, element.GetComponentCount(), ShaderDataTypeToOpenGLBaseType(element.type),
-                              element.normalized, buffer.GetLayout().GetStride(), (const void*)element.offset);
-        glEnableVertexAttribArray(enabledAttribs);
-        enabledAttribs++;
+        glVertexAttribPointer(m_enabled_attribs, element.get_component_count(),
+                              shader_data_type_to_open_gl_base_type(element.type), element.normalized,
+                              buffer.get_layout().get_stride(), (const void*)element.offset);
+        glEnableVertexAttribArray(m_enabled_attribs);
+        m_enabled_attribs++;
     }
 }

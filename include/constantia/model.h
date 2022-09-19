@@ -12,11 +12,11 @@ struct Vertex
 {
     glm::vec3 position;
     glm::vec3 normal;
-    glm::vec2 texCoords;
+    glm::vec2 tex_coords;
 
     bool operator==(const Vertex& other) const
     {
-        return position == other.position && texCoords == other.texCoords;
+        return position == other.position && tex_coords == other.tex_coords;
     }
 };
 
@@ -36,14 +36,14 @@ class Model
   public:
     explicit Model(const std::string& path)
     {
-        loadModel(path);
+        load_model(path);
     }
 
-    void Draw(Shader& shader);
+    void draw(Shader& shader);
 
   private:
-    std::vector<MeshMaterialGroup> meshes = {};
-    std::string directory;
+    std::vector<MeshMaterialGroup> m_meshes = {};
+    std::string m_directory;
 
-    void loadModel(const std::string& path);
+    void load_model(const std::string& path);
 };

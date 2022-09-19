@@ -8,34 +8,34 @@ class Texture
     Texture(const char* path, const char* type);
     ~Texture();
 
-    void Bind(unsigned int slot = 0) const;
-    static void Unbind();
+    void bind(unsigned int slot = 0) const;
+    static void unbind();
 
-    const std::string& GetPath()
+    const std::string& get_path()
     {
-        return path;
+        return m_path;
     }
 
-    const std::string& GetType()
+    const std::string& get_type()
     {
-        return type;
+        return m_type;
     }
 
-    void SetPath(const std::string& newPath)
+    void set_path(const std::string& new_path)
     {
-        path = newPath;
+        m_path = new_path;
     }
 
-    void SetType(const std::string& typeName)
+    void set_type(const std::string& type_name)
     {
-        type = typeName;
+        m_type = type_name;
     }
 
   private:
-    unsigned int id;
-    int width;
-    int height;
-    int nrChannels;
-    std::string path;
-    std::string type;
+    unsigned int m_id;
+    int m_width;
+    int m_height;
+    int m_nr_channels;
+    std::string m_path;
+    std::string m_type;
 };
