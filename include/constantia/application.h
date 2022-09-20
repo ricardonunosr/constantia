@@ -58,6 +58,7 @@ class Application
     float m_delta_time = 0, m_last_frame = 0;
     static std::unique_ptr<Camera> s_camera;
     static Metrics s_metrics;
+    unsigned int m_framebuffer, m_rbo, m_texture_colorbuffer;
 
   protected:
     static std::vector<Layer*> layers;

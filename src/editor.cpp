@@ -12,9 +12,9 @@
 static bool examples = true;
 
 std::vector<Layer*>& layers = Application::get().get_layers();
-FrameBuffersLayer* framebuffers = nullptr;
 SponzaLayer* sponza = nullptr;
-RayTracingLayer* raytracing = nullptr;
+// FrameBuffersLayer* framebuffers = nullptr;
+// RayTracingLayer* raytracing = nullptr;
 
 void im_gui_init(GLFWwindow* window)
 {
@@ -26,15 +26,15 @@ void im_gui_init(GLFWwindow* window)
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
-    framebuffers = new FrameBuffersLayer("FrameBuffers");
+    // framebuffers = new FrameBuffersLayer("FrameBuffers");
     sponza = new SponzaLayer("Sponza");
 }
 
 void im_gui_cleanup()
 {
-    delete framebuffers;
+    // delete framebuffers;
     delete sponza;
-    delete raytracing;
+    // delete raytracing;
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -51,7 +51,7 @@ void editor_im_gui_render(bool editor)
         if (ImGui::Button("FrameBuffers"))
         {
             layers.clear();
-            layers.push_back(framebuffers);
+            // layers.push_back(framebuffers);
         }
         if (ImGui::Button("Sponza"))
         {
@@ -61,7 +61,7 @@ void editor_im_gui_render(bool editor)
         if (ImGui::Button("RayTracing"))
         {
             layers.clear();
-            layers.push_back(raytracing);
+            // layers.push_back(raytracing);
         }
         ImGui::End();
     }

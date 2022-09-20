@@ -8,10 +8,13 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
-void Model::draw(Shader& shader)
+void Model::draw(const Frustum& frustum, const glm::mat4& transform, Shader& shader, unsigned int& display,
+                 unsigned int& total)
 {
     for (int i = 1; i < m_meshes.size(); i++)
     {
+        //        if (m_bounding_volume->is_on_frustum(frustum, transform))
+        //        {
         auto& mesh = m_meshes[i];
         shader.bind();
         for (uint32_t k = 0; k < mesh.textures.size(); k++)
@@ -29,6 +32,9 @@ void Model::draw(Shader& shader)
         mesh.vao->unbind();
         mesh.ibo->unbind();
         Shader::unbind();
+        display++;
+        //        }
+        total++;
     }
 }
 

@@ -14,6 +14,7 @@ set(SOURCES
         src/main.cpp
         src/application.cpp
         src/shader.cpp
+        src/types.cpp
         src/vertex_array.cpp
         src/vertex_buffer.cpp
         src/index_buffer.cpp
@@ -25,14 +26,15 @@ set(SOURCES
         src/editor.cpp
         # Examples
         src/examples/sponza/sponza.cpp
-        src/examples/framebuffers/framebuffers.cpp
-        src/examples/ray-tracing/ray_tracing.cpp
+        #src/examples/framebuffers/framebuffers.cpp
+        #src/examples/ray-tracing/ray_tracing.cpp
         )
 
 set(HEADERS
         include/constantia/application.h
         include/constantia/camera.h
         include/constantia/core.h
+        include/constantia/types.h
         include/constantia/editor.h
         include/constantia/index_buffer.h
         include/constantia/model.h
@@ -46,8 +48,8 @@ set(HEADERS
         include/constantia/layer.h
         # Examples
         src/examples/sponza/sponza.h
-        src/examples/framebuffers/framebuffers.h
-        src/examples/ray-tracing/ray_tracing.h
+        #src/examples/framebuffers/framebuffers.h
+        #src/examples/ray-tracing/ray_tracing.h
         )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})

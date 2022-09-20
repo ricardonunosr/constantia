@@ -4,11 +4,11 @@
 
 Camera::Camera()
 {
-    m_camera_pos = glm::vec3(-25.0f, 3.0f, 0.0f);
-    m_camera_front = glm::vec3(1.0f, 0.0f, 0.0f);
-    m_camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
+    m_position = glm::vec3(-25.0f, 3.0f, 0.0f);
+    m_front = glm::vec3(1.0f, 0.0f, 0.0f);
+    m_up = glm::vec3(0.0f, 1.0f, 0.0f);
     m_projection_matrix = glm::perspective(glm::radians(45.0f), (float)1280 / (float)720, 0.1f, 100.0f);
-    m_view_matrix = glm::lookAt(m_camera_pos, m_camera_pos + m_camera_front, m_camera_up);
+    m_view_matrix = glm::lookAt(m_position, m_position + m_front, m_up);
 }
 
 void Camera::process_input(GLFWwindow* window, float delta_time)
@@ -29,19 +29,19 @@ void Camera::process_input(GLFWwindow* window, float delta_time)
 
     float camera_speed = 3.5f * delta_time; // adjust accordingly
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        m_camera_pos += camera_speed * m_camera_front;
+        m_position += camera_speed * m_front;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        m_camera_pos -= camera_speed * m_camera_front;
+        m_position -= camera_speed * m_front;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        m_camera_pos -= glm::normalize(glm::cross(m_camera_front, m_camera_up)) * camera_speed;
+        m_position -= glm::normalize(glm::cross(m_front, m_up)) * camera_speed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        m_camera_pos += glm::normalize(glm::cross(m_camera_front, m_camera_up)) * camera_speed;
+        m_position += glm::normalize(glm::cross(m_front, m_up)) * camera_speed;
     if (glfwGetKey(window, GLFW_KEY_Q) != 0)
-        m_camera_pos += camera_speed * m_camera_up;
+        m_position += camera_speed * m_up;
     if (glfwGetKey(window, GLFW_KEY_E) != 0)
-        m_camera_pos -= camera_speed * m_camera_up;
+        m_position -= camera_speed * m_up;
 
-    m_view_matrix = glm::lookAt(m_camera_pos, m_camera_pos + m_camera_front, m_camera_up);
+    m_view_matrix = glm::lookAt(m_position, m_position + m_front, m_up);
 }
 
 void Camera::move_camera(double xpos, double ypos)
@@ -76,7 +76,7 @@ void Camera::move_camera(double xpos, double ypos)
     direction.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
     direction.y = sin(glm::radians(m_pitch));
     direction.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-    m_camera_front = glm::normalize(direction);
+    m_front = glm::normalize(direction);
 }
 
 void Camera::zoom(double /*xoffset*/, double yoffset)

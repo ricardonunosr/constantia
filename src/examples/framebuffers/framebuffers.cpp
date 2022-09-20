@@ -88,9 +88,9 @@ void FrameBuffersLayer::update(float /*delta_time*/)
 
     Camera& camera = Application::get().get_camera();
     m_shader->bind();
-    m_shader->set_uniform_mat4("projection", camera.get_projection_matrix());
-    m_shader->set_uniform_mat4("view", camera.get_view_matrix());
-    m_shader->set_uniform3f("viewPos", camera.get_camera_position());
+    m_shader->set_uniform_mat4("projection", camera.m_projection_matrix);
+    m_shader->set_uniform_mat4("view", camera.m_view_matrix);
+    m_shader->set_uniform3f("viewPos", camera.m_position);
     m_shader->set_uniform1f("material.shininess", 64.0f);
     m_shader->set_uniform3f("light.position", light_pos);
     m_shader->set_uniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
