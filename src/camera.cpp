@@ -13,20 +13,7 @@ Camera::Camera()
 
 void Camera::process_input(GLFWwindow* window, float delta_time)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        m_editor = false;
-        m_enabled = true;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_GRAVE_ACCENT) == GLFW_PRESS)
-    {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        m_editor = true;
-        m_enabled = false;
-    }
-
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     float camera_speed = 3.5f * delta_time; // adjust accordingly
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         m_position += camera_speed * m_front;
@@ -46,8 +33,6 @@ void Camera::process_input(GLFWwindow* window, float delta_time)
 
 void Camera::move_camera(double xpos, double ypos)
 {
-    if (!m_enabled)
-        return;
     if (m_first_mouse)
     {
         m_last_x = xpos;
@@ -81,8 +66,6 @@ void Camera::move_camera(double xpos, double ypos)
 
 void Camera::zoom(double /*xoffset*/, double yoffset)
 {
-    if (!m_enabled)
-        return;
     m_fov -= (float)yoffset;
     if (m_fov < 1.0f)
         m_fov = 1.0f;

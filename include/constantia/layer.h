@@ -20,7 +20,7 @@ class Layer
     virtual void update(float delta_time)
     {
     }
-    virtual void on_ui_render()
+    virtual void on_ui_render(float delta_time)
     {
     }
 

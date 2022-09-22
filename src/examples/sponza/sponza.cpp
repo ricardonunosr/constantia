@@ -11,6 +11,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define WIDTH 1920
+#define HEIGHT 1080
+
+std::unique_ptr<Camera> SponzaLayer::m_camera = nullptr;
+std::unique_ptr<Camera> SponzaLayer::m_second_camera = nullptr;
+
 SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
 {
     std::string base_path_assets = "./data/";
@@ -20,6 +26,66 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
         std::make_unique<Shader>(base_path_assets + "shaders/basic.vert", base_path_assets + "shaders/basic.frag");
     m_light_shader =
         std::make_unique<Shader>(base_path_assets + "shaders/light.vert", base_path_assets + "shaders/light.frag");
+
+    m_camera = std::make_unique<Camera>();
+    m_second_camera = std::make_unique<Camera>();
+
+    // TODO: find a better way to define this
+    glfwSetScrollCallback(Application::get().get_window().get_native_window(), scroll_callback);
+    glfwSetCursorPosCallback(Application::get().get_window().get_native_window(), mouse_callback);
+
+    // Main Texture Framebuffer
+    //-------------------------
+    glGenFramebuffers(1, &m_framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+
+    glGenTextures(1, &m_texture_colorbuffer);
+    glBindTexture(GL_TEXTURE_2D, m_texture_colorbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    // attach it to currently bound framebuffer object
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture_colorbuffer, 0);
+
+    // Generate RenderBuffer for depth and/or stencil attachments
+    glGenRenderbuffers(1, &m_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        spdlog::error("Framebuffer is not complete!");
+
+    // Secondary Texture Framebuffer
+    //------------------------------
+    glGenFramebuffers(1, &m_second_framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_second_framebuffer);
+
+    glGenTextures(1, &m_texture_second_colorbuffer);
+    glBindTexture(GL_TEXTURE_2D, m_texture_second_colorbuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture_second_colorbuffer, 0);
+
+    // Generate RenderBuffer for depth and/or stencil attachments
+    glGenRenderbuffers(1, &m_second_rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, m_second_rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_second_rbo);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        spdlog::error("Framebuffer is not complete!");
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 SponzaLayer::~SponzaLayer() = default;
@@ -31,15 +97,43 @@ void SponzaLayer::de_init()
 {
 }
 
-void SponzaLayer::on_ui_render()
+void SponzaLayer::on_ui_render(float delta_time)
 {
-    ImGui::Begin("test");
-    ImGui::End();
+    // ImGui::ShowDemoWindow();
+
+    if (ImGui::Begin("Main Camera"))
+    {
+        ImVec2 wsize = ImGui::GetWindowSize();
+        ImGui::Image((ImTextureID)m_texture_colorbuffer, wsize, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::End();
+    }
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (ImGui::Begin("Secondary Camera"))
+    {
+        ImVec2 wsize = ImGui::GetWindowSize();
+        ImGui::Image((ImTextureID)m_texture_second_colorbuffer, wsize, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::End();
+    }
+
+    if (ImGui::Begin("Metrics/Debugger"))
+    {
+        auto& metrics = Application::get().get_metrics();
+        ImGui::Text("Application average %.3f ms/frame (%.3f FPS)", delta_time * 1000.0f,
+                    1000.0f / (1000.0f * delta_time));
+        ImGui::Text("%d vertices, %d indices (%d triangles)", metrics.vertex_count, metrics.indices_count,
+                    metrics.indices_count / 3);
+        ImGui::Separator();
+
+        ImGui::End();
+    }
 }
 
-void SponzaLayer::update(float /*delta_time*/)
+void SponzaLayer::update(float delta_time)
 {
     Renderer::set_clear_color(0.1f, 0.1f, 0.1f, 1.0f);
+
+    m_camera->process_input(Application::get().get_window().get_native_window(), delta_time);
 
     float light_x = 2.0f * sin(glfwGetTime());
     float light_y = 1.0f;
@@ -48,14 +142,14 @@ void SponzaLayer::update(float /*delta_time*/)
 
     m_shader->bind();
 
-    Camera& camera = Application::get().get_camera();
-    Frustum frustum = create_frustum_from_camera(camera, 1280.0f / 720.0f, 45.0f, 0.1f, 1000.0f);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+    Frustum frustum = create_frustum_from_camera(*m_camera, 1280.0f / 720.0f, 45.0f, 0.1f, 1000.0f);
     unsigned int total = 0;
     unsigned int display = 0;
 
-    m_shader->set_uniform_mat4("projection", camera.m_projection_matrix);
-    m_shader->set_uniform_mat4("view", camera.m_view_matrix);
-    m_shader->set_uniform3f("viewPos", camera.m_position);
+    m_shader->set_uniform_mat4("projection", m_camera->m_projection_matrix);
+    m_shader->set_uniform_mat4("view", m_camera->m_view_matrix);
+    m_shader->set_uniform3f("viewPos", m_camera->m_position);
     m_shader->set_uniform1f("material.shininess", 64.0f);
 
     m_shader->set_uniform3f("light.position", light_pos);
@@ -77,5 +171,32 @@ void SponzaLayer::update(float /*delta_time*/)
     light_transform = glm::scale(light_transform, glm::vec3(0.2f));
     m_light_shader->set_uniform_mat4("model", light_transform);
     m_light->draw(frustum, model, *m_light_shader, display, total);
-    spdlog::info("Total Process in CPU: {} / Total send to GPU: {}", total, display);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    Renderer::set_clear_color(0.1f, 0.1f, 0.1f, 1.0f);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_second_framebuffer);
+
+    m_shader->set_uniform_mat4("projection", m_second_camera->m_projection_matrix);
+    m_shader->set_uniform_mat4("view", m_second_camera->m_view_matrix);
+    m_shader->set_uniform3f("viewPos", m_second_camera->m_position);
+    m_shader->set_uniform1f("material.shininess", 64.0f);
+
+    m_shader->set_uniform3f("light.position", light_pos);
+    m_shader->set_uniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
+    m_shader->set_uniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
+    m_shader->set_uniform3f("light.specular", 1.0f, 1.0f, 1.0f);
+
+    m_shader->set_uniform1f("light.constant", 1.0f);
+    m_shader->set_uniform1f("light.linear", 0.09f);
+    m_shader->set_uniform1f("light.quadratic", 0.032f);
+
+    model = glm::scale(model, glm::vec3(0.02f));
+    m_shader->set_uniform_mat4("model", model);
+    m_sponza->draw(frustum, model, *m_shader, display, total);
+
+    light_transform = glm::translate(light_transform, light_pos);
+    light_transform = glm::scale(light_transform, glm::vec3(0.2f));
+    m_light_shader->set_uniform_mat4("model", light_transform);
+    m_light->draw(frustum, model, *m_light_shader, display, total);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

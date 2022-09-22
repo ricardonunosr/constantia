@@ -26,8 +26,13 @@ void im_gui_init(GLFWwindow* window)
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
+#ifdef FRAMEBUFFERS_EXAMPLE
     // framebuffers = new FrameBuffersLayer("FrameBuffers");
+#endif
+#if 1
     sponza = new SponzaLayer("Sponza");
+    layers.push_back(sponza);
+#endif
 }
 
 void im_gui_cleanup()
@@ -38,31 +43,4 @@ void im_gui_cleanup()
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
-}
-
-void editor_im_gui_render(bool editor)
-{
-    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-
-    if (editor)
-    {
-        ImGui::SetNextWindowSize(ImVec2(430, 450), ImGuiCond_FirstUseEver);
-        ImGui::Begin("Scene");
-        if (ImGui::Button("FrameBuffers"))
-        {
-            layers.clear();
-            // layers.push_back(framebuffers);
-        }
-        if (ImGui::Button("Sponza"))
-        {
-            layers.clear();
-            layers.push_back(sponza);
-        }
-        if (ImGui::Button("RayTracing"))
-        {
-            layers.clear();
-            // layers.push_back(raytracing);
-        }
-        ImGui::End();
-    }
 }

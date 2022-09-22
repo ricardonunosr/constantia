@@ -27,11 +27,6 @@ class Application
         return *m_window;
     }
 
-    static Camera& get_camera()
-    {
-        return *s_camera;
-    }
-
     static std::vector<Layer*>& get_layers()
     {
         return layers;
@@ -42,23 +37,12 @@ class Application
         return s_metrics;
     }
 
-    static void mouse_callback(GLFWwindow* /*window*/, double xpos, double ypos)
-    {
-        s_camera->move_camera(xpos, ypos);
-    }
-
-    static void scroll_callback(GLFWwindow* /*window*/, double xoffset, double yoffset)
-    {
-        s_camera->zoom(xoffset, yoffset);
-    }
 
   private:
     static Application* s_instance;
     std::unique_ptr<Window> m_window;
     float m_delta_time = 0, m_last_frame = 0;
-    static std::unique_ptr<Camera> s_camera;
     static Metrics s_metrics;
-    unsigned int m_framebuffer, m_rbo, m_texture_colorbuffer;
 
   protected:
     static std::vector<Layer*> layers;
