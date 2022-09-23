@@ -21,12 +21,7 @@ class SponzaLayer : public Layer
 
     static void mouse_callback(GLFWwindow* /*window*/, double xpos, double ypos)
     {
-        m_camera->move_camera(xpos, ypos);
-    }
-
-    static void scroll_callback(GLFWwindow* /*window*/, double xoffset, double yoffset)
-    {
-        m_camera->zoom(xoffset, yoffset);
+        m_camera->handle_mouse_move(xpos, ypos);
     }
 
   private:

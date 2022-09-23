@@ -1,38 +1,39 @@
 #include "camera.h"
 #include <GLFW/glfw3.h>
+#include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
+#include <math.h>
+
+constexpr glm::vec3 K_WORLD_UP(0.0f, 1.0f, 0.0f);
+constexpr float K_MOUSE_SENSITIVITY = 0.1f;
 
 Camera::Camera()
 {
     m_position = glm::vec3(-25.0f, 3.0f, 0.0f);
-    m_front = glm::vec3(1.0f, 0.0f, 0.0f);
-    m_up = glm::vec3(0.0f, 1.0f, 0.0f);
-    m_projection_matrix = glm::perspective(glm::radians(45.0f), (float)1280 / (float)720, 0.1f, 100.0f);
-    m_view_matrix = glm::lookAt(m_position, m_position + m_front, m_up);
+    m_forward = glm::vec3(1.0f, 0.0f, 0.0f);
+    m_projection = glm::perspective(glm::radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
 }
 
-void Camera::process_input(GLFWwindow* window, float delta_time)
+void Camera::update(GLFWwindow* window, float delta_time)
 {
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     float camera_speed = 3.5f * delta_time; // adjust accordingly
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        m_position += camera_speed * m_front;
+        m_position += camera_speed * m_forward;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        m_position -= camera_speed * m_front;
+        m_position -= camera_speed * m_forward;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        m_position -= glm::normalize(glm::cross(m_front, m_up)) * camera_speed;
+        m_position -= glm::normalize(glm::cross(m_forward, K_WORLD_UP)) * camera_speed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        m_position += glm::normalize(glm::cross(m_front, m_up)) * camera_speed;
+        m_position += glm::normalize(glm::cross(m_forward, K_WORLD_UP)) * camera_speed;
     if (glfwGetKey(window, GLFW_KEY_Q) != 0)
-        m_position += camera_speed * m_up;
+        m_position += camera_speed * K_WORLD_UP;
     if (glfwGetKey(window, GLFW_KEY_E) != 0)
-        m_position -= camera_speed * m_up;
-
-    m_view_matrix = glm::lookAt(m_position, m_position + m_front, m_up);
+        m_position -= camera_speed * K_WORLD_UP;
 }
 
-void Camera::move_camera(double xpos, double ypos)
+void Camera::handle_mouse_move(double xpos, double ypos)
 {
+    // Calculate delta
     if (m_first_mouse)
     {
         m_last_x = xpos;
@@ -45,30 +46,18 @@ void Camera::move_camera(double xpos, double ypos)
     m_last_x = xpos;
     m_last_y = ypos;
 
-    float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
+    m_yaw += xoffset * K_MOUSE_SENSITIVITY;
+    m_pitch -= yoffset * K_MOUSE_SENSITIVITY;
+    m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI_2) + 0.001f, static_cast<float>(M_PI_2) - 0.001f);
 
-    m_yaw += xoffset;
-    m_pitch += yoffset;
-
-    if (m_pitch > 89.0f)
-        m_pitch = 89.0f;
-    if (m_pitch < -89.0f)
-        m_pitch = -89.0f;
-
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-    direction.y = sin(glm::radians(m_pitch));
-    direction.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-    m_front = glm::normalize(direction);
+    m_forward.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+    m_forward.y = sin(glm::radians(m_pitch));
+    m_forward.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+    m_forward = glm::normalize(m_forward);
+    m_right = glm::normalize(glm::cross(m_forward, K_WORLD_UP));
 }
 
-void Camera::zoom(double /*xoffset*/, double yoffset)
+glm::mat4 Camera::view_matrix()
 {
-    m_fov -= (float)yoffset;
-    if (m_fov < 1.0f)
-        m_fov = 1.0f;
-    if (m_fov > 45.0f)
-        m_fov = 45.0f;
+    return glm::lookAt(m_position, m_position + m_forward, K_WORLD_UP);
 }

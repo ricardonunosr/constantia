@@ -36,7 +36,7 @@ void Application::run()
     // Main Loop
     while (!m_window->should_close())
     {
-        float current_frame = glfwGetTime();
+        float current_frame = static_cast<float>(glfwGetTime());
         m_delta_time = current_frame - m_last_frame;
         m_last_frame = current_frame;
 

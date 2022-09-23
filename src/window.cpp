@@ -25,7 +25,6 @@ Window::Window(int width, int height, const std::string& name) : m_width{width},
         return;
     }
     glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
-    glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     /* Make the window's context current */
     glfwMakeContextCurrent(m_window);
