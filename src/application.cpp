@@ -49,7 +49,6 @@ void Application::run()
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
             for (Layer* layer : layers)
                 layer->on_ui_render(m_delta_time);
 
