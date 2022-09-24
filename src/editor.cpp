@@ -13,7 +13,7 @@ static bool examples = true;
 
 std::vector<Layer*>& layers = Application::get().get_layers();
 SponzaLayer* sponza = nullptr;
-// FrameBuffersLayer* framebuffers = nullptr;
+FrameBuffersLayer* framebuffers = nullptr;
 // RayTracingLayer* raytracing = nullptr;
 
 void im_gui_init(GLFWwindow* window)
@@ -26,10 +26,11 @@ void im_gui_init(GLFWwindow* window)
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
-#ifdef FRAMEBUFFERS_EXAMPLE
-    // framebuffers = new FrameBuffersLayer("FrameBuffers");
-#endif
 #if 1
+    framebuffers = new FrameBuffersLayer("FrameBuffers");
+    layers.push_back(framebuffers);
+#endif
+#if 0
     sponza = new SponzaLayer("Sponza");
     layers.push_back(sponza);
 #endif
@@ -37,7 +38,7 @@ void im_gui_init(GLFWwindow* window)
 
 void im_gui_cleanup()
 {
-    // delete framebuffers;
+    delete framebuffers;
     delete sponza;
     // delete raytracing;
     ImGui_ImplOpenGL3_Shutdown();

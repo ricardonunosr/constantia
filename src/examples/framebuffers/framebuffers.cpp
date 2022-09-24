@@ -4,7 +4,6 @@
 #include "application.h"
 #include "camera.h"
 #include "model.h"
-#include "renderer.h"
 #include "shader.h"
 #include "vertex_array.h"
 #include "vertex_buffer.h"
@@ -15,6 +14,8 @@
 
 #define WIDTH 1280
 #define HEIGHT 720
+
+std::unique_ptr<Camera> FrameBuffersLayer::m_camera = nullptr;
 
 FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
 {
@@ -29,6 +30,12 @@ FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
         std::make_unique<Shader>(base_path_assets + "shaders/basic.vert", base_path_assets + "shaders/basic.frag");
     m_light_shader =
         std::make_unique<Shader>(base_path_assets + "shaders/light.vert", base_path_assets + "shaders/light.frag");
+
+    m_camera = std::make_unique<Camera>();
+
+    // TODO: find a better way to define this
+    glfwSetCursorPosCallback(Application::get().get_window().get_native_window(), mouse_callback);
+    glfwSetMouseButtonCallback(Application::get().get_window().get_native_window(), mouse_button_callback);
 
     glGenFramebuffers(1, &m_framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
@@ -75,22 +82,28 @@ void FrameBuffersLayer::init()
 void FrameBuffersLayer::de_init()
 {
 }
-void FrameBuffersLayer::update(float /*delta_time*/)
+void FrameBuffersLayer::update(float delta_time)
 {
-    // First pass
-    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
-    Renderer::set_clear_color(0.1f, 0.1f, 0.1f, 1.0f);
+    m_camera->update(Application::get().get_window().get_native_window(), delta_time);
 
     float light_x = 2.0f * sin(glfwGetTime());
     float light_y = 1.0f;
     float light_z = 1.5f * cos(glfwGetTime());
     glm::vec3 light_pos = glm::vec3(light_x, light_y, light_z);
 
-    Camera& camera = Application::get().get_camera();
+    Frustum frustum = create_frustum_from_camera(*m_camera, 1280.0f / 720.0f, 45.0f, 0.1f, 1000.0f);
+    unsigned int total = 0;
+    unsigned int display = 0;
+
+    // First pass
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
     m_shader->bind();
-    m_shader->set_uniform_mat4("projection", camera.m_projection_matrix);
-    m_shader->set_uniform_mat4("view", camera.m_view_matrix);
-    m_shader->set_uniform3f("viewPos", camera.m_position);
+    m_shader->set_uniform_mat4("projection", m_camera->m_projection);
+    m_shader->set_uniform_mat4("view", m_camera->view_matrix());
+    m_shader->set_uniform3f("viewPos", m_camera->m_position);
     m_shader->set_uniform1f("material.shininess", 64.0f);
     m_shader->set_uniform3f("light.position", light_pos);
     m_shader->set_uniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
@@ -104,11 +117,11 @@ void FrameBuffersLayer::update(float /*delta_time*/)
     m_shader->bind();
     glm::mat4 model = glm::mat4(1.0f);
     m_shader->set_uniform_mat4("model", model);
-    m_cube->draw(*m_shader);
+    m_cube->draw(frustum,model,*m_shader,display,total);
 
     m_light_shader->bind();
-    m_light_shader->set_uniform_mat4("projection", camera.get_projection_matrix());
-    m_light_shader->set_uniform_mat4("view", camera.get_view_matrix());
+    m_light_shader->set_uniform_mat4("projection", m_camera->m_projection);
+    m_light_shader->set_uniform_mat4("view", m_camera->view_matrix());
 
     glm::mat4 light_transform = glm::mat4(1.0f);
     light_transform = glm::translate(light_transform, light_pos);
@@ -117,12 +130,12 @@ void FrameBuffersLayer::update(float /*delta_time*/)
 
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
-    m_light->draw(*m_light_shader);
+    m_light->draw(frustum,model,*m_light_shader,display,total);
 
     // Scaled(outline)
     m_outline_shader->bind();
-    m_outline_shader->set_uniform_mat4("projection", camera.get_projection_matrix());
-    m_outline_shader->set_uniform_mat4("view", camera.get_view_matrix());
+    m_outline_shader->set_uniform_mat4("projection", m_camera->m_projection);
+    m_outline_shader->set_uniform_mat4("view", m_camera->view_matrix());
 
     glm::mat4 light_outline_transform = glm::mat4(1.0f);
     light_outline_transform = glm::translate(light_outline_transform, light_pos);
@@ -133,7 +146,7 @@ void FrameBuffersLayer::update(float /*delta_time*/)
     glStencilMask(0x00);
     glDisable(GL_DEPTH_TEST);
 
-    m_light->draw(*m_outline_shader);
+    m_light->draw(frustum,model,*m_outline_shader,display,total);
     glStencilMask(0xFF);
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glEnable(GL_DEPTH_TEST);

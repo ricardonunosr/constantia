@@ -25,7 +25,7 @@ set(SOURCES
         src/editor.cpp
         # Examples
         src/examples/sponza/sponza.cpp
-        #src/examples/framebuffers/framebuffers.cpp
+        src/examples/framebuffers/framebuffers.cpp
         #src/examples/ray-tracing/ray_tracing.cpp
         )
 
@@ -46,7 +46,7 @@ set(HEADERS
         include/constantia/layer.h
         # Examples
         src/examples/sponza/sponza.h
-        #src/examples/framebuffers/framebuffers.h
+        src/examples/framebuffers/framebuffers.h
         #src/examples/ray-tracing/ray_tracing.h
         )
 
