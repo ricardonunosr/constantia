@@ -17,6 +17,7 @@ class Camera
     glm::vec3 m_position{};
     glm::vec3 m_forward{};
     glm::vec3 m_right{};
+    bool m_enabled = false;
 
   private:
     bool m_first_mouse = true;

@@ -3,6 +3,8 @@
 #include "camera.h"
 #include "layer.h"
 #include "window.h"
+#include <vector>
+#include <memory>
 
 struct Metrics
 {

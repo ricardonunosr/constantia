@@ -1,12 +1,14 @@
 #pragma once
 
+#define GLFW_INCLUDE_NONE
+#include "GLFW/glfw3.h"
 #include "camera.h"
 #include "layer.h"
+#include <memory>
 #include <string>
 
 struct Model;
 struct Shader;
-struct GLFWwindow;
 
 class SponzaLayer : public Layer
 {
@@ -22,6 +24,17 @@ class SponzaLayer : public Layer
     static void mouse_callback(GLFWwindow* /*window*/, double xpos, double ypos)
     {
         m_camera->handle_mouse_move(xpos, ypos);
+    }
+
+    static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+    {
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
+            m_camera->m_enabled = true;
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }else {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+            m_camera->m_enabled =false;
+        }
     }
 
   private:

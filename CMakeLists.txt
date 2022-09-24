@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21.1)
 set(LANGUAGES C CXX)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 project(Constantia LANGUAGES ${LANGUAGES})
@@ -22,7 +22,6 @@ set(SOURCES
         src/camera.cpp
         src/model.cpp
         src/window.cpp
-        src/renderer.cpp
         src/editor.cpp
         # Examples
         src/examples/sponza/sponza.cpp
@@ -38,7 +37,6 @@ set(HEADERS
         include/constantia/editor.h
         include/constantia/index_buffer.h
         include/constantia/model.h
-        include/constantia/renderer.h
         include/constantia/shader.h
         include/constantia/texture.h
         include/constantia/vertex_array.h
