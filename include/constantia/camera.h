@@ -11,7 +11,7 @@ class Camera
 
     void update(GLFWwindow* window, float delta_time);
     void handle_mouse_move(double xpos, double ypos);
-    glm::mat4 view_matrix();
+    glm::mat4 view_matrix() const;
 
     glm::mat4 m_projection{};
     glm::vec3 m_position{};

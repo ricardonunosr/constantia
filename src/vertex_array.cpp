@@ -6,23 +6,15 @@ static GLenum shader_data_type_to_open_gl_base_type(DataType type)
     switch (type)
     {
     case DataType::Float:
-        return GL_FLOAT;
     case DataType::Float2:
-        return GL_FLOAT;
     case DataType::Float3:
-        return GL_FLOAT;
     case DataType::Float4:
-        return GL_FLOAT;
     case DataType::Mat3:
-        return GL_FLOAT;
     case DataType::Mat4:
         return GL_FLOAT;
     case DataType::Int:
-        return GL_INT;
     case DataType::Int2:
-        return GL_INT;
     case DataType::Int3:
-        return GL_INT;
     case DataType::Int4:
         return GL_INT;
     case DataType::Bool:
@@ -30,7 +22,6 @@ static GLenum shader_data_type_to_open_gl_base_type(DataType type)
     case DataType::None:
         break;
     }
-
     return 0;
 }
 

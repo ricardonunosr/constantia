@@ -23,17 +23,20 @@ class SponzaLayer : public Layer
 
     static void mouse_callback(GLFWwindow* /*window*/, double xpos, double ypos)
     {
-        m_camera->handle_mouse_move(xpos, ypos);
+        m_second_camera->handle_mouse_move(xpos, ypos);
     }
 
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     {
-        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS){
-            m_camera->m_enabled = true;
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+        {
+            m_second_camera->m_enabled = true;
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        }else {
+        }
+        else
+        {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            m_camera->m_enabled =false;
+            m_second_camera->m_enabled = false;
         }
     }
 
@@ -46,6 +49,5 @@ class SponzaLayer : public Layer
     static std::unique_ptr<Camera> m_camera;
     static std::unique_ptr<Camera> m_second_camera;
 
-    unsigned int m_framebuffer, m_second_framebuffer, m_rbo, m_second_rbo, m_texture_colorbuffer,
-        m_texture_second_colorbuffer;
+    unsigned int m_framebuffer, m_rbo, m_texture_colorbuffer;
 };

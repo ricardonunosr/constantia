@@ -26,11 +26,11 @@ void im_gui_init(GLFWwindow* window)
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
-#if 1
+#if 0
     framebuffers = new FrameBuffersLayer("FrameBuffers");
     layers.push_back(framebuffers);
 #endif
-#if 0
+#if 1
     sponza = new SponzaLayer("Sponza");
     layers.push_back(sponza);
 #endif

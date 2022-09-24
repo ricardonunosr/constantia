@@ -98,14 +98,13 @@ void SponzaLayer::on_ui_render(float delta_time)
 
 void SponzaLayer::update(float delta_time)
 {
-    m_camera->update(Application::get().get_window().get_native_window(), delta_time);
+    //m_camera->update(Application::get().get_window().get_native_window(), delta_time);
+    m_second_camera->update(Application::get().get_window().get_native_window(), delta_time);
 
     float light_x = 2.0f * sin(glfwGetTime());
     float light_y = 1.0f;
     float light_z = 1.5f * cos(glfwGetTime());
     glm::vec3 light_pos = glm::vec3(light_x, light_y, light_z);
-
-    m_shader->bind();
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glClearColor(0.5f, 0.1f, 0.1f, 1.0f);
@@ -114,6 +113,7 @@ void SponzaLayer::update(float delta_time)
     unsigned int total = 0;
     unsigned int display = 0;
 
+    m_shader->bind();
     m_shader->set_uniform_mat4("projection", m_camera->m_projection);
     m_shader->set_uniform_mat4("view", m_camera->view_matrix());
     m_shader->set_uniform3f("viewPos", m_camera->m_position);
@@ -144,6 +144,7 @@ void SponzaLayer::update(float delta_time)
     glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    m_shader->bind();
     m_shader->set_uniform_mat4("projection", m_second_camera->m_projection);
     m_shader->set_uniform_mat4("view", m_second_camera->view_matrix());
     m_shader->set_uniform3f("viewPos", m_second_camera->m_position);
@@ -158,12 +159,9 @@ void SponzaLayer::update(float delta_time)
     m_shader->set_uniform1f("light.linear", 0.09f);
     m_shader->set_uniform1f("light.quadratic", 0.032f);
 
-    model = glm::scale(model, glm::vec3(0.02f));
     m_shader->set_uniform_mat4("model", model);
     m_sponza->draw(frustum, model, *m_shader, display, total);
 
-    light_transform = glm::translate(light_transform, light_pos);
-    light_transform = glm::scale(light_transform, glm::vec3(0.2f));
     m_light_shader->set_uniform_mat4("model", light_transform);
     m_light->draw(frustum, model, *m_light_shader, display, total);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

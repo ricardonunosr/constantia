@@ -1,6 +1,5 @@
 #include "camera.h"
 #include <GLFW/glfw3.h>
-#include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 #include <math.h>
@@ -61,7 +60,7 @@ void Camera::handle_mouse_move(double xpos, double ypos)
     m_right = glm::normalize(glm::cross(m_forward, K_WORLD_UP));
 }
 
-glm::mat4 Camera::view_matrix()
+glm::mat4 Camera::view_matrix() const
 {
     return glm::lookAt(m_position, m_position + m_forward, K_WORLD_UP);
 }
