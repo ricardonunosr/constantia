@@ -1,8 +1,12 @@
-#include "shader.h"
+#include "opengl_renderer.h"
+#include <glad/gl.h>
+#include <spdlog/spdlog.h>
 
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 Shader::Shader(const std::string& vertex_shader_path, const std::string& fragment_shader_path)
 {
@@ -152,11 +156,11 @@ void Shader::cache_uniforms()
     glGetProgramiv(m_id, GL_ACTIVE_UNIFORMS, &num_uniforms);
 
     char* name = (char*)malloc(longest_uniform_max_length_name * sizeof(char));
-    for (size_t i = 0; i < num_uniforms; i++)
+    for (int uniform_index = 0; uniform_index < num_uniforms; uniform_index++)
     {
         int size;
         unsigned int type;
-        glGetActiveUniform(m_id, i, longest_uniform_max_length_name, NULL, &size, &type, name);
+        glGetActiveUniform(m_id, uniform_index, longest_uniform_max_length_name, NULL, &size, &type, name);
         int location = glGetUniformLocation(m_id, name);
         m_uniform_cache[std::string(name)] = location;
     }
@@ -174,4 +178,154 @@ int Shader::get_location_from_cache(const std::string& name)
 
     spdlog::error("Couldn't find cached uniform:{} in shader with id {}", name, m_id);
     return 0;
+}
+
+Texture::Texture(const char* path, const char* type)
+    : m_id{0}, m_width{0}, m_height{0}, m_nr_channels{0}, m_path{path}, m_type{type}
+{
+    glGenTextures(1, &m_id);
+    glBindTexture(GL_TEXTURE_2D, m_id);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    unsigned char* data = stbi_load(path, &m_width, &m_height, &m_nr_channels, 0);
+    if (data != nullptr)
+    {
+        int format = GL_RGB;
+        if (m_nr_channels == 1)
+            format = GL_RED;
+        else if (m_nr_channels == 3)
+            format = GL_RGB;
+        else if (m_nr_channels == 4)
+            format = GL_RGBA;
+
+        glTexImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    else
+    {
+        spdlog::error("Failed to load texture({}) reason: {}", path, stbi_failure_reason());
+    }
+    stbi_image_free(data);
+}
+
+Texture::~Texture()
+{
+    // glDeleteTextures(1, &id);
+}
+
+void Texture::bind(unsigned int slot /*= 0*/) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, m_id);
+}
+void Texture::unbind()
+{
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+static GLenum shader_data_type_to_open_gl_base_type(DataType type)
+{
+    switch (type)
+    {
+    case DataType::Float:
+    case DataType::Float2:
+    case DataType::Float3:
+    case DataType::Float4:
+    case DataType::Mat3:
+    case DataType::Mat4:
+        return GL_FLOAT;
+    case DataType::Int:
+    case DataType::Int2:
+    case DataType::Int3:
+    case DataType::Int4:
+        return GL_INT;
+    case DataType::Bool:
+        return GL_BOOL;
+    case DataType::None:
+        break;
+    }
+    return 0;
+}
+
+VertexArray::VertexArray() : m_id{0}, m_enabled_attribs{0}
+{
+    glGenVertexArrays(1, &m_id);
+}
+
+VertexArray::~VertexArray()
+{
+    glDeleteVertexArrays(1, &m_id);
+}
+
+void VertexArray::bind() const
+{
+    glBindVertexArray(m_id);
+}
+
+void VertexArray::unbind()
+{
+    glBindVertexArray(0);
+}
+
+void VertexArray::add_buffer(VertexBuffer& buffer)
+{
+    bind();
+    buffer.bind();
+    const auto& layout = buffer.get_layout().get_elements();
+    for (const auto& element : layout)
+    {
+        glVertexAttribPointer(m_enabled_attribs, (GLint)element.get_component_count(),
+                              shader_data_type_to_open_gl_base_type(element.type), (GLint)element.normalized,
+                              (GLint)buffer.get_layout().get_stride(), (const void*)element.offset);
+        glEnableVertexAttribArray(m_enabled_attribs);
+        m_enabled_attribs++;
+    }
+}
+
+VertexBuffer::VertexBuffer(VertexBufferLayout layout, const void* data, size_t size) : m_layout{std::move(layout)}
+{
+    glGenBuffers(1, &m_id);
+    glBindBuffer(GL_ARRAY_BUFFER, m_id);
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+}
+
+VertexBuffer::~VertexBuffer()
+{
+    glDeleteBuffers(1, &m_id);
+}
+
+void VertexBuffer::bind() const
+{
+    glBindBuffer(GL_ARRAY_BUFFER, m_id);
+}
+
+void VertexBuffer::unbind()
+{
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+IndexBuffer::IndexBuffer(const void* indices, unsigned int count) : m_id{0}, m_count{count}
+{
+    glGenBuffers(1, &m_id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)count * sizeof(unsigned int), indices, GL_STATIC_DRAW);
+}
+
+IndexBuffer::~IndexBuffer()
+{
+    glDeleteBuffers(1, &m_id);
+}
+
+void IndexBuffer::bind() const
+{
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_id);
+}
+
+void IndexBuffer::unbind()
+{
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

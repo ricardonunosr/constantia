@@ -1,11 +1,9 @@
 #pragma once
 
-#include "index_buffer.h"
-#include "shader.h"
-#include "texture.h"
+#include "opengl_renderer.h"
 #include "types.h"
-#include "vertex_array.h"
 #include <glm/glm.hpp>
+#include <memory>
 #include <string>
 #include <vector>
 

@@ -1,13 +1,10 @@
 #include "framebuffers.h"
-#include "core.h"
+#include <glad/gl.h>
+#include <spdlog/spdlog.h>
 
 #include "application.h"
 #include "camera.h"
 #include "model.h"
-#include "shader.h"
-#include "vertex_array.h"
-#include "vertex_buffer.h"
-#include "vertex_buffer_layout.h"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -34,8 +31,8 @@ FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
     m_camera = std::make_unique<Camera>();
 
     // TODO: find a better way to define this
-    glfwSetCursorPosCallback(Application::get().get_window().get_native_window(), mouse_callback);
-    glfwSetMouseButtonCallback(Application::get().get_window().get_native_window(), mouse_button_callback);
+    glfwSetCursorPosCallback(Application::get().get_window(), mouse_callback);
+    glfwSetMouseButtonCallback(Application::get().get_window(), mouse_button_callback);
 
     glGenFramebuffers(1, &m_framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
@@ -75,16 +72,10 @@ FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
     m_vao->add_buffer(*vbo);
     m_vao->unbind();
 }
-FrameBuffersLayer::~FrameBuffersLayer() = default;
-void FrameBuffersLayer::init()
+
+void FrameBuffersLayer::update(float delta_time) const
 {
-}
-void FrameBuffersLayer::de_init()
-{
-}
-void FrameBuffersLayer::update(float delta_time)
-{
-    m_camera->update(Application::get().get_window().get_native_window(), delta_time);
+    m_camera->update(Application::get().get_window(), delta_time);
 
     float light_x = 2.0f * sin(glfwGetTime());
     float light_y = 1.0f;
@@ -104,7 +95,7 @@ void FrameBuffersLayer::update(float delta_time)
     m_shader->set_uniform_mat4("projection", m_camera->m_projection);
     m_shader->set_uniform_mat4("view", m_camera->view_matrix());
     m_shader->set_uniform3f("viewPos", m_camera->m_position);
-    m_shader->set_uniform1f("material.shininess", 64.0f);
+    m_shader->set_uniform1f("material.shiny", 64.0f);
     m_shader->set_uniform3f("light.position", light_pos);
     m_shader->set_uniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
     m_shader->set_uniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
@@ -117,7 +108,7 @@ void FrameBuffersLayer::update(float delta_time)
     m_shader->bind();
     glm::mat4 model = glm::mat4(1.0f);
     m_shader->set_uniform_mat4("model", model);
-    m_cube->draw(frustum,model,*m_shader,display,total);
+    m_cube->draw(frustum, model, *m_shader, display, total);
 
     m_light_shader->bind();
     m_light_shader->set_uniform_mat4("projection", m_camera->m_projection);
@@ -130,7 +121,7 @@ void FrameBuffersLayer::update(float delta_time)
 
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glStencilMask(0xFF);
-    m_light->draw(frustum,model,*m_light_shader,display,total);
+    m_light->draw(frustum, model, *m_light_shader, display, total);
 
     // Scaled(outline)
     m_outline_shader->bind();
@@ -146,7 +137,7 @@ void FrameBuffersLayer::update(float delta_time)
     glStencilMask(0x00);
     glDisable(GL_DEPTH_TEST);
 
-    m_light->draw(frustum,model,*m_outline_shader,display,total);
+    m_light->draw(frustum, model, *m_outline_shader, display, total);
     glStencilMask(0xFF);
     glStencilFunc(GL_ALWAYS, 1, 0xFF);
     glEnable(GL_DEPTH_TEST);

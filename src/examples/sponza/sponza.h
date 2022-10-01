@@ -14,19 +14,16 @@ class SponzaLayer : public Layer
 {
   public:
     explicit SponzaLayer(const std::string& name);
-    ~SponzaLayer();
 
-    void init() override;
-    void de_init() override;
-    void update(float delta_time) override;
-    void on_ui_render(float delta_time) override;
+    void update(float delta_time) const override;
+    void on_ui_render(float delta_time) const override;
 
     static void mouse_callback(GLFWwindow* /*window*/, double xpos, double ypos)
     {
         m_second_camera->handle_mouse_move(xpos, ypos);
     }
 
-    static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+    static void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/)
     {
         if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
         {

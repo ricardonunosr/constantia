@@ -2,9 +2,8 @@
 
 #include "camera.h"
 #include "layer.h"
-#include "window.h"
-#include <vector>
 #include <memory>
+#include <vector>
 
 struct Metrics
 {
@@ -24,9 +23,9 @@ class Application
     {
         return *s_instance;
     }
-    Window& get_window()
+    GLFWwindow* get_window()
     {
-        return *m_window;
+        return m_window;
     }
 
     static std::vector<Layer*>& get_layers()
@@ -39,10 +38,12 @@ class Application
         return s_metrics;
     }
 
+    int m_width = 800;
+    int m_height = 600;
 
   private:
     static Application* s_instance;
-    std::unique_ptr<Window> m_window;
+    GLFWwindow* m_window;
     float m_delta_time = 0, m_last_frame = 0;
     static Metrics s_metrics;
 

@@ -2,7 +2,6 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
-#include <math.h>
 
 constexpr glm::vec3 K_WORLD_UP(0.0f, 1.0f, 0.0f);
 constexpr float K_MOUSE_SENSITIVITY = 0.1f;
@@ -33,7 +32,7 @@ void Camera::update(GLFWwindow* window, float delta_time)
 
 void Camera::handle_mouse_move(double xpos, double ypos)
 {
-    if(!m_enabled)
+    if (!m_enabled)
         return;
 
     // Calculate delta
@@ -51,7 +50,7 @@ void Camera::handle_mouse_move(double xpos, double ypos)
 
     m_yaw += xoffset * K_MOUSE_SENSITIVITY;
     m_pitch += yoffset * K_MOUSE_SENSITIVITY;
-    m_pitch = std::clamp(m_pitch, -89.0f, 89.0f);
+    m_pitch = glm::clamp(m_pitch, -89.0f, 89.0f);
 
     m_forward.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
     m_forward.y = sin(glm::radians(m_pitch));

@@ -1,5 +1,4 @@
 #include "editor.h"
-#include "core.h"
 
 #include "application.h"
 #include "examples/framebuffers/framebuffers.h"
@@ -8,8 +7,6 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-
-static bool examples = true;
 
 std::vector<Layer*>& layers = Application::get().get_layers();
 SponzaLayer* sponza = nullptr;
@@ -38,9 +35,6 @@ void im_gui_init(GLFWwindow* window)
 
 void im_gui_cleanup()
 {
-    delete framebuffers;
-    delete sponza;
-    // delete raytracing;
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

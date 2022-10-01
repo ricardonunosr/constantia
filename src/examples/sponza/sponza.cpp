@@ -1,4 +1,6 @@
 #include "sponza.h"
+#include <glad/gl.h>
+#include <spdlog/spdlog.h>
 
 #include "model.h"
 
@@ -9,6 +11,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 std::unique_ptr<Camera> SponzaLayer::m_camera = nullptr;
 std::unique_ptr<Camera> SponzaLayer::m_second_camera = nullptr;
@@ -27,11 +30,11 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     m_second_camera = std::make_unique<Camera>();
 
     // TODO: find a better way to define this
-    glfwSetCursorPosCallback(Application::get().get_window().get_native_window(), mouse_callback);
-    glfwSetMouseButtonCallback(Application::get().get_window().get_native_window(), mouse_button_callback);
+    glfwSetCursorPosCallback(Application::get().get_window(), mouse_callback);
+    glfwSetMouseButtonCallback(Application::get().get_window(), mouse_button_callback);
 
-    int width = Application::get().get_window().get_width();
-    int height = Application::get().get_window().get_height();
+    int width = Application::get().m_width;
+    int height = Application::get().m_height;
     // Main Texture Framebuffer
     //-------------------------
     glGenFramebuffers(1, &m_framebuffer);
@@ -60,28 +63,19 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-SponzaLayer::~SponzaLayer() = default;
-
-void SponzaLayer::init()
+void SponzaLayer::on_ui_render(float delta_time) const
 {
-}
-void SponzaLayer::de_init()
-{
-}
+//    ImGui::ShowDemoWindow();
+//    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
-void SponzaLayer::on_ui_render(float delta_time)
-{
-    // ImGui::ShowDemoWindow();
-    // ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
-
-    // ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,ImVec2(0.0f,0.0f));
+//    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     if (ImGui::Begin("Second Camera"))
     {
         ImVec2 window_size = ImGui::GetWindowSize();
-        ImGui::Image((ImTextureID)m_texture_colorbuffer, window_size, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::Image(reinterpret_cast<ImTextureID>(m_texture_colorbuffer), window_size, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::End();
     }
-    // ImGui::PopStyleVar();
+//    ImGui::PopStyleVar();
 
     if (ImGui::Begin("Metrics/Debugger"))
     {
@@ -96,10 +90,11 @@ void SponzaLayer::on_ui_render(float delta_time)
     }
 }
 
-void SponzaLayer::update(float delta_time)
+void SponzaLayer::update(float delta_time) const
 {
-    //m_camera->update(Application::get().get_window().get_native_window(), delta_time);
-    m_second_camera->update(Application::get().get_window().get_native_window(), delta_time);
+    std::cout << "=======================Sponza loop start=============================\n";
+    m_camera->update(Application::get().get_window(), delta_time);
+    // m_second_camera->update(Application::get().get_window(), delta_time);
 
     float light_x = 2.0f * sin(glfwGetTime());
     float light_y = 1.0f;
@@ -113,11 +108,16 @@ void SponzaLayer::update(float delta_time)
     unsigned int total = 0;
     unsigned int display = 0;
 
+    std::cout << "Here\n";
+
     m_shader->bind();
     m_shader->set_uniform_mat4("projection", m_camera->m_projection);
     m_shader->set_uniform_mat4("view", m_camera->view_matrix());
     m_shader->set_uniform3f("viewPos", m_camera->m_position);
-    m_shader->set_uniform1f("material.shininess", 64.0f);
+    // TODO(ricardo): this way of setting shader uniforms can cause a memory allocation in the heap in the loop
+    // because strings which size is greater than 15(verify number) are allocated in the heap
+    // Example: this was "material.shininess" and caused heap allocation
+    m_shader->set_uniform1f("material.shiny", 64.0f);
 
     m_shader->set_uniform3f("light.position", light_pos);
     m_shader->set_uniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
@@ -128,10 +128,14 @@ void SponzaLayer::update(float delta_time)
     m_shader->set_uniform1f("light.linear", 0.09f);
     m_shader->set_uniform1f("light.quadratic", 0.032f);
 
+    std::cout << "Uniforms?\n";
+
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(0.02f));
     m_shader->set_uniform_mat4("model", model);
     m_sponza->draw(frustum, model, *m_shader, display, total);
+
+    std::cout << "Sponza Draw?\n";
 
     glm::mat4 light_transform = glm::mat4(1.0f);
     light_transform = glm::translate(light_transform, light_pos);
@@ -148,7 +152,7 @@ void SponzaLayer::update(float delta_time)
     m_shader->set_uniform_mat4("projection", m_second_camera->m_projection);
     m_shader->set_uniform_mat4("view", m_second_camera->view_matrix());
     m_shader->set_uniform3f("viewPos", m_second_camera->m_position);
-    m_shader->set_uniform1f("material.shininess", 64.0f);
+    m_shader->set_uniform1f("material.shiny", 64.0f);
 
     m_shader->set_uniform3f("light.position", light_pos);
     m_shader->set_uniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
@@ -165,4 +169,5 @@ void SponzaLayer::update(float delta_time)
     m_light_shader->set_uniform_mat4("model", light_transform);
     m_light->draw(frustum, model, *m_light_shader, display, total);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    std::cout << "=======================Sponza loop end=============================\n";
 }

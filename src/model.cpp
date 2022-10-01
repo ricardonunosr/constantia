@@ -1,7 +1,8 @@
 #include "model.h"
 
-#include "core.h"
 #include <algorithm>
+#include <glad/gl.h>
+#include <spdlog/spdlog.h>
 #include <unordered_map>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
@@ -11,16 +12,18 @@
 void Model::draw(const Frustum& frustum, const glm::mat4& transform, Shader& shader, unsigned int& display,
                  unsigned int& total)
 {
-    for (int i = 1; i < m_meshes.size(); i++)
+    // Note(ricardo): We start to draw at index 1 because 0 is a no texture mesh
+    for (int mesh_index = 1; mesh_index < (int)m_meshes.size(); mesh_index++)
     {
         //        if (m_bounding_volume->is_on_frustum(frustum, transform))
         //        {
-        auto& mesh = m_meshes[i];
+        auto& mesh = m_meshes[mesh_index];
         shader.bind();
         for (uint32_t k = 0; k < mesh.textures.size(); k++)
         {
             Texture& texture = mesh.textures[k];
             std::string name = texture.get_type();
+            // TODO(ricardo): this is causing a heap allocation because of the string length
             shader.set_uniform1i("material." + name, k);
             texture.bind(k);
         }

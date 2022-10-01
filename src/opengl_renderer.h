@@ -1,8 +1,74 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
+
+class Texture
+{
+  public:
+    Texture(const char* path, const char* type);
+    ~Texture();
+
+    void bind(unsigned int slot = 0) const;
+    static void unbind();
+
+    const std::string& get_path()
+    {
+        return m_path;
+    }
+
+    const std::string& get_type()
+    {
+        return m_type;
+    }
+
+    void set_path(const std::string& new_path)
+    {
+        m_path = new_path;
+    }
+
+    void set_type(const std::string& type_name)
+    {
+        m_type = type_name;
+    }
+
+  private:
+    unsigned int m_id;
+    int m_width;
+    int m_height;
+    int m_nr_channels;
+    std::string m_path;
+    std::string m_type;
+};
+
+class Shader
+{
+  public:
+    Shader(const std::string& vertex_shader_path, const std::string& fragment_shader_path);
+    ~Shader();
+    void bind() const;
+    static void unbind();
+
+    void set_uniform1i(const std::string& name, int value);
+    void set_uniform1f(const std::string& name, float value);
+    void set_uniform3f(const std::string& name, float v0, float v1, float v2);
+    void set_uniform3f(const std::string& name, const glm::vec3& value);
+    void set_uniform4f(const std::string& name, float v0, float v1, float v2, float v3);
+    void set_uniform_mat4(const std::string& name, const glm::mat4& matrix);
+
+  private:
+    unsigned int m_id{};
+    std::unordered_map<std::string, int> m_uniform_cache;
+
+    static std::string read_shader_source_from_file(const std::string& shader_path);
+    static unsigned int compile_shader(unsigned int type, const char* source);
+    void link_program(unsigned int vertex_shader, unsigned int fragment_shader);
+    void cache_uniforms();
+    int get_location_from_cache(const std::string& name);
+};
 
 enum class DataType
 {
@@ -135,4 +201,53 @@ class VertexBufferLayout
             offset += element.size;
         }
     }
+};
+
+class VertexBuffer
+{
+  public:
+    VertexBuffer(VertexBufferLayout layout, const void* data, size_t size);
+    ~VertexBuffer();
+
+    void bind() const;
+    static void unbind();
+
+    [[nodiscard]] const VertexBufferLayout& get_layout() const
+    {
+        return m_layout;
+    }
+
+  private:
+    unsigned int m_id{};
+    VertexBufferLayout m_layout;
+};
+
+class VertexArray
+{
+  public:
+    VertexArray();
+    ~VertexArray();
+
+    void bind() const;
+    static void unbind();
+
+    void add_buffer(VertexBuffer& buffer);
+
+  private:
+    unsigned int m_id;
+    unsigned int m_enabled_attribs;
+};
+
+class IndexBuffer
+{
+  public:
+    IndexBuffer(const void* indices, unsigned int count);
+    ~IndexBuffer();
+
+    void bind() const;
+    static void unbind();
+
+  private:
+    unsigned int m_id;
+    unsigned int m_count;
 };
