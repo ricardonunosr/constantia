@@ -2,15 +2,11 @@
 #include <glad/gl.h>
 #include <spdlog/spdlog.h>
 
-#include "application.h"
 #include "camera.h"
 #include "model.h"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#define WIDTH 1280
-#define HEIGHT 720
 
 std::unique_ptr<Camera> FrameBuffersLayer::m_camera = nullptr;
 
@@ -31,8 +27,8 @@ FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
     m_camera = std::make_unique<Camera>();
 
     // TODO: find a better way to define this
-    glfwSetCursorPosCallback(Application::get().get_window(), mouse_callback);
-    glfwSetMouseButtonCallback(Application::get().get_window(), mouse_button_callback);
+    glfwSetCursorPosCallback(app.window, mouse_callback);
+    glfwSetMouseButtonCallback(app.window, mouse_button_callback);
 
     glGenFramebuffers(1, &m_framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
@@ -73,9 +69,13 @@ FrameBuffersLayer::FrameBuffersLayer(const std::string& name) : Layer(name)
     m_vao->unbind();
 }
 
+void FrameBuffersLayer::on_ui_render(float delta_time) const
+{
+}
+
 void FrameBuffersLayer::update(float delta_time) const
 {
-    m_camera->update(Application::get().get_window(), delta_time);
+    m_camera->update(app.window, delta_time);
 
     float light_x = 2.0f * sin(glfwGetTime());
     float light_y = 1.0f;

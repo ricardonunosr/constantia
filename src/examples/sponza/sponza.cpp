@@ -4,7 +4,6 @@
 
 #include "model.h"
 
-#include "application.h"
 #include "camera.h"
 #include "imgui.h"
 
@@ -30,11 +29,9 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     m_second_camera = std::make_unique<Camera>();
 
     // TODO: find a better way to define this
-    glfwSetCursorPosCallback(Application::get().get_window(), mouse_callback);
-    glfwSetMouseButtonCallback(Application::get().get_window(), mouse_button_callback);
+    glfwSetCursorPosCallback(app.window, mouse_callback);
+    glfwSetMouseButtonCallback(app.window, mouse_button_callback);
 
-    int width = Application::get().m_width;
-    int height = Application::get().m_height;
     // Main Texture Framebuffer
     //-------------------------
     glGenFramebuffers(1, &m_framebuffer);
@@ -42,7 +39,7 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
 
     glGenTextures(1, &m_texture_colorbuffer);
     glBindTexture(GL_TEXTURE_2D, m_texture_colorbuffer);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -53,7 +50,7 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     // Generate RenderBuffer for depth and/or stencil attachments
     glGenRenderbuffers(1, &m_rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
@@ -65,21 +62,20 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
 
 void SponzaLayer::on_ui_render(float delta_time) const
 {
-//    ImGui::ShowDemoWindow();
-//    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+    //    ImGui::ShowDemoWindow();
+    //    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
-//    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    //    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
     if (ImGui::Begin("Second Camera"))
     {
         ImVec2 window_size = ImGui::GetWindowSize();
         ImGui::Image(reinterpret_cast<ImTextureID>(m_texture_colorbuffer), window_size, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::End();
     }
-//    ImGui::PopStyleVar();
+    //    ImGui::PopStyleVar();
 
     if (ImGui::Begin("Metrics/Debugger"))
     {
-        auto& metrics = Application::get().get_metrics();
         ImGui::Text("Application average %.3f ms/frame (%.3f FPS)", delta_time * 1000.0f,
                     1000.0f / (1000.0f * delta_time));
         ImGui::Text("%d vertices, %d indices (%d triangles)", metrics.vertex_count, metrics.indices_count,
@@ -93,7 +89,7 @@ void SponzaLayer::on_ui_render(float delta_time) const
 void SponzaLayer::update(float delta_time) const
 {
     std::cout << "=======================Sponza loop start=============================\n";
-    m_camera->update(Application::get().get_window(), delta_time);
+    m_camera->update(app.window, delta_time);
     // m_second_camera->update(Application::get().get_window(), delta_time);
 
     float light_x = 2.0f * sin(glfwGetTime());
@@ -107,8 +103,6 @@ void SponzaLayer::update(float delta_time) const
     Frustum frustum = create_frustum_from_camera(*m_camera, 1280.0f / 720.0f, 45.0f, 0.1f, 1000.0f);
     unsigned int total = 0;
     unsigned int display = 0;
-
-    std::cout << "Here\n";
 
     m_shader->bind();
     m_shader->set_uniform_mat4("projection", m_camera->m_projection);
@@ -128,14 +122,10 @@ void SponzaLayer::update(float delta_time) const
     m_shader->set_uniform1f("light.linear", 0.09f);
     m_shader->set_uniform1f("light.quadratic", 0.032f);
 
-    std::cout << "Uniforms?\n";
-
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(0.02f));
     m_shader->set_uniform_mat4("model", model);
     m_sponza->draw(frustum, model, *m_shader, display, total);
-
-    std::cout << "Sponza Draw?\n";
 
     glm::mat4 light_transform = glm::mat4(1.0f);
     light_transform = glm::translate(light_transform, light_pos);

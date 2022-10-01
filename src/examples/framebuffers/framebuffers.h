@@ -17,6 +17,7 @@ class FrameBuffersLayer : public Layer
     explicit FrameBuffersLayer(const std::string& name);
 
     void update(float delta_time) const override;
+    void on_ui_render(float delta_time) const override;
 
     static void mouse_callback(GLFWwindow* /*window*/, double xpos, double ypos)
     {

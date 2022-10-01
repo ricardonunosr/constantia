@@ -20,30 +20,21 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 set(SOURCES
         src/main.cpp
-        src/application.cpp
         src/types.cpp
         src/camera.cpp
         src/model.cpp
-        src/editor.cpp
         src/opengl_renderer.cpp
-        # Examples
-        src/examples/sponza/sponza.cpp
-        src/examples/framebuffers/framebuffers.cpp
-        #src/examples/ray-tracing/ray_tracing.cpp
         )
 
 set(HEADERS
-        src/application.h
         src/camera.h
         src/types.h
-        src/editor.h
         src/model.h
         src/layer.h
         src/opengl_renderer.h
         # Examples
         src/examples/sponza/sponza.h
         src/examples/framebuffers/framebuffers.h
-        #src/examples/ray-tracing/ray_tracing.h
         )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
