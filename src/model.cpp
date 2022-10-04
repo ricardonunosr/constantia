@@ -9,7 +9,7 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
 
-void Model::draw(const Frustum& frustum, const glm::mat4& transform, Shader& shader, unsigned int& display,
+void Model::draw(const Frustum& frustum, const glm::mat4& transform, OpenGLProgramCommon* shader, unsigned int& display,
                  unsigned int& total)
 {
     // Note(ricardo): We start to draw at index 1 because 0 is a no texture mesh
@@ -18,13 +18,19 @@ void Model::draw(const Frustum& frustum, const glm::mat4& transform, Shader& sha
         //        if (m_bounding_volume->is_on_frustum(frustum, transform))
         //        {
         auto& mesh = m_meshes[mesh_index];
-        shader.bind();
+        glUseProgram(shader->program_id);
         for (uint32_t k = 0; k < mesh.textures.size(); k++)
         {
             Texture& texture = mesh.textures[k];
-            std::string name = texture.get_type();
-            // TODO(ricardo): this is causing a heap allocation because of the string length
-            shader.set_uniform1i("material." + name, k);
+            std::string type = texture.get_type();
+            if (type == "texture_diffuse")
+            {
+                glUniform1i(shader->material_texture_diffuse, k);
+            }
+            else if (type == "texture_specular")
+            {
+                glUniform1i(shader->material_texture_specular, k);
+            }
             texture.bind(k);
         }
         glActiveTexture(GL_TEXTURE0);
@@ -34,7 +40,7 @@ void Model::draw(const Frustum& frustum, const glm::mat4& transform, Shader& sha
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
         mesh.vao->unbind();
         mesh.ibo->unbind();
-        Shader::unbind();
+        glUseProgram(0);
         display++;
         //        }
         total++;

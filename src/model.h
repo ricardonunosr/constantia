@@ -39,7 +39,7 @@ class Model
         m_bounding_volume = std::make_unique<Sphere>(generate_sphere_bv());
     }
 
-    void draw(const Frustum& frustum, const glm::mat4& transform, Shader& shader, unsigned int& display,
+    void draw(const Frustum& frustum, const glm::mat4& transform, OpenGLProgramCommon* shader, unsigned int& display,
               unsigned int& total);
 
     Sphere generate_sphere_bv()

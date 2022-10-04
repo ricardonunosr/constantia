@@ -4,11 +4,25 @@
 #include "GLFW/glfw3.h"
 #include "camera.h"
 #include "layer.h"
+#include "opengl_renderer.h"
 #include <memory>
 #include <string>
 
 struct Model;
 struct Shader;
+
+struct SponzaShader
+{
+    OpenGLProgramCommon common;
+
+    GLint light_position;
+    GLint light_ambient;
+    GLint light_diffuse;
+    GLint light_specular;
+    GLint light_constant;
+    GLint light_linear;
+    GLint light_quadratic;
+};
 
 class SponzaLayer : public Layer
 {
@@ -20,28 +34,28 @@ class SponzaLayer : public Layer
 
     static void mouse_callback(GLFWwindow* /*window*/, double xpos, double ypos)
     {
-        m_second_camera->handle_mouse_move(xpos, ypos);
+        m_camera->handle_mouse_move(xpos, ypos);
     }
 
     static void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/)
     {
         if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
         {
-            m_second_camera->m_enabled = true;
+            m_camera->m_enabled = true;
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
         else
         {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            m_second_camera->m_enabled = false;
+            m_camera->m_enabled = false;
         }
     }
 
   private:
     std::unique_ptr<Model> m_light;
     std::unique_ptr<Model> m_sponza;
-    std::unique_ptr<Shader> m_shader;
-    std::unique_ptr<Shader> m_light_shader;
+    SponzaShader* m_shader;
+    OpenGLProgramCommon* m_light_shader;
 
     static std::unique_ptr<Camera> m_camera;
     static std::unique_ptr<Camera> m_second_camera;

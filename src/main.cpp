@@ -10,8 +10,7 @@
 // TODO(ricardo): This can dissapear most likely
 #include "layer.h"
 
-#include "examples/framebuffers/framebuffers.h"
-#include "examples/ray-tracing/ray_tracing.h"
+//#include "examples/framebuffers/framebuffers.h"
 #include "examples/sponza/sponza.h"
 
 #define WIDTH 1920
@@ -43,8 +42,9 @@ struct Application
 static Metrics metrics;
 static Application app;
 SponzaLayer* sponza = nullptr;
-FrameBuffersLayer* framebuffers = nullptr;
+// FrameBuffersLayer* framebuffers = nullptr;
 
+#if 0
 void* operator new(size_t size)
 {
     std::cout << "Allocating " << size << "bytes\n";
@@ -64,6 +64,7 @@ void operator delete(void* memory)
 {
     free(memory);
 }
+#endif
 
 void framebuffer_size_callback(GLFWwindow* /*window*/, int width, int height)
 {
@@ -72,7 +73,7 @@ void framebuffer_size_callback(GLFWwindow* /*window*/, int width, int height)
 
 // TODO(ricardo): maybe instead of one translation unit i just pass the app to the layer.
 // Anyways the concept of layer needs to be revisited anyway so this will do
-#include "examples/framebuffers/framebuffers.cpp"
+//#include "examples/framebuffers/framebuffers.cpp"
 #include "examples/sponza/sponza.cpp"
 
 int main(int /*argc*/, char** /*argv*/)
@@ -118,11 +119,11 @@ int main(int /*argc*/, char** /*argv*/)
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(app.window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
-#if 1
+#if 0
     framebuffers = new FrameBuffersLayer("FrameBuffers");
     app.layers.push_back(framebuffers);
 #endif
-#if 0
+#if 1
     sponza = new SponzaLayer("Sponza");
     app.layers.push_back(sponza);
 #endif

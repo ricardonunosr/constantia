@@ -2,14 +2,14 @@
 #include <glad/gl.h>
 #include <spdlog/spdlog.h>
 
-#include "model.h"
-
 #include "camera.h"
 #include "imgui.h"
+#include "model.h"
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 std::unique_ptr<Camera> SponzaLayer::m_camera = nullptr;
@@ -20,10 +20,32 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     std::string base_path_assets = "./data/";
     m_sponza = std::make_unique<Model>(base_path_assets + "sponza/sponza.obj");
     m_light = std::make_unique<Model>(base_path_assets + "cube/cube.obj");
-    m_shader =
-        std::make_unique<Shader>(base_path_assets + "shaders/basic.vert", base_path_assets + "shaders/basic.frag");
-    m_light_shader =
-        std::make_unique<Shader>(base_path_assets + "shaders/light.vert", base_path_assets + "shaders/light.frag");
+
+    // Sponza
+    std::string vertex_shader_path = base_path_assets + "shaders/basic.vert";
+    std::string fragment_shader_path = base_path_assets + "shaders/basic.frag";
+    char* vertex_shader_source = (char*)read_entire_file(vertex_shader_path.c_str());
+    char* fragment_shader_source = (char*)read_entire_file(fragment_shader_path.c_str());
+
+    m_shader = (SponzaShader*)malloc(sizeof(SponzaShader));
+    opengl_create_shader(vertex_shader_source, fragment_shader_source, &m_shader->common);
+    m_shader->light_position = glGetUniformLocation(m_shader->common.program_id, "light.position");
+    m_shader->light_ambient = glGetUniformLocation(m_shader->common.program_id, "light.ambient");
+    m_shader->light_diffuse = glGetUniformLocation(m_shader->common.program_id, "light.diffuse");
+    m_shader->light_specular = glGetUniformLocation(m_shader->common.program_id, "light.specular");
+    m_shader->light_constant = glGetUniformLocation(m_shader->common.program_id, "light.constant");
+    m_shader->light_linear = glGetUniformLocation(m_shader->common.program_id, "light.linear");
+    m_shader->light_quadratic = glGetUniformLocation(m_shader->common.program_id, "light.quadratic");
+
+    // Light
+    std::string vertex_shader_light_path = base_path_assets + "shaders/light.vert";
+    std::string fragment_shader_light_path = base_path_assets + "shaders/light.frag";
+    char* vertex_shader_light_source = (char*)read_entire_file(vertex_shader_light_path.c_str());
+    char* fragment_shader_light_source = (char*)read_entire_file(fragment_shader_light_path.c_str());
+
+    OpenGLProgramCommon* light_shader = (OpenGLProgramCommon*)malloc(sizeof(OpenGLProgramCommon));
+    opengl_create_shader(vertex_shader_light_source, fragment_shader_light_source, light_shader);
+    m_light_shader = light_shader;
 
     m_camera = std::make_unique<Camera>();
     m_second_camera = std::make_unique<Camera>();
@@ -58,6 +80,16 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         spdlog::error("Framebuffer is not complete!");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glUseProgram(m_shader->common.program_id);
+    glUniform1f(m_shader->common.material_shininess, 64.0f);
+    glUniform3f(m_shader->light_ambient, 1.0f, 1.0f, 1.0f);
+    glUniform3f(m_shader->light_diffuse, 1.0f, 1.0f, 1.0f);
+    glUniform3f(m_shader->light_specular, 1.0f, 1.0f, 1.0f);
+    glUniform1f(m_shader->light_constant, 1.0f);
+    glUniform1f(m_shader->light_linear, 0.09f);
+    glUniform1f(m_shader->light_quadratic, 0.032f);
+    glUseProgram(0);
 }
 
 void SponzaLayer::on_ui_render(float delta_time) const
@@ -97,67 +129,75 @@ void SponzaLayer::update(float delta_time) const
     float light_z = 1.5f * cos(glfwGetTime());
     glm::vec3 light_pos = glm::vec3(light_x, light_y, light_z);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glClearColor(0.5f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     Frustum frustum = create_frustum_from_camera(*m_camera, 1280.0f / 720.0f, 45.0f, 0.1f, 1000.0f);
     unsigned int total = 0;
     unsigned int display = 0;
 
-    m_shader->bind();
-    m_shader->set_uniform_mat4("projection", m_camera->m_projection);
-    m_shader->set_uniform_mat4("view", m_camera->view_matrix());
-    m_shader->set_uniform3f("viewPos", m_camera->m_position);
-    // TODO(ricardo): this way of setting shader uniforms can cause a memory allocation in the heap in the loop
-    // because strings which size is greater than 15(verify number) are allocated in the heap
-    // Example: this was "material.shininess" and caused heap allocation
-    m_shader->set_uniform1f("material.shiny", 64.0f);
-
-    m_shader->set_uniform3f("light.position", light_pos);
-    m_shader->set_uniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
-    m_shader->set_uniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
-    m_shader->set_uniform3f("light.specular", 1.0f, 1.0f, 1.0f);
-
-    m_shader->set_uniform1f("light.constant", 1.0f);
-    m_shader->set_uniform1f("light.linear", 0.09f);
-    m_shader->set_uniform1f("light.quadratic", 0.032f);
-
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(0.02f));
-    m_shader->set_uniform_mat4("model", model);
-    m_sponza->draw(frustum, model, *m_shader, display, total);
 
     glm::mat4 light_transform = glm::mat4(1.0f);
     light_transform = glm::translate(light_transform, light_pos);
     light_transform = glm::scale(light_transform, glm::vec3(0.2f));
-    m_light_shader->set_uniform_mat4("model", light_transform);
-    m_light->draw(frustum, model, *m_light_shader, display, total);
 
-    glViewport(0, 0, 1920, 1080);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    m_shader->bind();
-    m_shader->set_uniform_mat4("projection", m_second_camera->m_projection);
-    m_shader->set_uniform_mat4("view", m_second_camera->view_matrix());
-    m_shader->set_uniform3f("viewPos", m_second_camera->m_position);
-    m_shader->set_uniform1f("material.shiny", 64.0f);
+    {
+        // Primary Framebuffer
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glClearColor(0.5f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    m_shader->set_uniform3f("light.position", light_pos);
-    m_shader->set_uniform3f("light.ambient", 1.0f, 1.0f, 1.0f);
-    m_shader->set_uniform3f("light.diffuse", 1.0f, 1.0f, 1.0f);
-    m_shader->set_uniform3f("light.specular", 1.0f, 1.0f, 1.0f);
+        glUseProgram(m_shader->common.program_id);
+        glUniformMatrix4fv(m_shader->common.projection, 1, false, glm::value_ptr(m_camera->m_projection));
+        glUniformMatrix4fv(m_shader->common.view, 1, false, glm::value_ptr(m_camera->view_matrix()));
+        glUniform3fv(m_shader->common.view_pos, 1, &m_camera->m_position[0]);
+        glUniform3fv(m_shader->light_position, 1, &light_pos[0]);
 
-    m_shader->set_uniform1f("light.constant", 1.0f);
-    m_shader->set_uniform1f("light.linear", 0.09f);
-    m_shader->set_uniform1f("light.quadratic", 0.032f);
+        glUniform1f(m_shader->common.material_shininess, 64.0f);
+        glUniform3f(m_shader->light_ambient, 1.0f, 1.0f, 1.0f);
+        glUniform3f(m_shader->light_diffuse, 1.0f, 1.0f, 1.0f);
+        glUniform3f(m_shader->light_specular, 1.0f, 1.0f, 1.0f);
+        glUniform1f(m_shader->light_constant, 1.0f);
+        glUniform1f(m_shader->light_linear, 0.09f);
+        glUniform1f(m_shader->light_quadratic, 0.032f);
 
-    m_shader->set_uniform_mat4("model", model);
-    m_sponza->draw(frustum, model, *m_shader, display, total);
+        glUniformMatrix4fv(m_shader->common.model, 1, GL_FALSE, glm::value_ptr(model));
+        m_sponza->draw(frustum, model, (OpenGLProgramCommon*)m_shader, display, total);
 
-    m_light_shader->set_uniform_mat4("model", light_transform);
-    m_light->draw(frustum, model, *m_light_shader, display, total);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glUseProgram(m_light_shader->program_id);
+        glUniformMatrix4fv(m_light_shader->model, 1, GL_FALSE, glm::value_ptr(light_transform));
+        m_light->draw(frustum, model, m_light_shader, display, total);
+    }
+
+    {
+        // Second Framebuffer
+        glViewport(0, 0, 1920, 1080);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        glUseProgram(m_shader->common.program_id);
+        glUniformMatrix4fv(m_shader->common.projection, 1, false, glm::value_ptr(m_second_camera->m_projection));
+        glUniformMatrix4fv(m_shader->common.view, 1, false, glm::value_ptr(m_second_camera->view_matrix()));
+        glUniform3fv(m_shader->common.view_pos, 1, &m_camera->m_position[0]);
+        glUniform3fv(m_shader->light_position, 1, &light_pos[0]);
+
+        glUniform1f(m_shader->common.material_shininess, 64.0f);
+        glUniform3f(m_shader->light_ambient, 1.0f, 1.0f, 1.0f);
+        glUniform3f(m_shader->light_diffuse, 1.0f, 1.0f, 1.0f);
+        glUniform3f(m_shader->light_specular, 1.0f, 1.0f, 1.0f);
+        glUniform1f(m_shader->light_constant, 1.0f);
+        glUniform1f(m_shader->light_linear, 0.09f);
+        glUniform1f(m_shader->light_quadratic, 0.032f);
+
+        m_sponza->draw(frustum, model, (OpenGLProgramCommon*)m_shader, display, total);
+
+        glUseProgram(m_light_shader->program_id);
+        glUniformMatrix4fv(m_light_shader->model, 1, GL_FALSE, glm::value_ptr(light_transform));
+        m_light->draw(frustum, model, m_light_shader, display, total);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glUseProgram(0);
+    }
+
     std::cout << "=======================Sponza loop end=============================\n";
 }

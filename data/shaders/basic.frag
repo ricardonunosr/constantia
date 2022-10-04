@@ -2,7 +2,7 @@
 struct Material {
     sampler2D texture_diffuse;
     sampler2D texture_specular;
-    float shiny;
+    float shininess;
 };
 
 struct Light {
@@ -41,7 +41,7 @@ void main()
     //specular
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shiny);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = light.specular * spec * vec3(texture(material.texture_specular,TexCoord));
 
     //attenuation

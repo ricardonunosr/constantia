@@ -10,7 +10,7 @@ if (MSVC)
     add_compile_options(/W4 /WX)
 else()
     # lots of warnings and all warnings as errors
-    add_compile_options(-Wall -Wextra -pedantic -Werror -Wno-unused-parameter)
+    add_compile_options(-Wall -Wextra -pedantic -Werror -Wno-unused-parameter -Wno-write-strings -Wno-unused-variable)
 endif()
 
 #GLFW additions
@@ -34,7 +34,7 @@ set(HEADERS
         src/opengl_renderer.h
         # Examples
         src/examples/sponza/sponza.h
-        src/examples/framebuffers/framebuffers.h
+        #src/examples/framebuffers/framebuffers.h
         )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
