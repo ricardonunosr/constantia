@@ -44,7 +44,7 @@ static Application app;
 SponzaLayer* sponza = nullptr;
 // FrameBuffersLayer* framebuffers = nullptr;
 
-#if 0
+#if 1
 void* operator new(size_t size)
 {
     std::cout << "Allocating " << size << "bytes\n";
@@ -136,6 +136,8 @@ int main(int /*argc*/, char** /*argv*/)
     // Main Loop
     while (!(glfwWindowShouldClose(app.window) != 0))
     {
+        metrics.total_allocated = 0;
+        metrics.total_freed = 0;
         float current_frame = static_cast<float>(glfwGetTime());
         app.delta_time = current_frame - app.last_frame;
         app.last_frame = current_frame;
@@ -156,6 +158,7 @@ int main(int /*argc*/, char** /*argv*/)
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
 
+        std::cout << "Allocated during frame " << metrics.current_usage() << " bytes\n";
         glfwPollEvents();
         glfwSwapBuffers(app.window);
     }

@@ -79,30 +79,30 @@ void opengl_create_shader(char* vertex_shader_source, char* fragment_shader_sour
     result->material_shininess = glGetUniformLocation(program_id, "material.shininess");
 }
 
-Texture::Texture(const char* path, const char* type)
-    : m_id{0}, m_width{0}, m_height{0}, m_nr_channels{0}, m_path{path}, m_type{type}
+void opengl_create_texture(const char* path, texture_type type, Texture* texture)
 {
-    glGenTextures(1, &m_id);
-    glBindTexture(GL_TEXTURE_2D, m_id);
+    glGenTextures(1, &texture->id);
+    glBindTexture(GL_TEXTURE_2D, texture->id);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    unsigned char* data = stbi_load(path, &m_width, &m_height, &m_nr_channels, 0);
+    unsigned char* data = stbi_load(path, &texture->width, &texture->height, &texture->nr_channels, 0);
     if (data != nullptr)
     {
         int format = GL_RGB;
-        if (m_nr_channels == 1)
+        if (texture->nr_channels == 1)
             format = GL_RED;
-        else if (m_nr_channels == 3)
+        else if (texture->nr_channels == 3)
             format = GL_RGB;
-        else if (m_nr_channels == 4)
+        else if (texture->nr_channels == 4)
             format = GL_RGBA;
 
-        glTexImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, texture->width, texture->height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
         glBindTexture(GL_TEXTURE_2D, 0);
+        texture->type = type;
     }
     else
     {
@@ -111,17 +111,13 @@ Texture::Texture(const char* path, const char* type)
     stbi_image_free(data);
 }
 
-Texture::~Texture()
-{
-    // glDeleteTextures(1, &id);
-}
-
-void Texture::bind(unsigned int slot /*= 0*/) const
+void opengl_bind_texture(unsigned int id, unsigned int slot)
 {
     glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(GL_TEXTURE_2D, m_id);
+    glBindTexture(GL_TEXTURE_2D, id);
 }
-void Texture::unbind()
+
+void opengl_unbind_textrure()
 {
     glBindTexture(GL_TEXTURE_2D, 0);
 }

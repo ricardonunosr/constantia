@@ -25,7 +25,7 @@ class Model
     {
         std::vector<Vertex> vertices{};
         std::vector<unsigned int> indices{};
-        std::vector<Texture> textures{};
+        std::vector<Texture*> textures{};
 
         std::unique_ptr<VertexArray> vao;
         std::unique_ptr<VertexBuffer> vbo;

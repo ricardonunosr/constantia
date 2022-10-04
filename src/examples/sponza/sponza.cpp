@@ -12,6 +12,99 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
+static char* VERTEX_SHADR_SOURCE = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoord;
+
+out vec2 TexCoord;
+out vec3 Normal;
+out vec3 FragPos;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+	gl_Position = projection * view * model * vec4(aPos, 1.0);
+	TexCoord = vec2(aTexCoord.x, aTexCoord.y);
+	FragPos = vec3(model * vec4(aPos, 1.0));
+	Normal = aNormal;
+}
+)";
+
+static char* FRAGMENT_SHADER_SOURCE = R"(
+#version 330 core
+struct Material {
+    sampler2D texture_diffuse;
+    sampler2D texture_specular;
+    float shininess;
+};
+
+struct Light {
+    vec3 position;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+
+    float constant;
+    float linear;
+    float quadratic;
+};
+
+out vec4 FragColor;
+
+in vec2 TexCoord;
+in vec3 Normal;
+in vec3 FragPos;
+
+uniform vec3 viewPos;
+uniform Material material;
+uniform Light light;
+
+void main()
+{
+    //ambient
+    vec3 ambient = light.ambient * vec3(texture(material.texture_diffuse, TexCoord));
+
+    //diffuse
+    vec3 norm = normalize(Normal);
+    vec3 lightDir =normalize(light.position - FragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.texture_diffuse, TexCoord));
+
+    //specular
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 specular = light.specular * spec * vec3(texture(material.texture_specular,TexCoord));
+
+    //attenuation
+    float distance = length(light.position - FragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+
+    vec3 result = ambient + diffuse + specular;
+    float alpha = texture(material.texture_diffuse, TexCoord).a;
+    if(alpha < 0.1)
+        discard;
+    FragColor = vec4(result, alpha);
+    //vec4 texColor = texture(material.texture_diffuse, TexCoord);
+    //if(texColor.a < 0.1)
+    //    discard;
+    //FragColor = texColor;
+    //FragColor = vec4(diffuse,1.0);
+    //FragColor.rgb = Normal;
+    //FragColor.a = 1.0f;
+}
+)";
+
 std::unique_ptr<Camera> SponzaLayer::m_camera = nullptr;
 std::unique_ptr<Camera> SponzaLayer::m_second_camera = nullptr;
 
@@ -24,11 +117,12 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     // Sponza
     std::string vertex_shader_path = base_path_assets + "shaders/basic.vert";
     std::string fragment_shader_path = base_path_assets + "shaders/basic.frag";
-    char* vertex_shader_source = (char*)read_entire_file(vertex_shader_path.c_str());
-    char* fragment_shader_source = (char*)read_entire_file(fragment_shader_path.c_str());
+    // TODO(ricardo): this is causing some invalid malloc from OpenGL drivers. INVESTIGATE.
+    //  char* vertex_shader_source = (char*)read_entire_file(vertex_shader_path.c_str());
+    //  char* fragment_shader_source = (char*)read_entire_file(fragment_shader_path.c_str());
 
     m_shader = (SponzaShader*)malloc(sizeof(SponzaShader));
-    opengl_create_shader(vertex_shader_source, fragment_shader_source, &m_shader->common);
+    opengl_create_shader(VERTEX_SHADR_SOURCE, FRAGMENT_SHADER_SOURCE, &m_shader->common);
     m_shader->light_position = glGetUniformLocation(m_shader->common.program_id, "light.position");
     m_shader->light_ambient = glGetUniformLocation(m_shader->common.program_id, "light.ambient");
     m_shader->light_diffuse = glGetUniformLocation(m_shader->common.program_id, "light.diffuse");
@@ -36,6 +130,8 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     m_shader->light_constant = glGetUniformLocation(m_shader->common.program_id, "light.constant");
     m_shader->light_linear = glGetUniformLocation(m_shader->common.program_id, "light.linear");
     m_shader->light_quadratic = glGetUniformLocation(m_shader->common.program_id, "light.quadratic");
+    // free(vertex_shader_source);
+    // free(fragment_shader_source);
 
     // Light
     std::string vertex_shader_light_path = base_path_assets + "shaders/light.vert";
@@ -46,6 +142,8 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     OpenGLProgramCommon* light_shader = (OpenGLProgramCommon*)malloc(sizeof(OpenGLProgramCommon));
     opengl_create_shader(vertex_shader_light_source, fragment_shader_light_source, light_shader);
     m_light_shader = light_shader;
+    free(vertex_shader_light_source);
+    free(fragment_shader_light_source);
 
     m_camera = std::make_unique<Camera>();
     m_second_camera = std::make_unique<Camera>();
@@ -92,6 +190,12 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     glUseProgram(0);
 }
 
+SponzaLayer::~SponzaLayer()
+{
+    glDeleteProgram(m_shader->common.program_id);
+    glDeleteProgram(m_light_shader->program_id);
+}
+
 void SponzaLayer::on_ui_render(float delta_time) const
 {
     //    ImGui::ShowDemoWindow();
@@ -120,7 +224,6 @@ void SponzaLayer::on_ui_render(float delta_time) const
 
 void SponzaLayer::update(float delta_time) const
 {
-    std::cout << "=======================Sponza loop start=============================\n";
     m_camera->update(app.window, delta_time);
     // m_second_camera->update(Application::get().get_window(), delta_time);
 
@@ -198,6 +301,4 @@ void SponzaLayer::update(float delta_time) const
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(0);
     }
-
-    std::cout << "=======================Sponza loop end=============================\n";
 }

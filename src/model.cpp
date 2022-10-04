@@ -21,17 +21,16 @@ void Model::draw(const Frustum& frustum, const glm::mat4& transform, OpenGLProgr
         glUseProgram(shader->program_id);
         for (uint32_t k = 0; k < mesh.textures.size(); k++)
         {
-            Texture& texture = mesh.textures[k];
-            std::string type = texture.get_type();
-            if (type == "texture_diffuse")
+            Texture* texture = mesh.textures[k];
+            if (texture->type == diffuse)
             {
                 glUniform1i(shader->material_texture_diffuse, k);
             }
-            else if (type == "texture_specular")
+            else if (texture->type == specular)
             {
                 glUniform1i(shader->material_texture_specular, k);
             }
-            texture.bind(k);
+            opengl_bind_texture(texture->id, k);
         }
         glActiveTexture(GL_TEXTURE0);
 
@@ -99,21 +98,27 @@ void Model::load_model(const std::string& path)
                 std::string diffuse_path(materials[i].diffuse_texname);
                 std::replace(diffuse_path.begin(), diffuse_path.end(), '\\', '/');
                 std::string diffuse_path_final = m_directory + "/" + diffuse_path;
-                mesh.textures.emplace_back(diffuse_path_final.c_str(), "texture_diffuse");
+                Texture* texture = (Texture*)malloc(sizeof(Texture));
+                opengl_create_texture(diffuse_path_final.c_str(), diffuse, texture);
+                mesh.textures.push_back(texture);
             }
             if (!materials[i].specular_texname.empty())
             {
                 std::string specular_path(materials[i].specular_texname);
                 std::replace(specular_path.begin(), specular_path.end(), '\\', '/');
                 std::string specular_path_final = m_directory + "/" + specular_path;
-                mesh.textures.emplace_back(specular_path_final.c_str(), "texture_specular");
+                Texture* texture = (Texture*)malloc(sizeof(Texture));
+                opengl_create_texture(specular_path_final.c_str(), specular, texture);
+                mesh.textures.push_back(texture);
             }
             else if (!materials[i].bump_texname.empty())
             {
                 std::string bump_path(materials[i].bump_texname);
                 std::replace(bump_path.begin(), bump_path.end(), '\\', '/');
                 std::string bump_path_final = m_directory + "/" + bump_path;
-                mesh.textures.emplace_back(bump_path_final.c_str(), "texture_specular");
+                Texture* texture = (Texture*)malloc(sizeof(Texture));
+                opengl_create_texture(bump_path_final.c_str(), specular, texture);
+                mesh.textures.push_back(texture);
             }
         }
 

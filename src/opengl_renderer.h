@@ -23,43 +23,24 @@ struct OpenGLProgramCommon
 void* read_entire_file(const char* file_path);
 void opengl_create_shader(char* vertex_shader_source, char* fragment_shader_source, OpenGLProgramCommon* result);
 
-class Texture
+enum texture_type
 {
-  public:
-    Texture(const char* path, const char* type);
-    ~Texture();
-
-    void bind(unsigned int slot = 0) const;
-    static void unbind();
-
-    const std::string& get_path()
-    {
-        return m_path;
-    }
-
-    const std::string& get_type()
-    {
-        return m_type;
-    }
-
-    void set_path(const std::string& new_path)
-    {
-        m_path = new_path;
-    }
-
-    void set_type(const std::string& type_name)
-    {
-        m_type = type_name;
-    }
-
-  private:
-    unsigned int m_id;
-    int m_width;
-    int m_height;
-    int m_nr_channels;
-    std::string m_path;
-    std::string m_type;
+    diffuse,
+    specular
 };
+
+struct Texture
+{
+    unsigned int id;
+    int width;
+    int height;
+    int nr_channels;
+    texture_type type;
+};
+
+void opengl_create_texture(const char* path, texture_type type,Texture *texture);
+void opengl_bind_texture(unsigned int id, unsigned int slot);
+void opengl_unbind_textrure();
 
 enum class DataType
 {

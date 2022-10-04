@@ -28,6 +28,7 @@ class SponzaLayer : public Layer
 {
   public:
     explicit SponzaLayer(const std::string& name);
+    ~SponzaLayer();
 
     void update(float delta_time) const override;
     void on_ui_render(float delta_time) const override;
