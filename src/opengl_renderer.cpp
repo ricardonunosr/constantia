@@ -1,6 +1,5 @@
 #include "opengl_renderer.h"
 #include <iostream>
-#include <spdlog/spdlog.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -13,7 +12,7 @@ void* read_entire_file(const char* file_path)
     FILE* file_handle = fopen(file_path, "r");
     if (file_handle == 0)
     {
-        spdlog::error("File doesn't exist.", file_path);
+        printf("File doesn't exist: %s", file_path);
         exit(-1);
     }
     fseek(file_handle, 0L, SEEK_END);
@@ -23,7 +22,7 @@ void* read_entire_file(const char* file_path)
     size_t bytes_read = fread(result, sizeof(char), file_size, file_handle);
     if (bytes_read != (long unsigned int)file_size)
     {
-        spdlog::error("Failed to read file {}", file_path);
+        printf("Failed to read file: %s", file_path);
         exit(-1);
     }
     fclose(file_handle);
@@ -107,7 +106,7 @@ void opengl_create_texture(const char* path, texture_type type, Texture* texture
     }
     else
     {
-        spdlog::error("Failed to load texture({}) reason: {}", path, stbi_failure_reason());
+        printf("Failed to load texture(%s) reason: %s", path, stbi_failure_reason());
     }
     stbi_image_free(data);
 }

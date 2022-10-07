@@ -6,7 +6,6 @@
 #include <filesystem>
 #include <imgui.h>
 #include <iostream>
-#include <spdlog/spdlog.h>
 // TODO(ricardo): This can dissapear most likely
 #include "layer.h"
 
@@ -44,7 +43,7 @@ static Application app;
 SponzaLayer* sponza = nullptr;
 // FrameBuffersLayer* framebuffers = nullptr;
 
-#if 0
+#if 1
 void* operator new(size_t size)
 {
     std::cout << "Allocating " << size << "bytes\n";
@@ -103,14 +102,13 @@ int main(int /*argc*/, char** /*argv*/)
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0)
     {
-        spdlog::error("Failed to initialize OpenGL context");
+	printf("Failed to initialize OpenGL context\n");
         return -1;
     }
 
-    // Successfully loaded OpenGL
-    spdlog::info("Loaded OpenGL {}.{}", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
+    printf("Loaded OpenGL %d.%d\n",GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
-    spdlog::info("Current working directory: {}", std::filesystem::current_path().c_str());
+    printf("Current working directory: %s\n",std::filesystem::current_path().c_str());
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -132,7 +130,7 @@ int main(int /*argc*/, char** /*argv*/)
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_CULL_FACE);
 
-    std::cout << "Startup Usage " << metrics.current_usage() << " bytes\n";
+    printf("Startup Usage %d bytes\n", metrics.current_usage());
     // Main Loop
     while (!(glfwWindowShouldClose(app.window) != 0))
     {
@@ -158,7 +156,7 @@ int main(int /*argc*/, char** /*argv*/)
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
 
-        std::cout << "Allocated during frame " << metrics.current_usage() << " bytes\n";
+	printf("Allocated during frame %d bytes\n",metrics.current_usage());
         glfwPollEvents();
         glfwSwapBuffers(app.window);
     }

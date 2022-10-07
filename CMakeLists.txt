@@ -41,7 +41,6 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glfw)
-add_subdirectory(lib/spdlog)
 add_subdirectory(lib/imgui)
 add_subdirectory(lib/tinyobjloader)
 
@@ -52,7 +51,6 @@ target_include_directories(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} SYSTEM
         PUBLIC lib/glad/include
         PUBLIC lib/glfw/include
-        PUBLIC lib/spdlog/include
         PUBLIC lib/glm
         PUBLIC lib/stb
         PUBLIC lib/imgui
@@ -62,16 +60,13 @@ target_include_directories(${PROJECT_NAME} SYSTEM
 target_link_libraries(${PROJECT_NAME}
         glad
         glfw
-        spdlog
         imgui
         tinyobjloader
         pthread
         )
 
 # TODO(ricardo): I HATE CMAKE... find better way to add third-party libs
-# TODO(ricardo): Remove spdlog
 target_compile_options(glad PRIVATE "-w")
 target_compile_options(glfw PRIVATE "-w")
-target_compile_options(spdlog PRIVATE "-w")
 target_compile_options(imgui PRIVATE "-w")
 target_compile_options(tinyobjloader PRIVATE "-w")

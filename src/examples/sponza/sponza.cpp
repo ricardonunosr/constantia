@@ -1,6 +1,5 @@
 #include "sponza.h"
 #include <glad/gl.h>
-#include <spdlog/spdlog.h>
 
 #include "camera.h"
 #include "imgui.h"
@@ -176,7 +175,7 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        spdlog::error("Framebuffer is not complete!");
+        printf("Framebuffer is not complete!\n");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glUseProgram(m_shader->common.program_id);

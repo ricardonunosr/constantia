@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <glad/gl.h>
-#include <spdlog/spdlog.h>
 #include <unordered_map>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
@@ -70,14 +69,14 @@ void Model::load_model(const std::string& path)
         {
             if (!reader.Error().empty())
             {
-                spdlog::error("TinyObjReader: {}", reader.Error());
+                printf("TinyObjReader: %s", reader.Error().c_str());
             }
             exit(1);
         }
 
         if (!reader.Warning().empty())
         {
-            spdlog::warn("TinyObjReader: {}", reader.Warning());
+            printf("TinyObjReader: %s", reader.Warning().c_str());
         }
 
         const auto& attrib = reader.GetAttrib();
