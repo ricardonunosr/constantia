@@ -30,11 +30,7 @@ set(HEADERS
         src/camera.h
         src/types.h
         src/model.h
-        src/layer.h
         src/opengl_renderer.h
-        # Examples
-        src/examples/sponza/sponza.h
-        #src/examples/framebuffers/framebuffers.h
         )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})

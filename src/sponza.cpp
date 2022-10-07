@@ -1,4 +1,3 @@
-#include "sponza.h"
 #include <glad/gl.h>
 
 #include "camera.h"
@@ -104,14 +103,59 @@ void main()
 }
 )";
 
-std::unique_ptr<Camera> SponzaLayer::m_camera = nullptr;
-std::unique_ptr<Camera> SponzaLayer::m_second_camera = nullptr;
+struct SponzaShader
+{
+    OpenGLProgramCommon common;
 
-SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
+    GLint light_position;
+    GLint light_ambient;
+    GLint light_diffuse;
+    GLint light_specular;
+    GLint light_constant;
+    GLint light_linear;
+    GLint light_quadratic;
+};
+
+struct Sponza
+{
+    std::unique_ptr<Model> light;
+    std::unique_ptr<Model> sponza;
+    SponzaShader* shader;
+    OpenGLProgramCommon* light_shader;
+    unsigned int framebuffer;
+    unsigned int rbo;
+    unsigned int texture_colorbuffer;
+};
+
+static std::unique_ptr<Camera> camera = nullptr;
+static std::unique_ptr<Camera> second_camera = nullptr;
+
+static void mouse_callback(GLFWwindow* /*window*/, double xpos, double ypos)
+{
+    camera->handle_mouse_move(xpos, ypos);
+}
+
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/)
+{
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+    {
+        camera->m_enabled = true;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        camera->m_enabled = false;
+    }
+}
+
+Sponza* sponza = (Sponza*)malloc(sizeof(Sponza));
+
+void init()
 {
     std::string base_path_assets = "./data/";
-    m_sponza = std::make_unique<Model>(base_path_assets + "sponza/sponza.obj");
-    m_light = std::make_unique<Model>(base_path_assets + "cube/cube.obj");
+    sponza->sponza = std::make_unique<Model>(base_path_assets + "sponza/sponza.obj");
+    sponza->light = std::make_unique<Model>(base_path_assets + "cube/cube.obj");
 
     // Sponza
     std::string vertex_shader_path = base_path_assets + "shaders/basic.vert";
@@ -120,15 +164,16 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     //  char* vertex_shader_source = (char*)read_entire_file(vertex_shader_path.c_str());
     //  char* fragment_shader_source = (char*)read_entire_file(fragment_shader_path.c_str());
 
-    m_shader = (SponzaShader*)malloc(sizeof(SponzaShader));
-    opengl_create_shader(VERTEX_SHADR_SOURCE, FRAGMENT_SHADER_SOURCE, &m_shader->common);
-    m_shader->light_position = glGetUniformLocation(m_shader->common.program_id, "light.position");
-    m_shader->light_ambient = glGetUniformLocation(m_shader->common.program_id, "light.ambient");
-    m_shader->light_diffuse = glGetUniformLocation(m_shader->common.program_id, "light.diffuse");
-    m_shader->light_specular = glGetUniformLocation(m_shader->common.program_id, "light.specular");
-    m_shader->light_constant = glGetUniformLocation(m_shader->common.program_id, "light.constant");
-    m_shader->light_linear = glGetUniformLocation(m_shader->common.program_id, "light.linear");
-    m_shader->light_quadratic = glGetUniformLocation(m_shader->common.program_id, "light.quadratic");
+    sponza->shader = (SponzaShader*)malloc(sizeof(SponzaShader));
+    SponzaShader* shader = sponza->shader;
+    opengl_create_shader(VERTEX_SHADR_SOURCE, FRAGMENT_SHADER_SOURCE, &shader->common);
+    shader->light_position = glGetUniformLocation(shader->common.program_id, "light.position");
+    shader->light_ambient = glGetUniformLocation(shader->common.program_id, "light.ambient");
+    shader->light_diffuse = glGetUniformLocation(shader->common.program_id, "light.diffuse");
+    shader->light_specular = glGetUniformLocation(shader->common.program_id, "light.specular");
+    shader->light_constant = glGetUniformLocation(shader->common.program_id, "light.constant");
+    shader->light_linear = glGetUniformLocation(shader->common.program_id, "light.linear");
+    shader->light_quadratic = glGetUniformLocation(shader->common.program_id, "light.quadratic");
     // free(vertex_shader_source);
     // free(fragment_shader_source);
 
@@ -138,14 +183,14 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
     char* vertex_shader_light_source = (char*)read_entire_file(vertex_shader_light_path.c_str());
     char* fragment_shader_light_source = (char*)read_entire_file(fragment_shader_light_path.c_str());
 
-    OpenGLProgramCommon* light_shader = (OpenGLProgramCommon*)malloc(sizeof(OpenGLProgramCommon));
+    sponza->light_shader = (OpenGLProgramCommon*)malloc(sizeof(OpenGLProgramCommon));
+    OpenGLProgramCommon* light_shader = sponza->light_shader; 
     opengl_create_shader(vertex_shader_light_source, fragment_shader_light_source, light_shader);
-    m_light_shader = light_shader;
     free(vertex_shader_light_source);
     free(fragment_shader_light_source);
 
-    m_camera = std::make_unique<Camera>();
-    m_second_camera = std::make_unique<Camera>();
+    camera = std::make_unique<Camera>();
+    second_camera = std::make_unique<Camera>();
 
     // TODO: find a better way to define this
     glfwSetCursorPosCallback(app.window, mouse_callback);
@@ -153,49 +198,49 @@ SponzaLayer::SponzaLayer(const std::string& name) : Layer(name)
 
     // Main Texture Framebuffer
     //-------------------------
-    glGenFramebuffers(1, &m_framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+    glGenFramebuffers(1, &sponza->framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, sponza->framebuffer);
 
-    glGenTextures(1, &m_texture_colorbuffer);
-    glBindTexture(GL_TEXTURE_2D, m_texture_colorbuffer);
+    glGenTextures(1, &sponza->texture_colorbuffer);
+    glBindTexture(GL_TEXTURE_2D, sponza->texture_colorbuffer);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     // attach it to currently bound framebuffer object
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture_colorbuffer, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, sponza->texture_colorbuffer, 0);
 
     // Generate RenderBuffer for depth and/or stencil attachments
-    glGenRenderbuffers(1, &m_rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
+    glGenRenderbuffers(1, &sponza->rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, sponza->rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, sponza->rbo);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         printf("Framebuffer is not complete!\n");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glUseProgram(m_shader->common.program_id);
-    glUniform1f(m_shader->common.material_shininess, 64.0f);
-    glUniform3f(m_shader->light_ambient, 1.0f, 1.0f, 1.0f);
-    glUniform3f(m_shader->light_diffuse, 1.0f, 1.0f, 1.0f);
-    glUniform3f(m_shader->light_specular, 1.0f, 1.0f, 1.0f);
-    glUniform1f(m_shader->light_constant, 1.0f);
-    glUniform1f(m_shader->light_linear, 0.09f);
-    glUniform1f(m_shader->light_quadratic, 0.032f);
+    glUseProgram(shader->common.program_id);
+    glUniform1f(shader->common.material_shininess, 64.0f);
+    glUniform3f(shader->light_ambient, 1.0f, 1.0f, 1.0f);
+    glUniform3f(shader->light_diffuse, 1.0f, 1.0f, 1.0f);
+    glUniform3f(shader->light_specular, 1.0f, 1.0f, 1.0f);
+    glUniform1f(shader->light_constant, 1.0f);
+    glUniform1f(shader->light_linear, 0.09f);
+    glUniform1f(shader->light_quadratic, 0.032f);
     glUseProgram(0);
 }
 
-SponzaLayer::~SponzaLayer()
+void deinit()
 {
-    glDeleteProgram(m_shader->common.program_id);
-    glDeleteProgram(m_light_shader->program_id);
+    glDeleteProgram(sponza->shader->common.program_id);
+    glDeleteProgram(sponza->light_shader->program_id);
 }
 
-void SponzaLayer::on_ui_render(float delta_time) const
+void ui_render(float delta_time)
 {
     //    ImGui::ShowDemoWindow();
     //    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
@@ -204,7 +249,7 @@ void SponzaLayer::on_ui_render(float delta_time) const
     if (ImGui::Begin("Second Camera"))
     {
         ImVec2 window_size = ImGui::GetWindowSize();
-        ImGui::Image(reinterpret_cast<ImTextureID>(m_texture_colorbuffer), window_size, ImVec2(0, 1), ImVec2(1, 0));
+        ImGui::Image(reinterpret_cast<ImTextureID>(sponza->texture_colorbuffer), window_size, ImVec2(0, 1), ImVec2(1, 0));
         ImGui::End();
     }
     //    ImGui::PopStyleVar();
@@ -221,9 +266,9 @@ void SponzaLayer::on_ui_render(float delta_time) const
     }
 }
 
-void SponzaLayer::update(float delta_time) const
+void update_and_render(float delta_time)
 {
-    m_camera->update(app.window, delta_time);
+    camera->update(app.window, delta_time);
     // m_second_camera->update(Application::get().get_window(), delta_time);
 
     float light_x = 2.0f * sin(glfwGetTime());
@@ -231,7 +276,7 @@ void SponzaLayer::update(float delta_time) const
     float light_z = 1.5f * cos(glfwGetTime());
     glm::vec3 light_pos = glm::vec3(light_x, light_y, light_z);
 
-    Frustum frustum = create_frustum_from_camera(*m_camera, 1280.0f / 720.0f, 45.0f, 0.1f, 1000.0f);
+    Frustum frustum = create_frustum_from_camera(*camera, 1280.0f / 720.0f, 45.0f, 0.1f, 1000.0f);
     unsigned int total = 0;
     unsigned int display = 0;
 
@@ -241,6 +286,8 @@ void SponzaLayer::update(float delta_time) const
     glm::mat4 light_transform = glm::mat4(1.0f);
     light_transform = glm::translate(light_transform, light_pos);
     light_transform = glm::scale(light_transform, glm::vec3(0.2f));
+    SponzaShader* shader = sponza->shader;
+    OpenGLProgramCommon* light_shader = sponza->light_shader;
 
     {
         // Primary Framebuffer
@@ -248,55 +295,55 @@ void SponzaLayer::update(float delta_time) const
         glClearColor(0.5f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        glUseProgram(m_shader->common.program_id);
-        glUniformMatrix4fv(m_shader->common.projection, 1, false, glm::value_ptr(m_camera->m_projection));
-        glUniformMatrix4fv(m_shader->common.view, 1, false, glm::value_ptr(m_camera->view_matrix()));
-        glUniform3fv(m_shader->common.view_pos, 1, &m_camera->m_position[0]);
-        glUniform3fv(m_shader->light_position, 1, &light_pos[0]);
+        glUseProgram(shader->common.program_id);
+        glUniformMatrix4fv(shader->common.projection, 1, false, glm::value_ptr(camera->m_projection));
+        glUniformMatrix4fv(shader->common.view, 1, false, glm::value_ptr(camera->view_matrix()));
+        glUniform3fv(shader->common.view_pos, 1, &camera->m_position[0]);
+        glUniform3fv(shader->light_position, 1, &light_pos[0]);
 
-        glUniform1f(m_shader->common.material_shininess, 64.0f);
-        glUniform3f(m_shader->light_ambient, 1.0f, 1.0f, 1.0f);
-        glUniform3f(m_shader->light_diffuse, 1.0f, 1.0f, 1.0f);
-        glUniform3f(m_shader->light_specular, 1.0f, 1.0f, 1.0f);
-        glUniform1f(m_shader->light_constant, 1.0f);
-        glUniform1f(m_shader->light_linear, 0.09f);
-        glUniform1f(m_shader->light_quadratic, 0.032f);
+        glUniform1f(shader->common.material_shininess, 64.0f);
+        glUniform3f(shader->light_ambient, 1.0f, 1.0f, 1.0f);
+        glUniform3f(shader->light_diffuse, 1.0f, 1.0f, 1.0f);
+        glUniform3f(shader->light_specular, 1.0f, 1.0f, 1.0f);
+        glUniform1f(shader->light_constant, 1.0f);
+        glUniform1f(shader->light_linear, 0.09f);
+        glUniform1f(shader->light_quadratic, 0.032f);
 
-        glUniformMatrix4fv(m_shader->common.model, 1, GL_FALSE, glm::value_ptr(model));
-        m_sponza->draw(frustum, model, (OpenGLProgramCommon*)m_shader, display, total);
+        glUniformMatrix4fv(shader->common.model, 1, GL_FALSE, glm::value_ptr(model));
+        sponza->sponza->draw(frustum, model, (OpenGLProgramCommon*)shader, display, total);
 
-        glUseProgram(m_light_shader->program_id);
-        glUniformMatrix4fv(m_light_shader->model, 1, GL_FALSE, glm::value_ptr(light_transform));
-        m_light->draw(frustum, model, m_light_shader, display, total);
+        glUseProgram(light_shader->program_id);
+        glUniformMatrix4fv(light_shader->model, 1, GL_FALSE, glm::value_ptr(light_transform));
+        sponza->light->draw(frustum, model, light_shader, display, total);
     }
 
     {
         // Second Framebuffer
         glViewport(0, 0, 1920, 1080);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, sponza->framebuffer);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        glUseProgram(m_shader->common.program_id);
-        glUniformMatrix4fv(m_shader->common.projection, 1, false, glm::value_ptr(m_second_camera->m_projection));
-        glUniformMatrix4fv(m_shader->common.view, 1, false, glm::value_ptr(m_second_camera->view_matrix()));
-        glUniform3fv(m_shader->common.view_pos, 1, &m_camera->m_position[0]);
-        glUniform3fv(m_shader->light_position, 1, &light_pos[0]);
+        glUseProgram(shader->common.program_id);
+        glUniformMatrix4fv(shader->common.projection, 1, false, glm::value_ptr(second_camera->m_projection));
+        glUniformMatrix4fv(shader->common.view, 1, false, glm::value_ptr(second_camera->view_matrix()));
+        glUniform3fv(shader->common.view_pos, 1, &camera->m_position[0]);
+        glUniform3fv(shader->light_position, 1, &light_pos[0]);
 
-        glUniform1f(m_shader->common.material_shininess, 64.0f);
-        glUniform3f(m_shader->light_ambient, 1.0f, 1.0f, 1.0f);
-        glUniform3f(m_shader->light_diffuse, 1.0f, 1.0f, 1.0f);
-        glUniform3f(m_shader->light_specular, 1.0f, 1.0f, 1.0f);
-        glUniform1f(m_shader->light_constant, 1.0f);
-        glUniform1f(m_shader->light_linear, 0.09f);
-        glUniform1f(m_shader->light_quadratic, 0.032f);
+        glUniform1f(shader->common.material_shininess, 64.0f);
+        glUniform3f(shader->light_ambient, 1.0f, 1.0f, 1.0f);
+        glUniform3f(shader->light_diffuse, 1.0f, 1.0f, 1.0f);
+        glUniform3f(shader->light_specular, 1.0f, 1.0f, 1.0f);
+        glUniform1f(shader->light_constant, 1.0f);
+        glUniform1f(shader->light_linear, 0.09f);
+        glUniform1f(shader->light_quadratic, 0.032f);
 
-        m_sponza->draw(frustum, model, (OpenGLProgramCommon*)m_shader, display, total);
+        sponza->sponza->draw(frustum, model, (OpenGLProgramCommon*)shader, display, total);
 
-        glUseProgram(m_light_shader->program_id);
-        glUniformMatrix4fv(m_light_shader->model, 1, GL_FALSE, glm::value_ptr(light_transform));
-        m_light->draw(frustum, model, m_light_shader, display, total);
+        glUseProgram(light_shader->program_id);
+        glUniformMatrix4fv(light_shader->model, 1, GL_FALSE, glm::value_ptr(light_transform));
+        sponza->light->draw(frustum, model, light_shader, display, total);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(0);
     }

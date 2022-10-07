@@ -6,14 +6,15 @@
 #include <filesystem>
 #include <imgui.h>
 #include <iostream>
-// TODO(ricardo): This can dissapear most likely
-#include "layer.h"
-
-//#include "examples/framebuffers/framebuffers.h"
-#include "examples/sponza/sponza.h"
 
 #define WIDTH 1920
 #define HEIGHT 1080
+
+// Examples functions
+void init();
+void ui_render(float delta_time);
+void update_and_render(float delta_time);
+void deinit();
 
 struct Metrics
 {
@@ -34,14 +35,11 @@ struct Application
     GLFWwindow* window;
     float delta_time = 0;
     float last_frame = 0;
-    std::vector<Layer*> layers;
 };
 
 // Globals
 static Metrics metrics;
 static Application app;
-SponzaLayer* sponza = nullptr;
-// FrameBuffersLayer* framebuffers = nullptr;
 
 #if 1
 void* operator new(size_t size)
@@ -70,10 +68,7 @@ void framebuffer_size_callback(GLFWwindow* /*window*/, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-// TODO(ricardo): maybe instead of one translation unit i just pass the app to the layer.
-// Anyways the concept of layer needs to be revisited anyway so this will do
-//#include "examples/framebuffers/framebuffers.cpp"
-#include "examples/sponza/sponza.cpp"
+#include "sponza.cpp"
 
 int main(int /*argc*/, char** /*argv*/)
 {
@@ -117,18 +112,12 @@ int main(int /*argc*/, char** /*argv*/)
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(app.window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
-#if 0
-    framebuffers = new FrameBuffersLayer("FrameBuffers");
-    app.layers.push_back(framebuffers);
-#endif
-#if 1
-    sponza = new SponzaLayer("Sponza");
-    app.layers.push_back(sponza);
-#endif
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glEnable(GL_CULL_FACE);
+
+    init();
 
     printf("Startup Usage %d bytes\n", metrics.current_usage());
     // Main Loop
@@ -140,8 +129,7 @@ int main(int /*argc*/, char** /*argv*/)
         app.delta_time = current_frame - app.last_frame;
         app.last_frame = current_frame;
 
-        for (Layer* layer : app.layers)
-            layer->update(app.delta_time);
+	update_and_render(app.delta_time);
 
         // UI Scope
         {
@@ -149,8 +137,7 @@ int main(int /*argc*/, char** /*argv*/)
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            for (Layer* layer : app.layers)
-                layer->on_ui_render(app.delta_time);
+            ui_render(app.delta_time);
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -161,6 +148,7 @@ int main(int /*argc*/, char** /*argv*/)
         glfwSwapBuffers(app.window);
     }
     // Shutdown
+    deinit();
     glfwTerminate();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
