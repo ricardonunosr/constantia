@@ -34,11 +34,11 @@ void Model::draw(const Frustum& frustum, const glm::mat4& transform, OpenGLProgr
         }
         glActiveTexture(GL_TEXTURE0);
 
-        mesh.vao->bind();
-        mesh.ibo->bind();
+        glBindVertexArray(mesh.vao->id);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo->id);
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
-        mesh.vao->unbind();
-        mesh.ibo->unbind();
+        glBindVertexArray(0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glUseProgram(0);
         display++;
         //        }
@@ -172,17 +172,26 @@ void Model::load_model(const std::string& path)
 
         for (auto& mesh : m_meshes)
         {
-            // Check if MeshMaterialGroup has anything
             if (!mesh.vertices.empty())
             {
-                mesh.vao = std::make_unique<VertexArray>();
-                VertexBufferLayout layout = {
-                    {"aPos", DataType::Float3}, {"aNormals", DataType::Float3}, {"aTexCoords", DataType::Float2}};
-                mesh.vbo = std::make_unique<VertexBuffer>(layout, (mesh.vertices).data(),
-                                                          mesh.vertices.size() * sizeof(Vertex));
-                mesh.ibo = std::make_unique<IndexBuffer>((const void*)(mesh.indices).data(), mesh.indices.size());
-                mesh.vao->add_buffer(*mesh.vbo);
-                mesh.vao->unbind();
+                mesh.vao = (VertexArray*)malloc(sizeof(VertexArray));
+                opengl_create_vertex_array(mesh.vao);
+                mesh.vbo = (VertexBuffer*)malloc(sizeof(VertexBuffer));
+                opengl_create_vertex_buffer((mesh.vertices).data(), mesh.vertices.size() * sizeof(Vertex), mesh.vbo);
+                mesh.ibo = (IndexBuffer*)malloc(sizeof(IndexBuffer));
+                opengl_create_index_buffer((const void*)(mesh.indices).data(), mesh.indices.size(), mesh.ibo);
+                int enabled_attribs = 0;
+                int stride = 32;
+                int offset = 0;
+                // Position
+                opengl_add_element_to_layout(DataType::Float3, false, &enabled_attribs, stride, &offset, mesh.vao,
+                                             mesh.vbo);
+                // Normals
+                opengl_add_element_to_layout(DataType::Float3, false, &enabled_attribs, stride, &offset, mesh.vao,
+                                             mesh.vbo);
+                // Texture Coords
+                opengl_add_element_to_layout(DataType::Float2, false, &enabled_attribs, stride, &offset, mesh.vao,
+                                             mesh.vbo);
             }
         }
     }

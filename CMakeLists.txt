@@ -10,7 +10,7 @@ if (MSVC)
     add_compile_options(/W4 /WX)
 else()
     # lots of warnings and all warnings as errors
-    add_compile_options(-Wall -Wextra -pedantic -Werror -Wno-unused-parameter -Wno-write-strings -Wno-unused-variable)
+    add_compile_options(-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-write-strings -Wno-unused-variable)
 endif()
 
 #GLFW additions

@@ -44,7 +44,7 @@ static Application app;
 SponzaLayer* sponza = nullptr;
 // FrameBuffersLayer* framebuffers = nullptr;
 
-#if 1
+#if 0
 void* operator new(size_t size)
 {
     std::cout << "Allocating " << size << "bytes\n";

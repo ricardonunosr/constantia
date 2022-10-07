@@ -27,9 +27,9 @@ class Model
         std::vector<unsigned int> indices{};
         std::vector<Texture*> textures{};
 
-        std::unique_ptr<VertexArray> vao;
-        std::unique_ptr<VertexBuffer> vbo;
-        std::unique_ptr<IndexBuffer> ibo;
+        VertexArray* vao;
+        VertexBuffer* vbo;
+        IndexBuffer* ibo;
     };
 
   public:

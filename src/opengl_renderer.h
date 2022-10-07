@@ -38,11 +38,11 @@ struct Texture
     texture_type type;
 };
 
-void opengl_create_texture(const char* path, texture_type type,Texture *texture);
+void opengl_create_texture(const char* path, texture_type type, Texture* texture);
 void opengl_bind_texture(unsigned int id, unsigned int slot);
-void opengl_unbind_textrure();
+void opengl_unbind_texture();
 
-enum class DataType
+enum DataType
 {
     None = 0,
     Float,
@@ -58,168 +58,27 @@ enum class DataType
     Bool
 };
 
-static uint32_t data_type_size(DataType type)
+struct VertexBuffer
 {
-    switch (type)
-    {
-    case DataType::Float:
-        return 4;
-    case DataType::Float2:
-        return 4 * 2;
-    case DataType::Float3:
-        return 4 * 3;
-    case DataType::Float4:
-        return 4 * 4;
-    case DataType::Mat3:
-        return 4 * 3 * 3;
-    case DataType::Mat4:
-        return 4 * 4 * 4;
-    case DataType::Int:
-        return 4;
-    case DataType::Int2:
-        return 4 * 2;
-    case DataType::Int3:
-        return 4 * 3;
-    case DataType::Int4:
-        return 4 * 4;
-    case DataType::Bool:
-        return 1;
-    case DataType::None:
-        return 0;
-    }
-
-    return 0;
-}
-
-struct VertexBufferElement
-{
-    const std::string name;
-    DataType type;
-    uint32_t size{};
-    bool normalized{};
-    size_t offset{};
-
-    VertexBufferElement() = default;
-
-    VertexBufferElement(std::string name, DataType type, bool normalized = false)
-        : name{std::move(name)}, type{type}, size(data_type_size(type)), normalized{normalized}, offset{0}
-    {
-    }
-
-    [[nodiscard]] uint32_t get_component_count() const
-    {
-        switch (type)
-        {
-        case DataType::Float:
-            return 1;
-        case DataType::Float2:
-            return 2;
-        case DataType::Float3:
-            return 3;
-        case DataType::Float4:
-            return 4;
-        case DataType::Mat3:
-            return 3;
-        case DataType::Mat4:
-            return 4;
-        case DataType::Int:
-            return 1;
-        case DataType::Int2:
-            return 2;
-        case DataType::Int3:
-            return 3;
-        case DataType::Int4:
-            return 4;
-        case DataType::Bool:
-            return 1;
-        case DataType::None:
-            return 0;
-        }
-
-        return 0;
-    }
+    unsigned int id;
 };
 
-class VertexBufferLayout
+void opengl_create_vertex_buffer(const void* data, size_t size, VertexBuffer* vertex_buffer);
+
+struct VertexArray
 {
-  public:
-    VertexBufferLayout(std::initializer_list<VertexBufferElement> elements) : m_elements{elements}
-    {
-        calculate_offset_and_stride();
-    };
-
-    [[nodiscard]] const std::vector<VertexBufferElement>& get_elements() const
-    {
-        return m_elements;
-    }
-
-    [[nodiscard]] unsigned int get_stride() const
-    {
-        return m_stride;
-    }
-
-  private:
-    std::vector<VertexBufferElement> m_elements;
-    unsigned int m_stride{};
-
-    void calculate_offset_and_stride()
-    {
-        size_t offset = 0;
-        m_stride = 0;
-        for (auto& element : m_elements)
-        {
-            m_stride += element.size;
-            element.offset = offset;
-            offset += element.size;
-        }
-    }
+    unsigned int id;
+    unsigned int enabled_attribs;
 };
 
-class VertexBuffer
+void opengl_create_vertex_array(VertexArray* vertex_array);
+void opengl_add_element_to_layout(DataType type, bool normalized, int* enabled_attribs, int stride, int* offset,
+                                  VertexArray* vertex_array, VertexBuffer* buffer);
+
+struct IndexBuffer
 {
-  public:
-    VertexBuffer(VertexBufferLayout layout, const void* data, size_t size);
-    ~VertexBuffer();
-
-    void bind() const;
-    static void unbind();
-
-    [[nodiscard]] const VertexBufferLayout& get_layout() const
-    {
-        return m_layout;
-    }
-
-  private:
-    unsigned int m_id{};
-    VertexBufferLayout m_layout;
+    unsigned int id;
+    unsigned int count;
 };
 
-class VertexArray
-{
-  public:
-    VertexArray();
-    ~VertexArray();
-
-    void bind() const;
-    static void unbind();
-
-    void add_buffer(VertexBuffer& buffer);
-
-  private:
-    unsigned int m_id;
-    unsigned int m_enabled_attribs;
-};
-
-class IndexBuffer
-{
-  public:
-    IndexBuffer(const void* indices, unsigned int count);
-    ~IndexBuffer();
-
-    void bind() const;
-    static void unbind();
-
-  private:
-    unsigned int m_id;
-    unsigned int m_count;
-};
+void opengl_create_index_buffer(const void* indices, unsigned int count, IndexBuffer* index_buffer);

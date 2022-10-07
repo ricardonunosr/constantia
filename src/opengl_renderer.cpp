@@ -1,7 +1,8 @@
 #include "opengl_renderer.h"
-#include <glad/gl.h>
 #include <iostream>
 #include <spdlog/spdlog.h>
+#include <stdio.h>
+#include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -63,7 +64,7 @@ void opengl_create_shader(char* vertex_shader_source, char* fragment_shader_sour
         glGetShaderInfoLog(fragment_shader_id, sizeof(fragment_errors), &ignored, fragment_errors);
         glGetProgramInfoLog(program_id, sizeof(program_errors), &ignored, program_errors);
         std::cout << "Vertex errors: " << vertex_errors << "\n";
-        std::cout << "Fragment errors: " << fragment_errors << "\n";
+	std::cout << "Fragment errors: " << fragment_errors << "\n";
         std::cout << "Program errors: " << program_errors << "\n";
     }
 
@@ -117,7 +118,7 @@ void opengl_bind_texture(unsigned int id, unsigned int slot)
     glBindTexture(GL_TEXTURE_2D, id);
 }
 
-void opengl_unbind_textrure()
+void opengl_unbind_texture()
 {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -146,81 +147,102 @@ static GLenum shader_data_type_to_open_gl_base_type(DataType type)
     return 0;
 }
 
-VertexArray::VertexArray() : m_id{0}, m_enabled_attribs{0}
+static uint32_t data_type_size(DataType type)
 {
-    glGenVertexArrays(1, &m_id);
-}
-
-VertexArray::~VertexArray()
-{
-    glDeleteVertexArrays(1, &m_id);
-}
-
-void VertexArray::bind() const
-{
-    glBindVertexArray(m_id);
-}
-
-void VertexArray::unbind()
-{
-    glBindVertexArray(0);
-}
-
-void VertexArray::add_buffer(VertexBuffer& buffer)
-{
-    bind();
-    buffer.bind();
-    const auto& layout = buffer.get_layout().get_elements();
-    for (const auto& element : layout)
+    switch (type)
     {
-        glVertexAttribPointer(m_enabled_attribs, (GLint)element.get_component_count(),
-                              shader_data_type_to_open_gl_base_type(element.type), (GLint)element.normalized,
-                              (GLint)buffer.get_layout().get_stride(), (const void*)element.offset);
-        glEnableVertexAttribArray(m_enabled_attribs);
-        m_enabled_attribs++;
+    case DataType::Float:
+        return 4;
+    case DataType::Float2:
+        return 4 * 2;
+    case DataType::Float3:
+        return 4 * 3;
+    case DataType::Float4:
+        return 4 * 4;
+    case DataType::Mat3:
+        return 4 * 3 * 3;
+    case DataType::Mat4:
+        return 4 * 4 * 4;
+    case DataType::Int:
+        return 4;
+    case DataType::Int2:
+        return 4 * 2;
+    case DataType::Int3:
+        return 4 * 3;
+    case DataType::Int4:
+        return 4 * 4;
+    case DataType::Bool:
+        return 1;
+    case DataType::None:
+        return 0;
     }
+
+    return 0;
 }
 
-VertexBuffer::VertexBuffer(VertexBufferLayout layout, const void* data, size_t size) : m_layout{std::move(layout)}
+static uint32_t get_component_count(DataType type)
 {
-    glGenBuffers(1, &m_id);
-    glBindBuffer(GL_ARRAY_BUFFER, m_id);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    switch (type)
+    {
+    case DataType::Float:
+        return 1;
+    case DataType::Float2:
+        return 2;
+    case DataType::Float3:
+        return 3;
+    case DataType::Float4:
+        return 4;
+    case DataType::Mat3:
+        return 3;
+    case DataType::Mat4:
+        return 4;
+    case DataType::Int:
+        return 1;
+    case DataType::Int2:
+        return 2;
+    case DataType::Int3:
+        return 3;
+    case DataType::Int4:
+        return 4;
+    case DataType::Bool:
+        return 1;
+    case DataType::None:
+        return 0;
+    }
+    return 0;
 }
 
-VertexBuffer::~VertexBuffer()
+void opengl_create_vertex_array(VertexArray* vertex_array)
 {
-    glDeleteBuffers(1, &m_id);
+    glGenVertexArrays(1, &vertex_array->id);
 }
 
-void VertexBuffer::bind() const
+void opengl_add_element_to_layout(DataType type, bool normalized, int* enabled_attribs, int stride, int* offset,
+                                  VertexArray* vertex_array, VertexBuffer* buffer)
 {
-    glBindBuffer(GL_ARRAY_BUFFER, m_id);
-}
-
-void VertexBuffer::unbind()
-{
+    glBindVertexArray(vertex_array->id);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer->id);
+    glVertexAttribPointer(*enabled_attribs, (GLint)get_component_count(type),
+                          shader_data_type_to_open_gl_base_type(type), normalized, stride, (const void*)*offset);
+    glEnableVertexAttribArray(*enabled_attribs);
+    *offset += data_type_size(type);
+    (*enabled_attribs)++;
+    glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-IndexBuffer::IndexBuffer(const void* indices, unsigned int count) : m_id{0}, m_count{count}
+void opengl_create_vertex_buffer(const void* data, size_t size, VertexBuffer* vertex_buffer)
 {
-    glGenBuffers(1, &m_id);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_id);
+    glGenBuffers(1, &vertex_buffer->id);
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer->id);
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void opengl_create_index_buffer(const void* indices, unsigned int count, IndexBuffer* index_buffer)
+{
+    glGenBuffers(1, &index_buffer->id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer->id);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)count * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-}
-
-IndexBuffer::~IndexBuffer()
-{
-    glDeleteBuffers(1, &m_id);
-}
-
-void IndexBuffer::bind() const
-{
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_id);
-}
-
-void IndexBuffer::unbind()
-{
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
