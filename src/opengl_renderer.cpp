@@ -18,15 +18,10 @@ void* read_entire_file(const char* file_path)
     fseek(file_handle, 0L, SEEK_END);
     long file_size = ftell(file_handle);
     fseek(file_handle, 0L, SEEK_SET);
+
     result = malloc(file_size);
-    size_t bytes_read = fread(result, sizeof(char), file_size, file_handle);
-    if (bytes_read != (long unsigned int)file_size)
-    {
-        printf("Failed to read file: %s", file_path);
-        exit(-1);
-    }
+    fread(result, 1, file_size, file_handle);
     fclose(file_handle);
-    ((char*)result)[file_size] = 0;
 
     return result;
 }
