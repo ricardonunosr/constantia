@@ -4,25 +4,21 @@
 
 struct GLFWwindow;
 
-class Camera
+struct Camera
 {
-  public:
-    Camera();
-
-    void update(GLFWwindow* window, float delta_time);
-    void handle_mouse_move(double xpos, double ypos);
-    glm::mat4 view_matrix() const;
-
-    glm::mat4 m_projection{};
-    glm::vec3 m_position{};
-    glm::vec3 m_forward{};
-    glm::vec3 m_right{};
-    bool m_enabled = false;
-
-  private:
-    bool m_first_mouse = true;
-    float m_last_x = 1920.0f / 2.0f;
-    float m_last_y = 1080.0f / 2.0f;
-    float m_yaw = 0.0f;
-    float m_pitch = 0.0f;
+    glm::mat4 projection;
+    glm::vec3 position;
+    glm::vec3 forward;
+    glm::vec3 right;
+    bool enabled;
+    bool first_mouse;
+    float last_x;
+    float last_y;
+    float yaw;
+    float pitch;
 };
+
+void create_camera(Camera* camera);
+void update(GLFWwindow* window, float delta_time, Camera* camera);
+void handle_mouse_move(double xpos, double ypos, Camera* camera);
+glm::mat4 view_matrix(Camera* camera);

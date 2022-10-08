@@ -74,4 +74,4 @@ struct Sphere : public BoundingVolume
     }
 };
 
-Frustum create_frustum_from_camera(const Camera& camera, float aspect, float fov_y, float z_near, float z_far);
+Frustum create_frustum_from_camera(float aspect, float fov_y, float z_near, float z_far, Camera* camera);

@@ -166,25 +166,25 @@ struct Sponza
     unsigned int texture_colorbuffer;
 };
 
-static std::unique_ptr<Camera> camera = nullptr;
-static std::unique_ptr<Camera> second_camera = nullptr;
+static Camera* camera = nullptr;
+static Camera* second_camera = nullptr;
 
 static void mouse_callback(GLFWwindow* /*window*/, double xpos, double ypos)
 {
-    camera->handle_mouse_move(xpos, ypos);
+    handle_mouse_move(xpos, ypos, camera);
 }
 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int /*mods*/)
 {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
     {
-        camera->m_enabled = true;
+        camera->enabled = true;
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
     else
     {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        camera->m_enabled = false;
+        camera->enabled = false;
     }
 }
 
@@ -228,8 +228,10 @@ void init()
     //free(vertex_shader_light_source);
     //free(fragment_shader_light_source);
 
-    camera = std::make_unique<Camera>();
-    second_camera = std::make_unique<Camera>();
+    camera = (Camera*)malloc(sizeof(Camera));
+    create_camera(camera);
+    second_camera = (Camera*)malloc(sizeof(Camera));
+    create_camera(second_camera);
 
     // TODO: find a better way to define this
     glfwSetCursorPosCallback(app.window, mouse_callback);
@@ -307,15 +309,14 @@ void ui_render(float delta_time)
 
 void update_and_render(float delta_time)
 {
-    camera->update(app.window, delta_time);
-    // m_second_camera->update(Application::get().get_window(), delta_time);
+    update(app.window, delta_time, camera);
 
     float light_x = 2.0f * sin(glfwGetTime());
     float light_y = 1.0f;
     float light_z = 1.5f * cos(glfwGetTime());
     glm::vec3 light_pos = glm::vec3(light_x, light_y, light_z);
 
-    Frustum frustum = create_frustum_from_camera(*camera, 1280.0f / 720.0f, 45.0f, 0.1f, 1000.0f);
+    Frustum frustum = create_frustum_from_camera(1280.0f / 720.0f, 45.0f, 0.1f, 1000.0f,camera);
     unsigned int total = 0;
     unsigned int display = 0;
 
@@ -335,9 +336,9 @@ void update_and_render(float delta_time)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         glUseProgram(shader->common.program_id);
-        glUniformMatrix4fv(shader->common.projection, 1, false, glm::value_ptr(camera->m_projection));
-        glUniformMatrix4fv(shader->common.view, 1, false, glm::value_ptr(camera->view_matrix()));
-        glUniform3fv(shader->common.view_pos, 1, &camera->m_position[0]);
+        glUniformMatrix4fv(shader->common.projection, 1, false, glm::value_ptr(camera->projection));
+        glUniformMatrix4fv(shader->common.view, 1, false, glm::value_ptr(view_matrix(camera)));
+        glUniform3fv(shader->common.view_pos, 1, &camera->position[0]);
         glUniform3fv(shader->light_position, 1, &light_pos[0]);
 
         glUniform1f(shader->common.material_shininess, 64.0f);
@@ -365,9 +366,9 @@ void update_and_render(float delta_time)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         glUseProgram(shader->common.program_id);
-        glUniformMatrix4fv(shader->common.projection, 1, false, glm::value_ptr(second_camera->m_projection));
-        glUniformMatrix4fv(shader->common.view, 1, false, glm::value_ptr(second_camera->view_matrix()));
-        glUniform3fv(shader->common.view_pos, 1, &camera->m_position[0]);
+        glUniformMatrix4fv(shader->common.projection, 1, false, glm::value_ptr(second_camera->projection));
+        glUniformMatrix4fv(shader->common.view, 1, false, glm::value_ptr(view_matrix(second_camera)));
+        glUniform3fv(shader->common.view_pos, 1, &camera->position[0]);
         glUniform3fv(shader->light_position, 1, &light_pos[0]);
 
         glUniform1f(shader->common.material_shininess, 64.0f);
