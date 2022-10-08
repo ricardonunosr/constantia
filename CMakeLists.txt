@@ -31,6 +31,8 @@ set(HEADERS
         src/types.h
         src/model.h
         src/opengl_renderer.h
+        src/vendor/tiny_obj_loader.h
+        src/vendor/stb_image.h
         )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -38,7 +40,6 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glfw)
 add_subdirectory(lib/imgui)
-add_subdirectory(lib/tinyobjloader)
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC src/
@@ -48,16 +49,13 @@ target_include_directories(${PROJECT_NAME} SYSTEM
         PUBLIC lib/glad/include
         PUBLIC lib/glfw/include
         PUBLIC lib/glm
-        PUBLIC lib/stb
         PUBLIC lib/imgui
-        PUBLIC lib/tinyobjloader
         )
 
 target_link_libraries(${PROJECT_NAME}
         glad
         glfw
         imgui
-        tinyobjloader
         pthread
         )
 
@@ -65,4 +63,3 @@ target_link_libraries(${PROJECT_NAME}
 target_compile_options(glad PRIVATE "-w")
 target_compile_options(glfw PRIVATE "-w")
 target_compile_options(imgui PRIVATE "-w")
-target_compile_options(tinyobjloader PRIVATE "-w")

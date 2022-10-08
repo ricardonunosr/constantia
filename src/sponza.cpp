@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "imgui.h"
 #include "model.h"
+#include "opengl_renderer.h"
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -10,7 +11,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
-static char* VERTEX_SHADR_SOURCE = R"(
+static char* VERTEX_SHADER_SOURCE = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
@@ -103,6 +104,44 @@ void main()
 }
 )";
 
+static char* VERTEX_LIGHT_SOURCE = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoord;
+
+out vec2 TexCoord;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main()
+{
+	gl_Position = projection * view * model * vec4(aPos, 1.0);
+	TexCoord = vec2(aTexCoord.x, aTexCoord.y);
+}
+)";
+
+static char* FRAGMENT_LIGHT_SOURCE = R"(
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+struct Material{
+  sampler2D texture_diffuse;
+  sampler2D texture_specular;
+};
+
+uniform Material material;
+
+void main()
+{
+    FragColor = texture(material.texture_diffuse, TexCoord)*texture(material.texture_specular, TexCoord)* vec4(1.0); // set all 4 vector values to 1.0
+}
+)";
+
 struct SponzaShader
 {
     OpenGLProgramCommon common;
@@ -166,7 +205,7 @@ void init()
 
     sponza->shader = (SponzaShader*)malloc(sizeof(SponzaShader));
     SponzaShader* shader = sponza->shader;
-    opengl_create_shader(VERTEX_SHADR_SOURCE, FRAGMENT_SHADER_SOURCE, &shader->common);
+    opengl_create_shader(VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE, &shader->common);
     shader->light_position = glGetUniformLocation(shader->common.program_id, "light.position");
     shader->light_ambient = glGetUniformLocation(shader->common.program_id, "light.ambient");
     shader->light_diffuse = glGetUniformLocation(shader->common.program_id, "light.diffuse");
@@ -180,14 +219,14 @@ void init()
     // Light
     std::string vertex_shader_light_path = base_path_assets + "shaders/light.vert";
     std::string fragment_shader_light_path = base_path_assets + "shaders/light.frag";
-    char* vertex_shader_light_source = (char*)read_entire_file(vertex_shader_light_path.c_str());
-    char* fragment_shader_light_source = (char*)read_entire_file(fragment_shader_light_path.c_str());
+    //ReadEntireFile vertex_shader_light_source = read_entire_file(vertex_shader_light_path.c_str());
+    //ReadEntireFile fragment_shader_light_source = read_entire_file(fragment_shader_light_path.c_str());
 
     sponza->light_shader = (OpenGLProgramCommon*)malloc(sizeof(OpenGLProgramCommon));
     OpenGLProgramCommon* light_shader = sponza->light_shader; 
-    opengl_create_shader(vertex_shader_light_source, fragment_shader_light_source, light_shader);
-    free(vertex_shader_light_source);
-    free(fragment_shader_light_source);
+    opengl_create_shader(VERTEX_LIGHT_SOURCE, FRAGMENT_LIGHT_SOURCE, light_shader);
+    //free(vertex_shader_light_source);
+    //free(fragment_shader_light_source);
 
     camera = std::make_unique<Camera>();
     second_camera = std::make_unique<Camera>();

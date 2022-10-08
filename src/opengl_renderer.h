@@ -20,7 +20,13 @@ struct OpenGLProgramCommon
     GLint material_shininess;
 };
 
-void* read_entire_file(const char* file_path);
+struct ReadEntireFile
+{
+    char* content;
+    uint32_t size;
+};
+
+ReadEntireFile read_entire_file(const char* file_path);
 void opengl_create_shader(char* vertex_shader_source, char* fragment_shader_source, OpenGLProgramCommon* result);
 
 enum texture_type

@@ -6,7 +6,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
 #define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
+#include <vendor/tiny_obj_loader.h>
 
 void Model::draw(const Frustum& frustum, const glm::mat4& transform, OpenGLProgramCommon* shader, unsigned int& display,
                  unsigned int& total)

@@ -4,23 +4,23 @@
 #include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "vendor/stb_image.h"
 
-void* read_entire_file(const char* file_path)
+ReadEntireFile read_entire_file(const char* file_path)
 {
-    void* result;
-    FILE* file_handle = fopen(file_path, "r");
+    ReadEntireFile result = {};
+    FILE* file_handle = fopen(file_path, "rb");
     if (file_handle == 0)
     {
         printf("File doesn't exist: %s", file_path);
-        exit(-1);
+        return result;
     }
     fseek(file_handle, 0L, SEEK_END);
-    long file_size = ftell(file_handle);
+    result.size = ftell(file_handle);
     fseek(file_handle, 0L, SEEK_SET);
 
-    result = malloc(file_size);
-    fread(result, 1, file_size, file_handle);
+    result.content = (char*)malloc(result.size);
+    fread(result.content, 1, result.size, file_handle);
     fclose(file_handle);
 
     return result;
@@ -57,18 +57,20 @@ void opengl_create_shader(char* vertex_shader_source, char* fragment_shader_sour
         glGetShaderInfoLog(vertex_shader_id, sizeof(vertex_errors), &ignored, vertex_errors);
         glGetShaderInfoLog(fragment_shader_id, sizeof(fragment_errors), &ignored, fragment_errors);
         glGetProgramInfoLog(program_id, sizeof(program_errors), &ignored, program_errors);
-        std::cout << "Vertex errors: " << vertex_errors << "\n";
-	std::cout << "Fragment errors: " << fragment_errors << "\n";
-        std::cout << "Program errors: " << program_errors << "\n";
-    }
+        printf("Vertex errors: %s\n", vertex_errors);
+	    printf("Fragment errors: %s\n", fragment_errors);
+        printf("Program errors: %s\n", program_errors);
+    } 
 
     glDeleteShader(vertex_shader_id);
     glDeleteShader(fragment_shader_id);
+    printf("Created shader successfully\n");
 
     result->program_id = program_id;
     result->model = glGetUniformLocation(program_id, "model");
     result->projection = glGetUniformLocation(program_id, "projection");
     result->view = glGetUniformLocation(program_id, "view");
+    result->view_pos = glGetUniformLocation(program_id, "viewPos");
     result->material_texture_diffuse = glGetUniformLocation(program_id, "material.texture_diffuse");
     result->material_texture_specular = glGetUniformLocation(program_id, "material.texture_specular");
     result->material_shininess = glGetUniformLocation(program_id, "material.shininess");
