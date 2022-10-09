@@ -335,9 +335,10 @@ void update_and_render(float delta_time)
         glClearColor(0.5f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+        idk_mat4 view = view_matrix(camera);
         glUseProgram(shader->common.program_id);
-        glUniformMatrix4fv(shader->common.projection, 1, false, glm::value_ptr(camera->projection));
-        glUniformMatrix4fv(shader->common.view, 1, false, glm::value_ptr(view_matrix(camera)));
+        glUniformMatrix4fv(shader->common.projection, 1, false, camera->projection.elements[0]);
+        glUniformMatrix4fv(shader->common.view, 1, false, view_matrix(camera).elements[0]);
         glUniform3fv(shader->common.view_pos, 1, &camera->position[0]);
         glUniform3fv(shader->light_position, 1, &light_pos[0]);
 
@@ -366,8 +367,8 @@ void update_and_render(float delta_time)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         glUseProgram(shader->common.program_id);
-        glUniformMatrix4fv(shader->common.projection, 1, false, glm::value_ptr(second_camera->projection));
-        glUniformMatrix4fv(shader->common.view, 1, false, glm::value_ptr(view_matrix(second_camera)));
+        glUniformMatrix4fv(shader->common.projection, 1, false, second_camera->projection.elements[0]);
+        glUniformMatrix4fv(shader->common.view, 1, false, view_matrix(second_camera).elements[0]);
         glUniform3fv(shader->common.view_pos, 1, &camera->position[0]);
         glUniform3fv(shader->light_position, 1, &light_pos[0]);
 

@@ -10,7 +10,7 @@ if (MSVC)
     add_compile_options(/W4 /WX)
 else()
     # lots of warnings and all warnings as errors
-    add_compile_options(-Wall -Wextra -pedantic -Wno-unused-parameter -Wno-write-strings -Wno-unused-variable)
+    add_compile_options(-Wall -Wno-unused-parameter -Wno-write-strings -Wno-unused-variable)
 endif()
 
 #GLFW additions
@@ -31,6 +31,7 @@ set(HEADERS
         src/types.h
         src/model.h
         src/opengl_renderer.h
+        src/idk_math.h
         src/vendor/tiny_obj_loader.h
         src/vendor/stb_image.h
         )

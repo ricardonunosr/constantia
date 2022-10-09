@@ -1,9 +1,7 @@
 #include "camera.h"
 #include <GLFW/glfw3.h>
-#include <glm/gtc/matrix_transform.hpp>
 
-constexpr glm::vec3 K_WORLD_UP(0.0f, 1.0f, 0.0f);
-constexpr float K_MOUSE_SENSITIVITY = 0.1f;
+#define K_MOUSE_SENSITIVITY 0.1f
 
 void create_camera(Camera* camera)
 {
@@ -13,9 +11,11 @@ void create_camera(Camera* camera)
     camera->last_y = 1080.0f / 2.0f;
     camera->yaw = 0.0f;
     camera->pitch = 0.0f;
-    camera->position = glm::vec3(-25.0f, 3.0f, 0.0f);
-    camera->forward = glm::vec3(1.0f, 0.0f, 0.0f);
-    camera->projection = glm::perspective(glm::radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
+    camera->position = idk_vec3f(-25.0f, 3.0f, 0.0f);
+    camera->forward = idk_vec3f(1.0f, 0.0f, 0.0f);
+    camera->up = idk_vec3f(0.0f, 1.0f, 0.0f);
+    camera->right = idk_vec3f(0.0f, 0.0f, 1.0f);
+    camera->projection = idk_perspective(idk_radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
 }
 
 void update(GLFWwindow* window, float delta_time, Camera* camera)
@@ -26,13 +26,13 @@ void update(GLFWwindow* window, float delta_time, Camera* camera)
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         camera->position -= camera_speed * camera->forward;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera->position -= glm::normalize(glm::cross(camera->forward, K_WORLD_UP)) * camera_speed;
+        camera->position -= idk_normalize_vec3(idk_cross(camera->forward, camera->up)) * camera_speed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera->position += glm::normalize(glm::cross(camera->forward, K_WORLD_UP)) * camera_speed;
+        camera->position += idk_normalize_vec3(idk_cross(camera->forward, camera->up)) * camera_speed;
     if (glfwGetKey(window, GLFW_KEY_Q) != 0)
-        camera->position += camera_speed * K_WORLD_UP;
+        camera->position += camera_speed * camera->up;
     if (glfwGetKey(window, GLFW_KEY_E) != 0)
-        camera->position -= camera_speed * K_WORLD_UP;
+        camera->position -= camera_speed * camera->up;
 }
 
 void handle_mouse_move(double xpos, double ypos, Camera* camera)
@@ -55,16 +55,16 @@ void handle_mouse_move(double xpos, double ypos, Camera* camera)
 
     camera->yaw += xoffset * K_MOUSE_SENSITIVITY;
     camera->pitch += yoffset * K_MOUSE_SENSITIVITY;
-    camera->pitch = glm::clamp(camera->pitch, -89.0f, 89.0f);
+    camera->pitch = idk_clamp(camera->pitch, -89.0f, 89.0f);
 
-    camera->forward.x = cos(glm::radians(camera->yaw)) * cos(glm::radians(camera->pitch));
-    camera->forward.y = sin(glm::radians(camera->pitch));
-    camera->forward.z = sin(glm::radians(camera->yaw)) * cos(glm::radians(camera->pitch));
-    camera->forward = glm::normalize(camera->forward);
-    camera->right = glm::normalize(glm::cross(camera->forward, K_WORLD_UP));
+    camera->forward.x = cos(idk_radians(camera->yaw)) * cos(idk_radians(camera->pitch));
+    camera->forward.y = sin(idk_radians(camera->pitch));
+    camera->forward.z = sin(idk_radians(camera->yaw)) * cos(idk_radians(camera->pitch));
+    camera->forward = idk_normalize_vec3(camera->forward);
+    camera->right = idk_normalize_vec3(idk_cross(camera->forward, camera->up));
 }
 
-glm::mat4 view_matrix(Camera* camera)
+idk_mat4 view_matrix(Camera* camera)
 {
-    return glm::lookAt(camera->position, camera->position + camera->forward, K_WORLD_UP);
+    return idk_lookat(camera->position, camera->position + camera->forward, camera->up);
 }

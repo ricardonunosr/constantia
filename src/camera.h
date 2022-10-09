@@ -1,15 +1,16 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "idk_math.h"
 
 struct GLFWwindow;
 
 struct Camera
 {
-    glm::mat4 projection;
-    glm::vec3 position;
-    glm::vec3 forward;
-    glm::vec3 right;
+    idk_mat4 projection;
+    idk_vec3 position;
+    idk_vec3 forward;
+    idk_vec3 right;
+    idk_vec3 up;
     bool enabled;
     bool first_mouse;
     float last_x;
@@ -21,4 +22,4 @@ struct Camera
 void create_camera(Camera* camera);
 void update(GLFWwindow* window, float delta_time, Camera* camera);
 void handle_mouse_move(double xpos, double ypos, Camera* camera);
-glm::mat4 view_matrix(Camera* camera);
+idk_mat4 view_matrix(Camera* camera);
