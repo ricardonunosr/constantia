@@ -8,14 +8,11 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <vendor/tiny_obj_loader.h>
 
-void Model::draw(const Frustum& frustum, const glm::mat4& transform, OpenGLProgramCommon* shader, unsigned int& display,
-                 unsigned int& total)
+void Model::draw(const idk_mat4& transform, OpenGLProgramCommon* shader)
 {
     // Note(ricardo): We start to draw at index 1 because 0 is a no texture mesh
     for (int mesh_index = 1; mesh_index < (int)m_meshes.size(); mesh_index++)
     {
-        //        if (m_bounding_volume->is_on_frustum(frustum, transform))
-        //        {
         auto& mesh = m_meshes[mesh_index];
         glUseProgram(shader->program_id);
         for (uint32_t k = 0; k < mesh.textures.size(); k++)
@@ -39,9 +36,6 @@ void Model::draw(const Frustum& frustum, const glm::mat4& transform, OpenGLProgr
         glBindVertexArray(0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glUseProgram(0);
-        display++;
-        //        }
-        total++;
     }
 }
 

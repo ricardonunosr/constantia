@@ -20,7 +20,6 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 set(SOURCES
         src/main.cpp
-        src/types.cpp
         src/camera.cpp
         src/model.cpp
         src/opengl_renderer.cpp
@@ -28,7 +27,6 @@ set(SOURCES
 
 set(HEADERS
         src/camera.h
-        src/types.h
         src/model.h
         src/opengl_renderer.h
         src/idk_math.h

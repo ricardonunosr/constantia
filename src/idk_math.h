@@ -44,6 +44,25 @@ inline idk_vec3 idk_vec3f(float x, float y, float z)
     return result;
 }
 
+inline idk_vec3 idk_vec3fv(float value)
+{
+    idk_vec3 result = {};
+    result.x = value;
+    result.y = value;
+    result.z = value;
+    return result;
+}
+
+inline idk_mat4 idk_mat4f(float value)
+{
+    idk_mat4 result = {};
+    result.elements[0][0] = value;
+    result.elements[1][1] = value;
+    result.elements[2][2] = value;
+    result.elements[3][3] = value;
+    return result;
+}
+
 inline idk_vec3 idk_cross(idk_vec3 a, idk_vec3 b)
 {
     idk_vec3 result = {}; 
@@ -80,6 +99,27 @@ inline idk_mat4 idk_perspective(float fovy, float aspect, float z_near, float z_
     result.elements[2][2] = (z_far+z_near)/(z_near-z_far);
     result.elements[3][2] = (2*z_far*z_near)/(z_near-z_far);
     result.elements[3][3] = 0.0f;
+    return result;
+}
+
+inline idk_mat4 idk_scale(idk_mat4 m, idk_vec3 scale)
+{
+    // Reference: https://en.wikipedia.org/wiki/Scaling_(geometry)
+    idk_mat4 result = {};
+    result.elements[0][0] = m.elements[0][0]*scale[0];
+    result.elements[1][1] = m.elements[1][1]*scale[1];
+    result.elements[2][2] = m.elements[2][2]*scale[2];
+    result.elements[3][3] = m.elements[3][3];
+    return result;
+}
+
+inline idk_mat4 idk_translate(idk_mat4 m, idk_vec3 scale)
+{
+    // Reference: https://en.wikipedia.org/wiki/Scaling_(geometry)
+    idk_mat4 result = idk_mat4f(1.0f);
+    result.elements[0][3] = scale[0];
+    result.elements[1][3] = scale[1];
+    result.elements[2][3] = scale[2];
     return result;
 }
 

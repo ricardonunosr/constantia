@@ -1,7 +1,6 @@
 #pragma once
 #include <glad/gl.h>
 
-#include <glm/glm.hpp>
 #include <string>
 #include <unordered_map>
 #include <utility>

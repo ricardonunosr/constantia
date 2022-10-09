@@ -6,9 +6,6 @@
 #include "opengl_renderer.h"
 
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 static char* VERTEX_SHADER_SOURCE = R"(
@@ -314,18 +311,14 @@ void update_and_render(float delta_time)
     float light_x = 2.0f * sin(glfwGetTime());
     float light_y = 1.0f;
     float light_z = 1.5f * cos(glfwGetTime());
-    glm::vec3 light_pos = glm::vec3(light_x, light_y, light_z);
+    idk_vec3 light_pos = idk_vec3f(light_x, light_y, light_z);
 
-    Frustum frustum = create_frustum_from_camera(1280.0f / 720.0f, 45.0f, 0.1f, 1000.0f,camera);
-    unsigned int total = 0;
-    unsigned int display = 0;
+    idk_mat4 model = idk_mat4f(1.0f);
+    model = idk_scale(model, idk_vec3fv(0.02f));
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(0.02f));
-
-    glm::mat4 light_transform = glm::mat4(1.0f);
-    light_transform = glm::translate(light_transform, light_pos);
-    light_transform = glm::scale(light_transform, glm::vec3(0.2f));
+    idk_mat4 light_transform =idk_mat4f(1.0f);
+    light_transform = idk_translate(light_transform, light_pos);
+    light_transform = idk_scale(light_transform, idk_vec3fv(0.2f));
     SponzaShader* shader = sponza->shader;
     OpenGLProgramCommon* light_shader = sponza->light_shader;
 
@@ -335,7 +328,6 @@ void update_and_render(float delta_time)
         glClearColor(0.5f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-        idk_mat4 view = view_matrix(camera);
         glUseProgram(shader->common.program_id);
         glUniformMatrix4fv(shader->common.projection, 1, false, camera->projection.elements[0]);
         glUniformMatrix4fv(shader->common.view, 1, false, view_matrix(camera).elements[0]);
@@ -350,12 +342,12 @@ void update_and_render(float delta_time)
         glUniform1f(shader->light_linear, 0.09f);
         glUniform1f(shader->light_quadratic, 0.032f);
 
-        glUniformMatrix4fv(shader->common.model, 1, GL_FALSE, glm::value_ptr(model));
-        sponza->sponza->draw(frustum, model, (OpenGLProgramCommon*)shader, display, total);
+        glUniformMatrix4fv(shader->common.model, 1, GL_FALSE, model.elements[0]);
+        sponza->sponza->draw(model, (OpenGLProgramCommon*)shader);
 
         glUseProgram(light_shader->program_id);
-        glUniformMatrix4fv(light_shader->model, 1, GL_FALSE, glm::value_ptr(light_transform));
-        sponza->light->draw(frustum, model, light_shader, display, total);
+        glUniformMatrix4fv(light_shader->model, 1, GL_FALSE, light_transform.elements[0]);
+        sponza->light->draw(model, light_shader);
     }
 
     {
@@ -380,11 +372,11 @@ void update_and_render(float delta_time)
         glUniform1f(shader->light_linear, 0.09f);
         glUniform1f(shader->light_quadratic, 0.032f);
 
-        sponza->sponza->draw(frustum, model, (OpenGLProgramCommon*)shader, display, total);
+        sponza->sponza->draw(model, (OpenGLProgramCommon*)shader);
 
         glUseProgram(light_shader->program_id);
-        glUniformMatrix4fv(light_shader->model, 1, GL_FALSE, glm::value_ptr(light_transform));
-        sponza->light->draw(frustum, model, light_shader, display, total);
+        glUniformMatrix4fv(light_shader->model, 1, GL_FALSE, light_transform.elements[0]);
+        sponza->light->draw(model, light_shader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(0);
     }
