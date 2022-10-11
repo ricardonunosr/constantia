@@ -3,12 +3,12 @@
 #include "opengl_renderer.h"
 #include "idk_math.h"
 #include <glm/glm.hpp>
-#include <memory>
 #include <string>
 #include <vector>
 
 struct Vertex
 {
+    // TODO(ricardo): change this to our own math library. Need to implement hash function.
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 tex_coords;
@@ -19,30 +19,22 @@ struct Vertex
     }
 };
 
-class Model
+struct Model
 {
     struct MeshMaterialGroup
     {
-        std::vector<Vertex> vertices{};
-        std::vector<unsigned int> indices{};
-        std::vector<Texture*> textures{};
+        std::vector<Vertex> vertices;
+        std::vector<unsigned int> indices;
+        std::vector<Texture*> textures;
 
         VertexArray* vao;
         VertexBuffer* vbo;
         IndexBuffer* ibo;
     };
 
-  public:
-    explicit Model(const std::string& path)
-    {
-        load_model(path);
-    }
-
-    void draw(const idk_mat4& transform, OpenGLProgramCommon* shader);
-
-  private:
-    std::vector<MeshMaterialGroup> m_meshes = {};
-    std::string m_directory;
-
-    void load_model(const std::string& path);
+    std::vector<MeshMaterialGroup> meshes;
 };
+
+void create_model(Model* model, const std::string& path);
+void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader);
+

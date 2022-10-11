@@ -104,7 +104,7 @@ int main(int /*argc*/, char** /*argv*/)
 
     printf("Loaded OpenGL %d.%d\n",GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
-    printf("Current working directory: %s\n",std::filesystem::current_path().c_str());
+    printf("Current working directory: %ls\n",std::filesystem::current_path().c_str());
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();

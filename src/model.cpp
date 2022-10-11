@@ -8,12 +8,12 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <vendor/tiny_obj_loader.h>
 
-void Model::draw(const idk_mat4& transform, OpenGLProgramCommon* shader)
+void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
 {
     // Note(ricardo): We start to draw at index 1 because 0 is a no texture mesh
-    for (int mesh_index = 1; mesh_index < (int)m_meshes.size(); mesh_index++)
+    for (int mesh_index = 1; mesh_index < (int)model->meshes.size(); mesh_index++)
     {
-        auto& mesh = m_meshes[mesh_index];
+        auto& mesh = model->meshes[mesh_index];
         glUseProgram(shader->program_id);
         for (uint32_t k = 0; k < mesh.textures.size(); k++)
         {
@@ -50,13 +50,12 @@ template <> struct hash<Vertex>
 };
 } // namespace std
 
-void Model::load_model(const std::string& path)
+void create_model(Model* model, const std::string& path)
 {
-    {
-        m_directory = path.substr(0, path.find_last_of('/'));
+        std::string directory =path.substr(0, path.find_last_of('/'));  
 
         tinyobj::ObjReaderConfig reader_config;
-        reader_config.mtl_search_path = m_directory;
+        reader_config.mtl_search_path = directory;
         tinyobj::ObjReader reader;
 
         if (!reader.ParseFromFile(path, reader_config))
@@ -81,16 +80,16 @@ void Model::load_model(const std::string& path)
          *  This way we can group every mesh into one draw call instead of multiple for the same mesh.
          *  +1 for an unknown material (index 0 is the unknown material)
          */
-        m_meshes.resize(materials.size() + 1);
+        model->meshes.resize(materials.size() + 1);
 
         for (size_t i = 0; i < materials.size(); i++)
         {
-            auto& mesh = m_meshes[i + 1];
+            auto& mesh = model->meshes[i + 1];
             if (!materials[i].diffuse_texname.empty())
             {
                 std::string diffuse_path(materials[i].diffuse_texname);
                 std::replace(diffuse_path.begin(), diffuse_path.end(), '\\', '/');
-                std::string diffuse_path_final = m_directory + "/" + diffuse_path;
+                std::string diffuse_path_final = directory + "/" + diffuse_path;
                 Texture* texture = (Texture*)malloc(sizeof(Texture));
                 opengl_create_texture(diffuse_path_final.c_str(), diffuse, texture);
                 mesh.textures.push_back(texture);
@@ -99,7 +98,7 @@ void Model::load_model(const std::string& path)
             {
                 std::string specular_path(materials[i].specular_texname);
                 std::replace(specular_path.begin(), specular_path.end(), '\\', '/');
-                std::string specular_path_final = m_directory + "/" + specular_path;
+                std::string specular_path_final = directory + "/" + specular_path;
                 Texture* texture = (Texture*)malloc(sizeof(Texture));
                 opengl_create_texture(specular_path_final.c_str(), specular, texture);
                 mesh.textures.push_back(texture);
@@ -108,7 +107,7 @@ void Model::load_model(const std::string& path)
             {
                 std::string bump_path(materials[i].bump_texname);
                 std::replace(bump_path.begin(), bump_path.end(), '\\', '/');
-                std::string bump_path_final = m_directory + "/" + bump_path;
+                std::string bump_path_final = directory + "/" + bump_path;
                 Texture* texture = (Texture*)malloc(sizeof(Texture));
                 opengl_create_texture(bump_path_final.c_str(), specular, texture);
                 mesh.textures.push_back(texture);
@@ -151,7 +150,7 @@ void Model::load_model(const std::string& path)
 
                     // 0 for unknown material
                     auto& unique_vertices = unique_vertices_per_group[material_id + 1];
-                    auto& group = m_meshes[material_id + 1];
+                    auto& group = model->meshes[material_id + 1];
                     if (unique_vertices.count(vertex) == 0)
                     {
                         unique_vertices[vertex] = group.vertices.size(); // auto incrementing size
@@ -163,7 +162,7 @@ void Model::load_model(const std::string& path)
             }
         }
 
-        for (auto& mesh : m_meshes)
+        for (auto& mesh : model->meshes)
         {
             if (!mesh.vertices.empty())
             {
@@ -188,4 +187,3 @@ void Model::load_model(const std::string& path)
             }
         }
     }
-}

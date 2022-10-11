@@ -176,8 +176,8 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
 
 struct Sponza
 {
-    std::unique_ptr<Model> light;
-    std::unique_ptr<Model> sponza;
+    Model* light;
+    Model* sponza;
     SponzaShader* shader;
     OpenGLProgramCommon* light_shader;
     unsigned int framebuffer;
@@ -190,8 +190,11 @@ Sponza* sponza = (Sponza*)new Sponza;
 void init()
 {
     std::string base_path_assets = "./data/";
-    sponza->sponza = std::make_unique<Model>(base_path_assets + "sponza/sponza.obj");
-    sponza->light = std::make_unique<Model>(base_path_assets + "cube/cube.obj");
+    
+    sponza->sponza = (Model*)new Model;  
+    create_model(sponza->sponza,base_path_assets + "sponza/sponza.obj");
+    sponza->light = (Model*)new Model;
+    create_model(sponza->light,base_path_assets + "cube/cube.obj");
 
     // Sponza
     std::string vertex_shader_path = base_path_assets + "shaders/basic.vert";
@@ -343,11 +346,11 @@ void update_and_render(float delta_time)
         glUniform1f(shader->light_quadratic, 0.032f);
 
         glUniformMatrix4fv(shader->common.model, 1, GL_FALSE, model.elements[0]);
-        sponza->sponza->draw(model, (OpenGLProgramCommon*)shader);
+        draw(sponza->sponza,model, (OpenGLProgramCommon*)shader);
 
         glUseProgram(light_shader->program_id);
         glUniformMatrix4fv(light_shader->model, 1, GL_FALSE, light_transform.elements[0]);
-        sponza->light->draw(model, light_shader);
+        draw(sponza->light,model, light_shader);
     }
 
     {
@@ -372,11 +375,11 @@ void update_and_render(float delta_time)
         glUniform1f(shader->light_linear, 0.09f);
         glUniform1f(shader->light_quadratic, 0.032f);
 
-        sponza->sponza->draw(model, (OpenGLProgramCommon*)shader);
+        draw(sponza->sponza,model, (OpenGLProgramCommon*)shader);
 
         glUseProgram(light_shader->program_id);
         glUniformMatrix4fv(light_shader->model, 1, GL_FALSE, light_transform.elements[0]);
-        sponza->light->draw(model, light_shader);
+        draw(sponza->light,model, light_shader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glUseProgram(0);
     }
