@@ -7,7 +7,7 @@ project(Constantia LANGUAGES ${LANGUAGES})
 
 if (MSVC)
     # warning level 4 and all warnings as errors
-    add_compile_options(/W4 /WX)
+    # add_compile_options(/W4 /WX)
 else()
     # lots of warnings and all warnings as errors
     add_compile_options(-Wall -Wno-unused-parameter -Wno-write-strings -Wno-unused-variable)
@@ -55,7 +55,6 @@ target_link_libraries(${PROJECT_NAME}
         glad
         glfw
         imgui
-        pthread
         )
 
 # TODO(ricardo): I HATE CMAKE... find better way to add third-party libs
