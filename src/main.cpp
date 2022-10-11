@@ -41,7 +41,8 @@ struct Application
 static Metrics metrics;
 static Application app;
 
-#if 1
+// Note(ricardo): This is slow af on Windows
+#if 0
 void* operator new(size_t size)
 {
     std::cout << "Allocating " << size << "bytes\n";

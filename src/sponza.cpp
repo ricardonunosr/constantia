@@ -8,7 +8,7 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-static char* VERTEX_SHADER_SOURCE = R"(
+static char* VERTEX_SHADER_SOURCE = (char*)R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
@@ -31,7 +31,7 @@ void main()
 }
 )";
 
-static char* FRAGMENT_SHADER_SOURCE = R"(
+static char* FRAGMENT_SHADER_SOURCE = (char*)R"(
 #version 330 core
 struct Material {
     sampler2D texture_diffuse;
@@ -101,7 +101,7 @@ void main()
 }
 )";
 
-static char* VERTEX_LIGHT_SOURCE = R"(
+static char* VERTEX_LIGHT_SOURCE = (char*)R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
@@ -120,7 +120,7 @@ void main()
 }
 )";
 
-static char* FRAGMENT_LIGHT_SOURCE = R"(
+static char* FRAGMENT_LIGHT_SOURCE = (char*)R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -152,17 +152,6 @@ struct SponzaShader
     GLint light_quadratic;
 };
 
-struct Sponza
-{
-    std::unique_ptr<Model> light;
-    std::unique_ptr<Model> sponza;
-    SponzaShader* shader;
-    OpenGLProgramCommon* light_shader;
-    unsigned int framebuffer;
-    unsigned int rbo;
-    unsigned int texture_colorbuffer;
-};
-
 static Camera* camera = nullptr;
 static Camera* second_camera = nullptr;
 
@@ -185,7 +174,18 @@ static void mouse_button_callback(GLFWwindow* window, int button, int action, in
     }
 }
 
-Sponza* sponza = (Sponza*)malloc(sizeof(Sponza));
+struct Sponza
+{
+    std::unique_ptr<Model> light;
+    std::unique_ptr<Model> sponza;
+    SponzaShader* shader;
+    OpenGLProgramCommon* light_shader;
+    unsigned int framebuffer;
+    unsigned int rbo;
+    unsigned int texture_colorbuffer;
+};
+
+Sponza* sponza = (Sponza*)new Sponza;
 
 void init()
 {
