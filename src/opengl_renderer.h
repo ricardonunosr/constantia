@@ -41,9 +41,10 @@ struct Texture
     int height;
     int nr_channels;
     texture_type type;
+    std::string name;
 };
 
-void opengl_create_texture(const char* path, texture_type type, Texture* texture);
+void opengl_create_texture(const std::string path, texture_type type, Texture* texture);
 void opengl_bind_texture(unsigned int id, unsigned int slot);
 void opengl_unbind_texture();
 

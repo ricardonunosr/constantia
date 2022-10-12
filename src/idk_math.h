@@ -27,8 +27,19 @@ union idk_vec3
     {
         return elements[index];    
     }
+
 #endif
 };
+
+inline bool operator==(const idk_vec2& a, const idk_vec2& b)
+{
+    return (a.x == b.x && a.y == b.y);
+}
+
+inline bool operator==(const idk_vec3& a, const idk_vec3& b)
+{
+    return (a.x == b.x && a.y == b.y && a.z == b.z);
+}
 
 union idk_mat4
 {

@@ -76,8 +76,9 @@ void opengl_create_shader(char* vertex_shader_source, char* fragment_shader_sour
     result->material_shininess = glGetUniformLocation(program_id, "material.shininess");
 }
 
-void opengl_create_texture(const char* path, texture_type type, Texture* texture)
+void opengl_create_texture(const std::string path, texture_type type, Texture* texture)
 {
+    texture->name = path;
     glGenTextures(1, &texture->id);
     glBindTexture(GL_TEXTURE_2D, texture->id);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -85,7 +86,7 @@ void opengl_create_texture(const char* path, texture_type type, Texture* texture
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    unsigned char* data = stbi_load(path, &texture->width, &texture->height, &texture->nr_channels, 0);
+    unsigned char* data = stbi_load(path.c_str(), &texture->width, &texture->height, &texture->nr_channels, 0);
     if (data != nullptr)
     {
         int format = GL_RGB;

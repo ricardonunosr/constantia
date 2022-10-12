@@ -8,10 +8,9 @@
 
 struct Vertex
 {
-    // TODO(ricardo): change this to our own math library. Need to implement hash function.
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec2 tex_coords;
+    idk_vec3 position;
+    idk_vec3 normal;
+    idk_vec2 tex_coords;
 
     bool operator==(const Vertex& other) const
     {

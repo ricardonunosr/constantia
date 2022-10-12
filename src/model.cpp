@@ -10,23 +10,27 @@
 
 void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
 {
-    // Note(ricardo): We start to draw at index 1 because 0 is a no texture mesh
     for (int mesh_index = 1; mesh_index < (int)model->meshes.size(); mesh_index++)
     {
         auto& mesh = model->meshes[mesh_index];
         glUseProgram(shader->program_id);
-        for (uint32_t k = 0; k < mesh.textures.size(); k++)
+        for (uint32_t k = 0; k < 2; k++)
         {
-            Texture* texture = mesh.textures[k];
-            if (texture->type == diffuse)
+            if(mesh.textures.size() > 0)
             {
-                glUniform1i(shader->material_texture_diffuse, k);
+                Texture* texture = mesh.textures[k];
+                if(texture){
+                    if (texture->type == diffuse)
+                    {
+                        glUniform1i(shader->material_texture_diffuse, k);
+                    }
+                    else if (texture->type == specular)
+                    {
+                        glUniform1i(shader->material_texture_specular, k);
+                    }
+                    opengl_bind_texture(texture->id, k);
+                }
             }
-            else if (texture->type == specular)
-            {
-                glUniform1i(shader->material_texture_specular, k);
-            }
-            opengl_bind_texture(texture->id, k);
         }
         glActiveTexture(GL_TEXTURE0);
 
@@ -39,16 +43,29 @@ void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
     }
 }
 
-namespace std
+static std::vector<int> find_unique_elements(std::vector<int> vector)
 {
-template <> struct hash<Vertex>
-{
-    size_t operator()(Vertex const& vertex) const
+    std::vector<int> result;
+    for(int vector_index = 0; vector_index< vector.size(); vector_index++)
     {
-        return ((hash<glm::vec3>()(vertex.position))) ^ (hash<glm::vec2>()(vertex.tex_coords) << 1);
+        if(result.size() != 0)
+        {
+            for(int result_index = 0; result_index < result.size(); result_index++)
+            {
+               if(result[result_index] != vector[vector_index])
+               {
+                   result.push_back(vector[vector_index]);
+               }
+            }
+        }
+        else
+        {
+            result.push_back(vector[vector_index]);
+        }
     }
-};
-} // namespace std
+
+    return result;
+}
 
 void create_model(Model* model, const std::string& path)
 {
@@ -76,92 +93,93 @@ void create_model(Model* model, const std::string& path)
         const auto& shapes = reader.GetShapes();
         const auto& materials = reader.GetMaterials();
 
-        /*  We are grouping every mesh that was the same material.
-         *  This way we can group every mesh into one draw call instead of multiple for the same mesh.
-         *  +1 for an unknown material (index 0 is the unknown material)
-         */
-        model->meshes.resize(materials.size() + 1);
-
+        // NOTE(ricardo): material = diffuse + specular textures
+        struct Material
+        {
+            Texture* diffuse_tex;
+            Texture* specular_tex;
+        };
+        std::vector<Material> all_materials(materials.size());
+        // Load all textures
         for (size_t i = 0; i < materials.size(); i++)
         {
-            auto& mesh = model->meshes[i + 1];
             if (!materials[i].diffuse_texname.empty())
             {
                 std::string diffuse_path(materials[i].diffuse_texname);
                 std::replace(diffuse_path.begin(), diffuse_path.end(), '\\', '/');
                 std::string diffuse_path_final = directory + "/" + diffuse_path;
-                Texture* texture = (Texture*)malloc(sizeof(Texture));
+                // Texture* texture = (Texture*)malloc(sizeof(Texture));
+                 Texture* texture = (Texture*)new Texture();
                 opengl_create_texture(diffuse_path_final.c_str(), diffuse, texture);
-                mesh.textures.push_back(texture);
+                all_materials[i].diffuse_tex = texture;
             }
             if (!materials[i].specular_texname.empty())
             {
                 std::string specular_path(materials[i].specular_texname);
                 std::replace(specular_path.begin(), specular_path.end(), '\\', '/');
                 std::string specular_path_final = directory + "/" + specular_path;
-                Texture* texture = (Texture*)malloc(sizeof(Texture));
+                //Texture* texture = (Texture*)malloc(sizeof(Texture));
+                Texture* texture = (Texture*)new Texture();
                 opengl_create_texture(specular_path_final.c_str(), specular, texture);
-                mesh.textures.push_back(texture);
+                all_materials[i].specular_tex = texture;
             }
             else if (!materials[i].bump_texname.empty())
             {
                 std::string bump_path(materials[i].bump_texname);
                 std::replace(bump_path.begin(), bump_path.end(), '\\', '/');
                 std::string bump_path_final = directory + "/" + bump_path;
-                Texture* texture = (Texture*)malloc(sizeof(Texture));
+                //Texture* texture = (Texture*)malloc(sizeof(Texture));
+                Texture* texture = (Texture*)new Texture();
                 opengl_create_texture(bump_path_final.c_str(), specular, texture);
-                mesh.textures.push_back(texture);
+                all_materials[i].specular_tex = texture;
             }
         }
 
-        std::vector<std::unordered_map<Vertex, uint32_t>> unique_vertices_per_group(materials.size() + 1);
-        for (const auto& shape : shapes)
+        model->meshes.resize(shapes.size());
+        for (size_t shape_index = 0; shape_index < shapes.size(); shape_index++)
         {
-            size_t index_offset = 0;
-            for (size_t n = 0; n < shape.mesh.num_face_vertices.size(); n++)
+            auto& shape = shapes[shape_index];
+            for (size_t indice = 0; indice < shape.mesh.indices.size(); indice++)
             {
-                // per face
-                auto ngon = shape.mesh.num_face_vertices[n];
-                auto material_id = shape.mesh.material_ids[n];
-                for (size_t f = 0; f < ngon; f++)
+                auto& index = shape.mesh.indices[indice];
+                Vertex vertex{};
+
+                vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
+                                   attrib.vertices[3 * index.vertex_index + 1],
+                                   attrib.vertices[3 * index.vertex_index + 2]};
+
+                // Check if it has texture coordinates
+                if (index.texcoord_index >= 0)
                 {
-                    const auto& index = shape.mesh.indices[index_offset + f];
-
-                    Vertex vertex{};
-
-                    vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
-                                       attrib.vertices[3 * index.vertex_index + 1],
-                                       attrib.vertices[3 * index.vertex_index + 2]};
-
-                    // Check if it has texture coordinates
-                    if (index.texcoord_index >= 0)
-                    {
-                        vertex.tex_coords = {attrib.texcoords[2 * index.texcoord_index + 0],
-                                             1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
-                    }
-
-                    // Check if it has normals
-                    if (index.normal_index >= 0)
-                    {
-                        vertex.normal = {attrib.normals[3 * index.normal_index + 0],
-                                         attrib.normals[3 * index.normal_index + 1],
-                                         attrib.normals[3 * index.normal_index + 2]};
-                    }
-
-                    // 0 for unknown material
-                    auto& unique_vertices = unique_vertices_per_group[material_id + 1];
-                    auto& group = model->meshes[material_id + 1];
-                    if (unique_vertices.count(vertex) == 0)
-                    {
-                        unique_vertices[vertex] = group.vertices.size(); // auto incrementing size
-                        group.vertices.push_back(vertex);
-                    }
-                    group.indices.push_back(static_cast<unsigned int>(unique_vertices[vertex]));
+                    vertex.tex_coords = {attrib.texcoords[2 * index.texcoord_index + 0],
+                                         1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
                 }
-                index_offset += ngon;
+
+                // Check if it has normals
+                if (index.normal_index >= 0)
+                {
+                    vertex.normal = {attrib.normals[3 * index.normal_index + 0],
+                                     attrib.normals[3 * index.normal_index + 1],
+                                     attrib.normals[3 * index.normal_index + 2]};
+                }
+
+                model->meshes[shape_index].vertices.push_back(vertex);
+                std::vector<unsigned int>& indices = model->meshes[shape_index].indices;
+                indices.push_back(indices.size());
+            }
+            std::vector<int> material_ids = shape.mesh.material_ids;
+            std::sort(material_ids.begin(),material_ids.end());
+            material_ids.erase(unique(material_ids.begin(),material_ids.end()),material_ids.end());
+
+            for(int unique_mat_index = 0; unique_mat_index < material_ids.size(); unique_mat_index++)
+            {
+                int unique_index = material_ids[unique_mat_index];
+                model->meshes[shape_index].textures.push_back(all_materials[unique_index].diffuse_tex);
+                model->meshes[shape_index].textures.push_back(all_materials[unique_index].specular_tex);
             }
         }
 
+        // Create OpenGL objects
         for (auto& mesh : model->meshes)
         {
             if (!mesh.vertices.empty())
