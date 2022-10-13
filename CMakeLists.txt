@@ -47,7 +47,6 @@ target_include_directories(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} SYSTEM
         PUBLIC lib/glad/include
         PUBLIC lib/glfw/include
-        PUBLIC lib/glm
         PUBLIC lib/imgui
         )
 

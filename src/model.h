@@ -2,7 +2,6 @@
 
 #include "opengl_renderer.h"
 #include "idk_math.h"
-#include <glm/glm.hpp>
 #include <string>
 #include <vector>
 

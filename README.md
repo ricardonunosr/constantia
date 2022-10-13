@@ -15,7 +15,6 @@ Dependencies
 - [glfw](https://github.com/glfw/glfw)
 - [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)
 - [glad2](https://github.com/Dav1dde/glad/tree/glad2)
-- [glm](https://github.com/g-truc/glm)
 - [imgui](https://github.com/ocornut/imgui)
 - [stb](https://github.com/nothings/stb)
 

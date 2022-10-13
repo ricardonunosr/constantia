@@ -3,14 +3,12 @@
 #include <algorithm>
 #include <glad/gl.h>
 #include <unordered_map>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/hash.hpp>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <vendor/tiny_obj_loader.h>
 
 void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
 {
-    for (int mesh_index = 1; mesh_index < (int)model->meshes.size(); mesh_index++)
+    for (int mesh_index = 0; mesh_index < (int)model->meshes.size(); mesh_index++)
     {
         auto& mesh = model->meshes[mesh_index];
         glUseProgram(shader->program_id);
@@ -33,7 +31,6 @@ void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
             }
         }
         glActiveTexture(GL_TEXTURE0);
-
         glBindVertexArray(mesh.vao->id);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo->id);
         glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
@@ -41,30 +38,6 @@ void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glUseProgram(0);
     }
-}
-
-static std::vector<int> find_unique_elements(std::vector<int> vector)
-{
-    std::vector<int> result;
-    for(int vector_index = 0; vector_index< vector.size(); vector_index++)
-    {
-        if(result.size() != 0)
-        {
-            for(int result_index = 0; result_index < result.size(); result_index++)
-            {
-               if(result[result_index] != vector[vector_index])
-               {
-                   result.push_back(vector[vector_index]);
-               }
-            }
-        }
-        else
-        {
-            result.push_back(vector[vector_index]);
-        }
-    }
-
-    return result;
 }
 
 void create_model(Model* model, const std::string& path)
@@ -136,47 +109,59 @@ void create_model(Model* model, const std::string& path)
         }
 
         model->meshes.resize(shapes.size());
-        for (size_t shape_index = 0; shape_index < shapes.size(); shape_index++)
+        uint32_t mesh_index = 0;
+        for (size_t s = 0; s < shapes.size(); s++)
         {
-            auto& shape = shapes[shape_index];
-            for (size_t indice = 0; indice < shape.mesh.indices.size(); indice++)
+            size_t index_offset = 0;
+            int previous_face_material_id = -1;
+            for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++)
             {
-                auto& index = shape.mesh.indices[indice];
-                Vertex vertex{};
-
-                vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
-                                   attrib.vertices[3 * index.vertex_index + 1],
-                                   attrib.vertices[3 * index.vertex_index + 2]};
-
-                // Check if it has texture coordinates
-                if (index.texcoord_index >= 0)
+                size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+                for(size_t v = 0; v < fv; v++)
                 {
-                    vertex.tex_coords = {attrib.texcoords[2 * index.texcoord_index + 0],
-                                         1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
+                    tinyobj::index_t index = shapes[s].mesh.indices[index_offset + v];
+                    Vertex vertex{};
+
+                    vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
+                                       attrib.vertices[3 * index.vertex_index + 1],
+                                       attrib.vertices[3 * index.vertex_index + 2]};
+
+                    // Check if it has texture coordinates
+                    if (index.texcoord_index >= 0)
+                    {
+                        vertex.tex_coords = {attrib.texcoords[2 * index.texcoord_index + 0],
+                                             1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
+                    }
+
+                    // Check if it has normals
+                    if (index.normal_index >= 0)
+                    {
+                        vertex.normal = {attrib.normals[3 * index.normal_index + 0],
+                                         attrib.normals[3 * index.normal_index + 1],
+                                         attrib.normals[3 * index.normal_index + 2]};
+                    }
+
+                    // NOTE(ricardo): if the face_material_id is different we want to make it into another mesh
+                    int face_material_id = shapes[s].mesh.material_ids[f];
+                    if(previous_face_material_id != -1 &&
+                            face_material_id != previous_face_material_id)
+                    {
+                        mesh_index++;
+                        previous_face_material_id = shapes[s].mesh.material_ids[f];
+                        model->meshes.resize(model->meshes.size() + 1);
+                    }
+
+                    model->meshes[mesh_index].vertices.push_back(vertex);
+                    std::vector<unsigned int>& indices = model->meshes[mesh_index].indices;
+                    indices.push_back(indices.size());
+                    model->meshes[mesh_index].textures.push_back(all_materials[face_material_id].diffuse_tex);
+                    model->meshes[mesh_index].textures.push_back(all_materials[face_material_id].specular_tex);
+
                 }
-
-                // Check if it has normals
-                if (index.normal_index >= 0)
-                {
-                    vertex.normal = {attrib.normals[3 * index.normal_index + 0],
-                                     attrib.normals[3 * index.normal_index + 1],
-                                     attrib.normals[3 * index.normal_index + 2]};
-                }
-
-                model->meshes[shape_index].vertices.push_back(vertex);
-                std::vector<unsigned int>& indices = model->meshes[shape_index].indices;
-                indices.push_back(indices.size());
+                index_offset+=fv;
+                previous_face_material_id = shapes[s].mesh.material_ids[f];
             }
-            std::vector<int> material_ids = shape.mesh.material_ids;
-            std::sort(material_ids.begin(),material_ids.end());
-            material_ids.erase(unique(material_ids.begin(),material_ids.end()),material_ids.end());
-
-            for(int unique_mat_index = 0; unique_mat_index < material_ids.size(); unique_mat_index++)
-            {
-                int unique_index = material_ids[unique_mat_index];
-                model->meshes[shape_index].textures.push_back(all_materials[unique_index].diffuse_tex);
-                model->meshes[shape_index].textures.push_back(all_materials[unique_index].specular_tex);
-            }
+            mesh_index++;
         }
 
         // Create OpenGL objects
