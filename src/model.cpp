@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <glad/gl.h>
-#include <unordered_map>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <vendor/tiny_obj_loader.h>
 
@@ -12,23 +11,17 @@ void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
     {
         auto& mesh = model->meshes[mesh_index];
         glUseProgram(shader->program_id);
-        for (uint32_t k = 0; k < 2; k++)
+        Texture* diffuse_tex = mesh.materials.diffuse_tex;
+        Texture* specular_tex = mesh.materials.specular_tex;
+        if(diffuse_tex)
         {
-            if(mesh.textures.size() > 0)
-            {
-                Texture* texture = mesh.textures[k];
-                if(texture){
-                    if (texture->type == diffuse)
-                    {
-                        glUniform1i(shader->material_texture_diffuse, k);
-                    }
-                    else if (texture->type == specular)
-                    {
-                        glUniform1i(shader->material_texture_specular, k);
-                    }
-                    opengl_bind_texture(texture->id, k);
-                }
-            }
+            glUniform1i(shader->material_texture_diffuse, 0);
+            opengl_bind_texture(diffuse_tex->id, 0);
+        }
+        if(specular_tex)
+        {
+            glUniform1i(shader->material_texture_specular, 1);
+            opengl_bind_texture(specular_tex->id, 1);
         }
         glActiveTexture(GL_TEXTURE0);
         glBindVertexArray(mesh.vao->id);
@@ -62,26 +55,20 @@ void create_model(Model* model, const std::string& path)
             printf("TinyObjReader: %s", reader.Warning().c_str());
         }
 
-        const auto& attrib = reader.GetAttrib();
-        const auto& shapes = reader.GetShapes();
-        const auto& materials = reader.GetMaterials();
+        tinyobj::attrib_t attrib = reader.GetAttrib();
+        std::vector<tinyobj::shape_t> shapes = reader.GetShapes();
+        std::vector<tinyobj::material_t> materials = reader.GetMaterials();
 
-        // NOTE(ricardo): material = diffuse + specular textures
-        struct Material
-        {
-            Texture* diffuse_tex;
-            Texture* specular_tex;
-        };
         std::vector<Material> all_materials(materials.size());
         // Load all textures
         for (size_t i = 0; i < materials.size(); i++)
         {
             if (!materials[i].diffuse_texname.empty())
             {
+                // TODO(ricardo): put this into a function
                 std::string diffuse_path(materials[i].diffuse_texname);
                 std::replace(diffuse_path.begin(), diffuse_path.end(), '\\', '/');
                 std::string diffuse_path_final = directory + "/" + diffuse_path;
-                // Texture* texture = (Texture*)malloc(sizeof(Texture));
                  Texture* texture = (Texture*)new Texture();
                 opengl_create_texture(diffuse_path_final.c_str(), diffuse, texture);
                 all_materials[i].diffuse_tex = texture;
@@ -91,7 +78,6 @@ void create_model(Model* model, const std::string& path)
                 std::string specular_path(materials[i].specular_texname);
                 std::replace(specular_path.begin(), specular_path.end(), '\\', '/');
                 std::string specular_path_final = directory + "/" + specular_path;
-                //Texture* texture = (Texture*)malloc(sizeof(Texture));
                 Texture* texture = (Texture*)new Texture();
                 opengl_create_texture(specular_path_final.c_str(), specular, texture);
                 all_materials[i].specular_tex = texture;
@@ -101,7 +87,6 @@ void create_model(Model* model, const std::string& path)
                 std::string bump_path(materials[i].bump_texname);
                 std::replace(bump_path.begin(), bump_path.end(), '\\', '/');
                 std::string bump_path_final = directory + "/" + bump_path;
-                //Texture* texture = (Texture*)malloc(sizeof(Texture));
                 Texture* texture = (Texture*)new Texture();
                 opengl_create_texture(bump_path_final.c_str(), specular, texture);
                 all_materials[i].specular_tex = texture;
@@ -154,8 +139,8 @@ void create_model(Model* model, const std::string& path)
                     model->meshes[mesh_index].vertices.push_back(vertex);
                     std::vector<unsigned int>& indices = model->meshes[mesh_index].indices;
                     indices.push_back(indices.size());
-                    model->meshes[mesh_index].textures.push_back(all_materials[face_material_id].diffuse_tex);
-                    model->meshes[mesh_index].textures.push_back(all_materials[face_material_id].specular_tex);
+                    model->meshes[mesh_index].materials.diffuse_tex = all_materials[face_material_id].diffuse_tex;
+                    model->meshes[mesh_index].materials.specular_tex = all_materials[face_material_id].specular_tex;
 
                 }
                 index_offset+=fv;
@@ -172,7 +157,7 @@ void create_model(Model* model, const std::string& path)
                 mesh.vao = (VertexArray*)malloc(sizeof(VertexArray));
                 opengl_create_vertex_array(mesh.vao);
                 mesh.vbo = (VertexBuffer*)malloc(sizeof(VertexBuffer));
-                opengl_create_vertex_buffer((mesh.vertices).data(), mesh.vertices.size() * sizeof(Vertex), mesh.vbo);
+                opengl_create_vertex_buffer(mesh.vertices.data(), mesh.vertices.size() * sizeof(Vertex), mesh.vbo);
                 mesh.ibo = (IndexBuffer*)malloc(sizeof(IndexBuffer));
                 opengl_create_index_buffer((const void*)(mesh.indices).data(), mesh.indices.size(), mesh.ibo);
                 int enabled_attribs = 0;

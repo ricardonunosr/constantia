@@ -3,6 +3,8 @@
 
 #define IDK_PI32 3.14159265359f
 #define IDK_PI 3.14159265358979323846
+#define IDK_F32_MAX 3.402823e+38
+#define IDK_F32_MIN 1.175494e-38
 
 union idk_vec2
 {
@@ -22,6 +24,25 @@ union idk_vec3
         float z;
     };
     float elements[3];
+#ifdef __cplusplus
+    inline float& operator[](const int& index)
+    {
+        return elements[index];    
+    }
+
+#endif
+};
+
+union idk_vec4
+{
+    struct
+    {
+        float x;
+        float y;
+        float z;
+        float w;
+    };
+    float elements[4];
 #ifdef __cplusplus
     inline float& operator[](const int& index)
     {
@@ -99,6 +120,16 @@ inline float idk_radians(float degrees)
     return result;
 }
 
+inline float idk_min(float a, float b)
+{
+    return a < b ?a:b;
+}
+
+inline float idk_max(float a, float b)
+{
+    return a > b ?a:b;
+}
+
 inline idk_mat4 idk_perspective(float fovy, float aspect, float z_near, float z_far)
 {
     // Reference: https://registry.khronos.org/OpenGL-Refpages/gl2.1/xhtml/gluPerspective.xml
@@ -153,6 +184,15 @@ inline idk_vec3 operator*(idk_vec3 a, float b)
     return result;
 }
 
+inline idk_vec3 operator-(idk_vec3 a)
+{
+   idk_vec3 result = {}; 
+   result.x = -a.x;
+   result.y = -a.y;
+   result.z = -a.z;
+   return result;
+}
+
 inline idk_vec3 operator-(idk_vec3 a, idk_vec3 b)
 {
    idk_vec3 result = {}; 
@@ -186,10 +226,16 @@ inline float idk_dot_vec3(idk_vec3 a, idk_vec3 b)
     return result;
 }
 
+inline float idk_vec3_length(idk_vec3 a)
+{
+    float result = sqrtf(idk_dot_vec3(a,a));
+    return result;
+}
+
 inline idk_vec3 idk_normalize_vec3(idk_vec3 a)
 {
     idk_vec3 result = {}; 
-    float vector_length = sqrtf(idk_dot_vec3(a,a));
+    float vector_length = idk_vec3_length(a);
     result = (1.0f/vector_length) * a; 
     return result;
 }

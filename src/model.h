@@ -17,13 +17,19 @@ struct Vertex
     }
 };
 
+struct Material
+{
+    Texture* diffuse_tex;
+    Texture* specular_tex;
+};
+
 struct Model
 {
     struct MeshMaterialGroup
     {
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
-        std::vector<Texture*> textures;
+        Material materials;
 
         VertexArray* vao;
         VertexBuffer* vbo;

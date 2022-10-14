@@ -120,7 +120,7 @@ int main(int /*argc*/, char** /*argv*/)
 
     init();
 
-    printf("Startup Usage %d bytes\n", metrics.current_usage());
+    // printf("Startup Usage %d bytes\n", metrics.current_usage());
     // Main Loop
     while (!(glfwWindowShouldClose(app.window) != 0))
     {
@@ -130,7 +130,7 @@ int main(int /*argc*/, char** /*argv*/)
         app.delta_time = current_frame - app.last_frame;
         app.last_frame = current_frame;
 
-	update_and_render(app.delta_time);
+	    update_and_render(app.delta_time);
 
         // UI Scope
         {
@@ -144,7 +144,7 @@ int main(int /*argc*/, char** /*argv*/)
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
 
-	printf("Allocated during frame %d bytes\n",metrics.current_usage());
+	    // printf("Allocated during frame %d bytes\n",metrics.current_usage());
         glfwPollEvents();
         glfwSwapBuffers(app.window);
     }

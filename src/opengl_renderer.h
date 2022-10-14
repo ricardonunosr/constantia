@@ -2,8 +2,6 @@
 #include <glad/gl.h>
 
 #include <string>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 struct OpenGLProgramCommon

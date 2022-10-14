@@ -19,9 +19,10 @@ ReadEntireFile read_entire_file(const char* file_path)
     result.size = ftell(file_handle);
     fseek(file_handle, 0L, SEEK_SET);
 
-    result.content = (char*)malloc(result.size);
+    result.content = (char*)malloc(result.size+1);
     fread(result.content, 1, result.size, file_handle);
     fclose(file_handle);
+    result.content[result.size] = '\0';
 
     return result;
 }
