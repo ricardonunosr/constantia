@@ -54,16 +54,21 @@ struct Sponza
     unsigned int texture_colorbuffer;
 };
 
+#define Bytes(n)      (n)
+#define Kilobytes(n)  (n << 10)
+#define Megabytes(n)  (n << 20)
+#define Gigabytes(n)  (((U64)n) << 30)
+#define Terabytes(n)  (((U64)n) << 40)
+
 Sponza* sponza = (Sponza*)new Sponza;
 
 void init()
 {
+    Arena* arena = arena_alloc(Megabytes(500));
     std::string base_path_assets = "./data/";
     
-    sponza->sponza = (Model*)new Model;  
-    create_model(sponza->sponza,base_path_assets + "sponza/sponza.obj");
-    sponza->light = (Model*)new Model;
-    create_model(sponza->light,base_path_assets + "cube/cube.obj");
+    sponza->sponza = create_model(arena, base_path_assets + "sponza/sponza.obj");
+    sponza->light = create_model(arena, base_path_assets + "cube/cube.obj");
 
     // Sponza
     std::string vertex_shader_path = base_path_assets + "shaders/basic.vert";
@@ -71,9 +76,10 @@ void init()
     ReadEntireFile vertex_shader_source = read_entire_file(vertex_shader_path.c_str());
     ReadEntireFile fragment_shader_source = read_entire_file(fragment_shader_path.c_str());
 
+    // TODO(ricardo): how to do arenas with this shader setup
     sponza->shader = (SponzaShader*)malloc(sizeof(SponzaShader));
     SponzaShader* shader = sponza->shader;
-    opengl_create_shader(vertex_shader_source.content, fragment_shader_source.content, &shader->common);
+    opengl_create_shader(arena, vertex_shader_source.content, fragment_shader_source.content, &shader->common);
     shader->light_position = glGetUniformLocation(shader->common.program_id, "light.position");
     shader->light_ambient = glGetUniformLocation(shader->common.program_id, "light.ambient");
     shader->light_diffuse = glGetUniformLocation(shader->common.program_id, "light.diffuse");
@@ -90,7 +96,7 @@ void init()
 
     sponza->light_shader = (OpenGLProgramCommon*)malloc(sizeof(OpenGLProgramCommon));
     OpenGLProgramCommon* light_shader = sponza->light_shader; 
-    opengl_create_shader(vertex_shader_light_source.content, fragment_shader_light_source.content, light_shader);
+    opengl_create_shader(arena, vertex_shader_light_source.content, fragment_shader_light_source.content, light_shader);
 
     camera = (Camera*)malloc(sizeof(Camera));
     create_camera(camera);

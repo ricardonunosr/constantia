@@ -1,6 +1,7 @@
 #pragma once
 
 #include "opengl_renderer.h"
+#include "memory.h"
 #include "idk_math.h"
 #include <string>
 #include <vector>
@@ -39,6 +40,6 @@ struct Model
     std::vector<MeshMaterialGroup> meshes;
 };
 
-void create_model(Model* model, const std::string& path);
+Model* create_model(Arena* arena, const std::string& path);
 void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader);
 

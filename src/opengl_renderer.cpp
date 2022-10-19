@@ -27,7 +27,7 @@ ReadEntireFile read_entire_file(const char* file_path)
     return result;
 }
 
-void opengl_create_shader(char* vertex_shader_source, char* fragment_shader_source, OpenGLProgramCommon* result)
+void opengl_create_shader(Arena* arena, char* vertex_shader_source, char* fragment_shader_source, OpenGLProgramCommon* program)
 {
     GLchar* vertex_shader_code[] = {vertex_shader_source};
     GLuint vertex_shader_id;
@@ -67,18 +67,19 @@ void opengl_create_shader(char* vertex_shader_source, char* fragment_shader_sour
     glDeleteShader(fragment_shader_id);
     printf("Created shader successfully\n");
 
-    result->program_id = program_id;
-    result->model = glGetUniformLocation(program_id, "model");
-    result->projection = glGetUniformLocation(program_id, "projection");
-    result->view = glGetUniformLocation(program_id, "view");
-    result->view_pos = glGetUniformLocation(program_id, "viewPos");
-    result->material_texture_diffuse = glGetUniformLocation(program_id, "material.texture_diffuse");
-    result->material_texture_specular = glGetUniformLocation(program_id, "material.texture_specular");
-    result->material_shininess = glGetUniformLocation(program_id, "material.shininess");
+    program->program_id = program_id;
+    program->model = glGetUniformLocation(program_id, "model");
+    program->projection = glGetUniformLocation(program_id, "projection");
+    program->view = glGetUniformLocation(program_id, "view");
+    program->view_pos = glGetUniformLocation(program_id, "viewPos");
+    program->material_texture_diffuse = glGetUniformLocation(program_id, "material.texture_diffuse");
+    program->material_texture_specular = glGetUniformLocation(program_id, "material.texture_specular");
+    program->material_shininess = glGetUniformLocation(program_id, "material.shininess");
 }
 
-void opengl_create_texture(const std::string path, texture_type type, Texture* texture)
+Texture* opengl_create_texture(Arena* arena, const std::string path, TextureType type)
 {
+    Texture* texture = (Texture*)arena_push(arena, sizeof(Texture));
     texture->name = path;
     glGenTextures(1, &texture->id);
     glBindTexture(GL_TEXTURE_2D, texture->id);
@@ -105,9 +106,10 @@ void opengl_create_texture(const std::string path, texture_type type, Texture* t
     }
     else
     {
-        printf("Failed to load texture(%s) reason: %s", path, stbi_failure_reason());
+        printf("Failed to load texture(%s) reason: %s", path.c_str(), stbi_failure_reason());
     }
     stbi_image_free(data);
+    return texture;
 }
 
 void opengl_bind_texture(unsigned int id, unsigned int slot)
@@ -210,9 +212,11 @@ static uint32_t get_component_count(DataType type)
     return 0;
 }
 
-void opengl_create_vertex_array(VertexArray* vertex_array)
+VertexArray* opengl_create_vertex_array(Arena* arena)
 {
+    VertexArray* vertex_array = (VertexArray*)arena_push(arena, sizeof(VertexArray));
     glGenVertexArrays(1, &vertex_array->id);
+    return vertex_array;
 }
 
 void opengl_add_element_to_layout(DataType type, bool normalized, int* enabled_attribs, int stride, int* offset,
@@ -229,18 +233,22 @@ void opengl_add_element_to_layout(DataType type, bool normalized, int* enabled_a
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void opengl_create_vertex_buffer(const void* data, size_t size, VertexBuffer* vertex_buffer)
+VertexBuffer* opengl_create_vertex_buffer(Arena* arena, const void* data, size_t size)
 {
+    VertexBuffer* vertex_buffer = (VertexBuffer*)arena_push(arena, sizeof(VertexBuffer));
     glGenBuffers(1, &vertex_buffer->id);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer->id);
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    return vertex_buffer;
 }
 
-void opengl_create_index_buffer(const void* indices, unsigned int count, IndexBuffer* index_buffer)
+IndexBuffer* opengl_create_index_buffer(Arena* arena, const void* indices, unsigned int count)
 {
+    IndexBuffer* index_buffer = (IndexBuffer*)arena_push(arena, sizeof(IndexBuffer));
     glGenBuffers(1, &index_buffer->id);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer->id);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)count * sizeof(unsigned int), indices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    return index_buffer;
 }

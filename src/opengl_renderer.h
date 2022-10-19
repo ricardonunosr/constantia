@@ -1,5 +1,6 @@
 #pragma once
 #include <glad/gl.h>
+#include "memory.h"
 
 #include <string>
 #include <vector>
@@ -24,9 +25,9 @@ struct ReadEntireFile
 };
 
 ReadEntireFile read_entire_file(const char* file_path);
-void opengl_create_shader(char* vertex_shader_source, char* fragment_shader_source, OpenGLProgramCommon* result);
+void opengl_create_shader(Arena* arena, char* vertex_shader_source, char* fragment_shader_source, OpenGLProgramCommon* program);
 
-enum texture_type
+enum TextureType
 {
     diffuse,
     specular
@@ -38,11 +39,11 @@ struct Texture
     int width;
     int height;
     int nr_channels;
-    texture_type type;
+    TextureType type;
     std::string name;
 };
 
-void opengl_create_texture(const std::string path, texture_type type, Texture* texture);
+Texture* opengl_create_texture(Arena* arena, const std::string path, TextureType type);
 void opengl_bind_texture(unsigned int id, unsigned int slot);
 void opengl_unbind_texture();
 
@@ -67,7 +68,7 @@ struct VertexBuffer
     unsigned int id;
 };
 
-void opengl_create_vertex_buffer(const void* data, size_t size, VertexBuffer* vertex_buffer);
+VertexBuffer* opengl_create_vertex_buffer(Arena* arena, const void* data, size_t size);
 
 struct VertexArray
 {
@@ -75,7 +76,7 @@ struct VertexArray
     unsigned int enabled_attribs;
 };
 
-void opengl_create_vertex_array(VertexArray* vertex_array);
+VertexArray* opengl_create_vertex_array(Arena* arena);
 void opengl_add_element_to_layout(DataType type, bool normalized, int* enabled_attribs, int stride, int* offset,
                                   VertexArray* vertex_array, VertexBuffer* buffer);
 
@@ -85,4 +86,4 @@ struct IndexBuffer
     unsigned int count;
 };
 
-void opengl_create_index_buffer(const void* indices, unsigned int count, IndexBuffer* index_buffer);
+IndexBuffer* opengl_create_index_buffer(Arena* arena, const void* indices, unsigned int count);

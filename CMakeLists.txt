@@ -23,6 +23,7 @@ set(SOURCES
         src/camera.cpp
         src/model.cpp
         src/opengl_renderer.cpp
+        src/memory.cpp
         )
 
 set(HEADERS
@@ -30,6 +31,7 @@ set(HEADERS
         src/model.h
         src/opengl_renderer.h
         src/idk_math.h
+        src/memory.h
         src/vendor/tiny_obj_loader.h
         src/vendor/stb_image.h
         )

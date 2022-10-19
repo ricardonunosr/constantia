@@ -33,7 +33,7 @@ void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
     }
 }
 
-void create_model(Model* model, const std::string& path)
+Model* create_model(Arena* arena, const std::string& path)
 {
         std::string directory =path.substr(0, path.find_last_of('/'));  
 
@@ -59,6 +59,9 @@ void create_model(Model* model, const std::string& path)
         std::vector<tinyobj::shape_t> shapes = reader.GetShapes();
         std::vector<tinyobj::material_t> materials = reader.GetMaterials();
 
+        //Model* model = (Model*)arena_push(arena,sizeof(Model)); 
+        Model* model = new Model();
+
         std::vector<Material> all_materials(materials.size());
         // Load all textures
         for (size_t i = 0; i < materials.size(); i++)
@@ -69,8 +72,7 @@ void create_model(Model* model, const std::string& path)
                 std::string diffuse_path(materials[i].diffuse_texname);
                 std::replace(diffuse_path.begin(), diffuse_path.end(), '\\', '/');
                 std::string diffuse_path_final = directory + "/" + diffuse_path;
-                 Texture* texture = (Texture*)new Texture();
-                opengl_create_texture(diffuse_path_final.c_str(), diffuse, texture);
+                Texture* texture = opengl_create_texture(arena, diffuse_path_final.c_str(), diffuse);
                 all_materials[i].diffuse_tex = texture;
             }
             if (!materials[i].specular_texname.empty())
@@ -78,8 +80,7 @@ void create_model(Model* model, const std::string& path)
                 std::string specular_path(materials[i].specular_texname);
                 std::replace(specular_path.begin(), specular_path.end(), '\\', '/');
                 std::string specular_path_final = directory + "/" + specular_path;
-                Texture* texture = (Texture*)new Texture();
-                opengl_create_texture(specular_path_final.c_str(), specular, texture);
+                Texture* texture = opengl_create_texture(arena, specular_path_final.c_str(), specular);
                 all_materials[i].specular_tex = texture;
             }
             else if (!materials[i].bump_texname.empty())
@@ -87,11 +88,11 @@ void create_model(Model* model, const std::string& path)
                 std::string bump_path(materials[i].bump_texname);
                 std::replace(bump_path.begin(), bump_path.end(), '\\', '/');
                 std::string bump_path_final = directory + "/" + bump_path;
-                Texture* texture = (Texture*)new Texture();
-                opengl_create_texture(bump_path_final.c_str(), specular, texture);
+                Texture* texture = opengl_create_texture(arena, bump_path_final.c_str(), specular);
                 all_materials[i].specular_tex = texture;
             }
         }
+
 
         model->meshes.resize(shapes.size());
         uint32_t mesh_index = 0;
@@ -154,12 +155,9 @@ void create_model(Model* model, const std::string& path)
         {
             if (!mesh.vertices.empty())
             {
-                mesh.vao = (VertexArray*)malloc(sizeof(VertexArray));
-                opengl_create_vertex_array(mesh.vao);
-                mesh.vbo = (VertexBuffer*)malloc(sizeof(VertexBuffer));
-                opengl_create_vertex_buffer(mesh.vertices.data(), mesh.vertices.size() * sizeof(Vertex), mesh.vbo);
-                mesh.ibo = (IndexBuffer*)malloc(sizeof(IndexBuffer));
-                opengl_create_index_buffer((const void*)(mesh.indices).data(), mesh.indices.size(), mesh.ibo);
+                mesh.vao = opengl_create_vertex_array(arena);
+                mesh.vbo = opengl_create_vertex_buffer(arena, mesh.vertices.data(), mesh.vertices.size() * sizeof(Vertex));
+                mesh.ibo = opengl_create_index_buffer(arena, (const void*)(mesh.indices).data(), mesh.indices.size());
                 int enabled_attribs = 0;
                 int stride = 32;
                 int offset = 0;
@@ -174,4 +172,5 @@ void create_model(Model* model, const std::string& path)
                                              mesh.vbo);
             }
         }
+        return model;
     }
