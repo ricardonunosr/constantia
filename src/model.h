@@ -28,8 +28,10 @@ struct Model
 {
     struct MeshMaterialGroup
     {
-        std::vector<Vertex> vertices;
-        std::vector<unsigned int> indices;
+        Vertex* vertices;
+        uint64_t num_vertices;
+        uint32_t* indices;
+        uint64_t num_indices;
         Material materials;
 
         VertexArray* vao;
