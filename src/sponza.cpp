@@ -65,6 +65,7 @@ Sponza* sponza = (Sponza*)new Sponza;
 
 void init()
 {
+    Arena* temp = arena_alloc(Megabytes(10));
     std::string base_path_assets = "./data/";
     
     sponza->sponza = create_model(arena, base_path_assets + "sponza/sponza.obj");
@@ -73,8 +74,8 @@ void init()
     // Sponza
     std::string vertex_shader_path = base_path_assets + "shaders/basic.vert";
     std::string fragment_shader_path = base_path_assets + "shaders/basic.frag";
-    ReadEntireFile vertex_shader_source = read_entire_file(vertex_shader_path.c_str());
-    ReadEntireFile fragment_shader_source = read_entire_file(fragment_shader_path.c_str());
+    ReadEntireFile vertex_shader_source = read_entire_file(temp, vertex_shader_path.c_str());
+    ReadEntireFile fragment_shader_source = read_entire_file(temp, fragment_shader_path.c_str());
 
     // TODO(ricardo): how to do arenas with this shader setup
     sponza->shader = (SponzaShader*)malloc(sizeof(SponzaShader));
@@ -91,17 +92,15 @@ void init()
     // Light
     std::string vertex_shader_light_path = base_path_assets + "shaders/light.vert";
     std::string fragment_shader_light_path = base_path_assets + "shaders/light.frag";
-    ReadEntireFile vertex_shader_light_source = read_entire_file(vertex_shader_light_path.c_str());
-    ReadEntireFile fragment_shader_light_source = read_entire_file(fragment_shader_light_path.c_str());
+    ReadEntireFile vertex_shader_light_source = read_entire_file(temp, vertex_shader_light_path.c_str());
+    ReadEntireFile fragment_shader_light_source = read_entire_file(temp, fragment_shader_light_path.c_str());
 
     sponza->light_shader = (OpenGLProgramCommon*)malloc(sizeof(OpenGLProgramCommon));
     OpenGLProgramCommon* light_shader = sponza->light_shader; 
     opengl_create_shader(arena, vertex_shader_light_source.content, fragment_shader_light_source.content, light_shader);
 
-    camera = (Camera*)malloc(sizeof(Camera));
-    create_camera(camera);
-    second_camera = (Camera*)malloc(sizeof(Camera));
-    create_camera(second_camera);
+    camera = create_camera(arena);
+    second_camera = create_camera(arena);
 
     // TODO(ricardo): find a better way to define this
     glfwSetCursorPosCallback(app.window, mouse_callback);

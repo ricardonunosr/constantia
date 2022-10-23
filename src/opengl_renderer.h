@@ -24,7 +24,7 @@ struct ReadEntireFile
     uint32_t size;
 };
 
-ReadEntireFile read_entire_file(const char* file_path);
+ReadEntireFile read_entire_file(Arena* arena, const char* file_path);
 void opengl_create_shader(Arena* arena, char* vertex_shader_source, char* fragment_shader_source, OpenGLProgramCommon* program);
 
 enum TextureType

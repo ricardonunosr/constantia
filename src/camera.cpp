@@ -3,8 +3,9 @@
 
 #define K_MOUSE_SENSITIVITY 0.1f
 
-void create_camera(Camera* camera)
+Camera* create_camera(Arena* arena)
 {
+    Camera* camera = (Camera*)arena_push(arena, sizeof(Camera));
     camera->enabled =false; 
     camera->first_mouse = true;
     camera->last_x = 1920.0f / 2.0f;
@@ -16,6 +17,7 @@ void create_camera(Camera* camera)
     camera->up = idk_vec3f(0.0f, 1.0f, 0.0f);
     camera->right = idk_vec3f(0.0f, 0.0f, 1.0f);
     camera->projection = idk_perspective(idk_radians(45.0f), (float)1920 / (float)1080, 0.1f, 100.0f);
+    return camera;
 }
 
 void update(GLFWwindow* window, float delta_time, Camera* camera)
