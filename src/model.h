@@ -3,43 +3,47 @@
 #include "opengl_renderer.h"
 #include "memory.h"
 #include "idk_math.h"
-#include <string>
-#include <vector>
 
 struct Vertex
 {
-    idk_vec3 position;
-    idk_vec3 normal;
-    idk_vec2 tex_coords;
+  idk_vec3 position;
+  idk_vec3 normal;
+  idk_vec2 tex_coords;
 
-    bool operator==(const Vertex& other) const
-    {
-        return position == other.position && tex_coords == other.tex_coords;
-    }
+  bool operator==(const Vertex& other) const
+  {
+      return position == other.position && tex_coords == other.tex_coords;
+  }
 };
 
 struct Material
 {
-    Texture* diffuse_tex;
-    Texture* specular_tex;
+  Texture* diffuse_tex;
+  Texture* specular_tex;
+};
+
+struct MeshMaterialGroup
+{
+  Vertex* vertices;
+  uint64_t num_vertices;
+  uint32_t* indices;
+  uint64_t num_indices;
+  Material materials;
+
+  VertexArray* vao;
+  VertexBuffer* vbo;
+  IndexBuffer* ibo;
+};
+
+struct MeshNode
+{
+  MeshMaterialGroup* data;
+  MeshNode* next;
 };
 
 struct Model
 {
-    struct MeshMaterialGroup
-    {
-        Vertex* vertices;
-        uint64_t num_vertices;
-        uint32_t* indices;
-        uint64_t num_indices;
-        Material materials;
-
-        VertexArray* vao;
-        VertexBuffer* vbo;
-        IndexBuffer* ibo;
-    };
-
-    std::vector<MeshMaterialGroup> meshes;
+  MeshNode* meshes; // Head of linked list
 };
 
 Model* create_model(Arena* arena, const std::string& path);

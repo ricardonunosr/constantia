@@ -59,12 +59,12 @@ struct Sponza
 #define Megabytes(n)  (n << 20)
 #define Gigabytes(n)  (((U64)n) << 30)
 #define Terabytes(n)  (((U64)n) << 40)
+static Arena* arena = arena_alloc(Megabytes(30));
 
 Sponza* sponza = (Sponza*)new Sponza;
 
 void init()
 {
-    Arena* arena = arena_alloc(Megabytes(500));
     std::string base_path_assets = "./data/";
     
     sponza->sponza = create_model(arena, base_path_assets + "sponza/sponza.obj");
