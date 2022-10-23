@@ -5,4 +5,5 @@
 cmake-build-debug
 .DS_Store
 .cache
+.vscode
 compile_commands.json

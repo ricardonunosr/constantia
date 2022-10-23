@@ -1,175 +1,210 @@
 #include "model.h"
 
-#include "core.h"
 #include <algorithm>
-#include <unordered_map>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/hash.hpp>
+#include <glad/gl.h>
+#include <string>
 #define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
+#include <vendor/tiny_obj_loader.h>
 
-void Model::draw(const Frustum& frustum, const glm::mat4& transform, Shader& shader, unsigned int& display,
-                 unsigned int& total)
+void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
 {
-    for (int i = 1; i < m_meshes.size(); i++)
-    {
-        //        if (m_bounding_volume->is_on_frustum(frustum, transform))
-        //        {
-        auto& mesh = m_meshes[i];
-        shader.bind();
-        for (uint32_t k = 0; k < mesh.textures.size(); k++)
-        {
-            Texture& texture = mesh.textures[k];
-            std::string name = texture.get_type();
-            shader.set_uniform1i("material." + name, k);
-            texture.bind(k);
-        }
-        glActiveTexture(GL_TEXTURE0);
-
-        mesh.vao->bind();
-        mesh.ibo->bind();
-        glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
-        mesh.vao->unbind();
-        mesh.ibo->unbind();
-        Shader::unbind();
-        display++;
-        //        }
-        total++;
-    }
+  MeshNode* mesh_node = model->meshes;
+  while(mesh_node != 0)
+  {
+      MeshMaterialGroup* mesh = mesh_node->data;
+      glUseProgram(shader->program_id);
+      Texture* diffuse_tex = mesh->materials.diffuse_tex;
+      Texture* specular_tex = mesh->materials.specular_tex;
+      if(diffuse_tex)
+      {
+          glUniform1i(shader->material_texture_diffuse, 0);
+          opengl_bind_texture(diffuse_tex->id, 0);
+      }
+      if(specular_tex)
+      {
+          glUniform1i(shader->material_texture_specular, 1);
+          opengl_bind_texture(specular_tex->id, 1);
+      }
+      glActiveTexture(GL_TEXTURE0);
+      glBindVertexArray(mesh->vao->id);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ibo->id);
+      glDrawElements(GL_TRIANGLES, mesh->num_indices, GL_UNSIGNED_INT, 0);
+      glBindVertexArray(0);
+      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+      glUseProgram(0);
+      mesh_node = mesh_node->next;
+  }
 }
 
-namespace std
+Model* create_model(Arena* arena, const std::string& path)
 {
-template <> struct hash<Vertex>
-{
-    size_t operator()(Vertex const& vertex) const
+  std::string directory =path.substr(0, path.find_last_of('/'));  
+
+  tinyobj::ObjReaderConfig reader_config;
+  reader_config.mtl_search_path = directory;
+  tinyobj::ObjReader reader;
+
+  if (!reader.ParseFromFile(path, reader_config))
+  {
+      if (!reader.Error().empty())
+      {
+          printf("TinyObjReader: %s", reader.Error().c_str());
+      }
+      exit(1);
+  }
+
+  if (!reader.Warning().empty())
+  {
+      printf("TinyObjReader: %s", reader.Warning().c_str());
+  }
+
+  tinyobj::attrib_t attrib = reader.GetAttrib();
+  std::vector<tinyobj::shape_t> shapes = reader.GetShapes();
+  std::vector<tinyobj::material_t> materials = reader.GetMaterials();
+
+
+  // TODO(ricardo): replace with arraylist?? or linked list??
+  std::vector<Material> all_materials(materials.size());
+  // Load all textures
+  for (size_t i = 0; i < materials.size(); i++)
+  {
+      if (!materials[i].diffuse_texname.empty())
+      {
+          // TODO(ricardo): put this into a function
+          std::string diffuse_path(materials[i].diffuse_texname);
+          std::replace(diffuse_path.begin(), diffuse_path.end(), '\\', '/');
+          std::string diffuse_path_final = directory + "/" + diffuse_path;
+          Texture* texture = opengl_create_texture(arena, diffuse_path_final.c_str(), diffuse);
+          all_materials[i].diffuse_tex = texture;
+      }
+      if (!materials[i].specular_texname.empty())
+      {
+          std::string specular_path(materials[i].specular_texname);
+          std::replace(specular_path.begin(), specular_path.end(), '\\', '/');
+          std::string specular_path_final = directory + "/" + specular_path;
+          Texture* texture = opengl_create_texture(arena, specular_path_final.c_str(), specular);
+          all_materials[i].specular_tex = texture;
+      }
+      else if (!materials[i].bump_texname.empty())
+      {
+          std::string bump_path(materials[i].bump_texname);
+          std::replace(bump_path.begin(), bump_path.end(), '\\', '/');
+          std::string bump_path_final = directory + "/" + bump_path;
+          Texture* texture = opengl_create_texture(arena, bump_path_final.c_str(), specular);
+          all_materials[i].specular_tex = texture;
+      }
+  }
+
+  Model* model = (Model*)arena_push(arena,sizeof(Model)); 
+  model->meshes = (MeshNode*)arena_push(arena, sizeof(MeshNode));
+  // Head
+  MeshNode* mesh = model->meshes;
+
+  uint32_t mesh_index = 0;
+  for (size_t s = 0; s < shapes.size(); s++)
+  {
+      size_t index_offset = 0;
+      int previous_face_material_id = -1;
+
+      size_t num_faces = shapes[s].mesh.num_face_vertices.size();
+      // Create new linked list node
+      if(s != 0){
+        mesh->next = (MeshNode*)arena_push(arena, sizeof(MeshNode));
+        mesh = mesh->next;
+      }
+      mesh->data = (MeshMaterialGroup*)arena_push(arena, sizeof(MeshMaterialGroup));
+
+      // NOTE(ricardo): we assume that the mesh is triangulated (only 3 vertices per face)
+      mesh->data->vertices = (Vertex*)arena_push(arena, sizeof(Vertex) * num_faces*3);
+      mesh->data->indices = (uint32_t*)arena_push(arena, sizeof(unsigned int) * num_faces*3);
+      uint32_t indice = 0;
+      for (size_t f = 0; f < num_faces; f++)
+      {
+          size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+          for(size_t v = 0; v < fv; v++)
+          {
+              tinyobj::index_t index = shapes[s].mesh.indices[index_offset + v];
+              Vertex vertex{};
+
+              vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
+                                 attrib.vertices[3 * index.vertex_index + 1],
+                                 attrib.vertices[3 * index.vertex_index + 2]};
+
+              // Check if it has texture coordinates
+              if (index.texcoord_index >= 0)
+              {
+                  vertex.tex_coords = {attrib.texcoords[2 * index.texcoord_index + 0],
+                                       1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
+              }
+
+              // Check if it has normals
+              if (index.normal_index >= 0)
+              {
+                  vertex.normal = {attrib.normals[3 * index.normal_index + 0],
+                                   attrib.normals[3 * index.normal_index + 1],
+                                   attrib.normals[3 * index.normal_index + 2]};
+              }
+
+              // NOTE(ricardo): if the face_material_id is different we want to make it 
+              // into another mesh
+              int face_material_id = shapes[s].mesh.material_ids[f];
+              if(previous_face_material_id != -1 &&
+                      face_material_id != previous_face_material_id)
+              {
+                  uint32_t model_num_vertices = mesh->data->num_vertices;
+                  Vertex* newPtrV = mesh->data->vertices + model_num_vertices; 
+                  uint32_t model_num_indices = mesh->data->num_indices;
+                  uint32_t* newPtrI = mesh->data->indices + model_num_indices; 
+                  mesh_index++;
+                  previous_face_material_id = shapes[s].mesh.material_ids[f];
+
+                  mesh->next = (MeshNode*)arena_push(arena, sizeof(MeshNode));
+                  mesh = mesh->next;
+                  mesh->data = (MeshMaterialGroup*)arena_push(arena, sizeof(MeshMaterialGroup));
+                  mesh->data->vertices = newPtrV;
+                  mesh->data->indices = newPtrI;
+                  indice = 0;
+              }
+    
+              uint32_t model_num_vertices = mesh->data->num_vertices++;
+              *(mesh->data->vertices + model_num_vertices) = vertex;
+              uint32_t model_num_indices = mesh->data->num_indices++;
+              // TODO(ricardo): Not doing indices yet
+              *(mesh->data->indices +  model_num_indices) = indice;
+              mesh->data->materials.diffuse_tex = all_materials[face_material_id].diffuse_tex;
+              mesh->data->materials.specular_tex = all_materials[face_material_id].specular_tex;
+              indice++;
+          }
+          index_offset+=fv;
+          previous_face_material_id = shapes[s].mesh.material_ids[f];
+      }
+      mesh_index++;
+  }
+
+  // Create OpenGL objects
+  MeshNode* mesh_node = model->meshes;
+  while(mesh_node != 0)
+  {
+    MeshMaterialGroup* mesh = mesh_node->data;
+    if (mesh->num_vertices != 0 )
     {
-        return ((hash<glm::vec3>()(vertex.position))) ^ (hash<glm::vec2>()(vertex.tex_coords) << 1);
+        mesh->vao = opengl_create_vertex_array(arena);
+        mesh->vbo = opengl_create_vertex_buffer(arena, mesh->vertices, mesh->num_vertices * sizeof(Vertex));
+        mesh->ibo = opengl_create_index_buffer(arena, (const void*)(mesh->indices), mesh->num_indices);
+        int enabled_attribs = 0;
+        int stride = 32;
+        int offset = 0;
+        // Position
+        opengl_add_element_to_layout(DataType::Float3, false, &enabled_attribs, stride, &offset, mesh->vao,
+                                     mesh->vbo);
+        // Normals
+        opengl_add_element_to_layout(DataType::Float3, false, &enabled_attribs, stride, &offset, mesh->vao,
+                                     mesh->vbo);
+        // Texture Coords
+        opengl_add_element_to_layout(DataType::Float2, false, &enabled_attribs, stride, &offset, mesh->vao,
+                                     mesh->vbo);
     }
-};
-} // namespace std
-
-void Model::load_model(const std::string& path)
-{
-    {
-        m_directory = path.substr(0, path.find_last_of('/'));
-
-        tinyobj::ObjReaderConfig reader_config;
-        reader_config.mtl_search_path = m_directory;
-        tinyobj::ObjReader reader;
-
-        if (!reader.ParseFromFile(path, reader_config))
-        {
-            if (!reader.Error().empty())
-            {
-                spdlog::error("TinyObjReader: {}", reader.Error());
-            }
-            exit(1);
-        }
-
-        if (!reader.Warning().empty())
-        {
-            spdlog::warn("TinyObjReader: {}", reader.Warning());
-        }
-
-        const auto& attrib = reader.GetAttrib();
-        const auto& shapes = reader.GetShapes();
-        const auto& materials = reader.GetMaterials();
-
-        /*  We are grouping every mesh that was the same material.
-         *  This way we can group every mesh into one draw call instead of multiple for the same mesh.
-         *  +1 for an unknown material (index 0 is the unknown material)
-         */
-        m_meshes.resize(materials.size() + 1);
-
-        for (size_t i = 0; i < materials.size(); i++)
-        {
-            auto& mesh = m_meshes[i + 1];
-            if (!materials[i].diffuse_texname.empty())
-            {
-                std::string diffuse_path(materials[i].diffuse_texname);
-                std::replace(diffuse_path.begin(), diffuse_path.end(), '\\', '/');
-                std::string diffuse_path_final = m_directory + "/" + diffuse_path;
-                mesh.textures.emplace_back(diffuse_path_final.c_str(), "texture_diffuse");
-            }
-            if (!materials[i].specular_texname.empty())
-            {
-                std::string specular_path(materials[i].specular_texname);
-                std::replace(specular_path.begin(), specular_path.end(), '\\', '/');
-                std::string specular_path_final = m_directory + "/" + specular_path;
-                mesh.textures.emplace_back(specular_path_final.c_str(), "texture_specular");
-            }
-            else if (!materials[i].bump_texname.empty())
-            {
-                std::string bump_path(materials[i].bump_texname);
-                std::replace(bump_path.begin(), bump_path.end(), '\\', '/');
-                std::string bump_path_final = m_directory + "/" + bump_path;
-                mesh.textures.emplace_back(bump_path_final.c_str(), "texture_specular");
-            }
-        }
-
-        std::vector<std::unordered_map<Vertex, uint32_t>> unique_vertices_per_group(materials.size() + 1);
-        for (const auto& shape : shapes)
-        {
-            size_t index_offset = 0;
-            for (size_t n = 0; n < shape.mesh.num_face_vertices.size(); n++)
-            {
-                // per face
-                auto ngon = shape.mesh.num_face_vertices[n];
-                auto material_id = shape.mesh.material_ids[n];
-                for (size_t f = 0; f < ngon; f++)
-                {
-                    const auto& index = shape.mesh.indices[index_offset + f];
-
-                    Vertex vertex{};
-
-                    vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
-                                       attrib.vertices[3 * index.vertex_index + 1],
-                                       attrib.vertices[3 * index.vertex_index + 2]};
-
-                    // Check if it has texture coordinates
-                    if (index.texcoord_index >= 0)
-                    {
-                        vertex.tex_coords = {attrib.texcoords[2 * index.texcoord_index + 0],
-                                             1.0f - attrib.texcoords[2 * index.texcoord_index + 1]};
-                    }
-
-                    // Check if it has normals
-                    if (index.normal_index >= 0)
-                    {
-                        vertex.normal = {attrib.normals[3 * index.normal_index + 0],
-                                         attrib.normals[3 * index.normal_index + 1],
-                                         attrib.normals[3 * index.normal_index + 2]};
-                    }
-
-                    // 0 for unknown material
-                    auto& unique_vertices = unique_vertices_per_group[material_id + 1];
-                    auto& group = m_meshes[material_id + 1];
-                    if (unique_vertices.count(vertex) == 0)
-                    {
-                        unique_vertices[vertex] = group.vertices.size(); // auto incrementing size
-                        group.vertices.push_back(vertex);
-                    }
-                    group.indices.push_back(static_cast<unsigned int>(unique_vertices[vertex]));
-                }
-                index_offset += ngon;
-            }
-        }
-
-        for (auto& mesh : m_meshes)
-        {
-            // Check if MeshMaterialGroup has anything
-            if (!mesh.vertices.empty())
-            {
-                mesh.vao = std::make_unique<VertexArray>();
-                VertexBufferLayout layout = {
-                    {"aPos", DataType::Float3}, {"aNormals", DataType::Float3}, {"aTexCoords", DataType::Float2}};
-                mesh.vbo = std::make_unique<VertexBuffer>(layout, (mesh.vertices).data(),
-                                                          mesh.vertices.size() * sizeof(Vertex));
-                mesh.ibo = std::make_unique<IndexBuffer>((const void*)(mesh.indices).data(), mesh.indices.size());
-                mesh.vao->add_buffer(*mesh.vbo);
-                mesh.vao->unbind();
-            }
-        }
-    }
+    mesh_node = mesh_node->next;
+  }
+  return model;
 }

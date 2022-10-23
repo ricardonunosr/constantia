@@ -5,6 +5,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 project(Constantia LANGUAGES ${LANGUAGES})
 
+if (MSVC)
+    # warning level 4 and all warnings as errors
+    # add_compile_options(/W4 /WX)
+else()
+    # lots of warnings and all warnings as errors
+    add_compile_options(-Wall -Wno-unused-parameter -Wno-write-strings -Wno-unused-variable)
+endif()
+
 #GLFW additions
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -12,68 +20,45 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 set(SOURCES
         src/main.cpp
-        src/application.cpp
-        src/shader.cpp
-        src/types.cpp
-        src/vertex_array.cpp
-        src/vertex_buffer.cpp
-        src/index_buffer.cpp
-        src/texture.cpp
         src/camera.cpp
         src/model.cpp
-        src/window.cpp
-        src/editor.cpp
-        # Examples
-        src/examples/sponza/sponza.cpp
-        src/examples/framebuffers/framebuffers.cpp
-        #src/examples/ray-tracing/ray_tracing.cpp
+        src/opengl_renderer.cpp
+        src/memory.cpp
         )
 
 set(HEADERS
-        include/constantia/application.h
-        include/constantia/camera.h
-        include/constantia/core.h
-        include/constantia/types.h
-        include/constantia/editor.h
-        include/constantia/index_buffer.h
-        include/constantia/model.h
-        include/constantia/shader.h
-        include/constantia/texture.h
-        include/constantia/vertex_array.h
-        include/constantia/vertex_buffer.h
-        include/constantia/vertex_buffer_layout.h
-        include/constantia/window.h
-        include/constantia/layer.h
-        # Examples
-        src/examples/sponza/sponza.h
-        src/examples/framebuffers/framebuffers.h
-        #src/examples/ray-tracing/ray_tracing.h
+        src/camera.h
+        src/model.h
+        src/opengl_renderer.h
+        src/idk_math.h
+        src/memory.h
+        src/vendor/tiny_obj_loader.h
+        src/vendor/stb_image.h
         )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glfw)
-add_subdirectory(lib/spdlog)
 add_subdirectory(lib/imgui)
-add_subdirectory(lib/tinyobjloader)
 
 target_include_directories(${PROJECT_NAME}
-        PUBLIC include/constantia
+        PUBLIC src/
+        )
+
+target_include_directories(${PROJECT_NAME} SYSTEM
         PUBLIC lib/glad/include
         PUBLIC lib/glfw/include
-        PUBLIC lib/spdlog/include
-        PUBLIC lib/glm
-        PUBLIC lib/stb
         PUBLIC lib/imgui
-        PUBLIC lib/tinyobjloader/tiny_obj_loader.h
         )
 
 target_link_libraries(${PROJECT_NAME}
         glad
         glfw
-        spdlog
         imgui
-        tinyobjloader
-        pthread
         )
+
+# TODO(ricardo): I HATE CMAKE... find better way to add third-party libs
+target_compile_options(glad PRIVATE "-w")
+target_compile_options(glfw PRIVATE "-w")
+target_compile_options(imgui PRIVATE "-w")
