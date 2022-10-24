@@ -2,19 +2,16 @@
 
 #include <stdint.h>
 
-// Stack arena
+// Linear Allocator
 struct Arena
 {
-    uint64_t pos;
-    void* memory_base;
+  unsigned char* mem_base;
+  size_t mem_length;
+  size_t curr_offset;
 };
 
-Arena* arena_alloc(uint64_t capacity);
+Arena* arena_alloc(size_t capacity);
 void arena_release(Arena* arena);
 
-void* arena_push(Arena* arena, uint64_t size);
-void* arena_push_zero(Arena* arena, uint64_t size);
-
-void arena_pop(Arena* arena, uint64_t size);
-void arena_set_pos_back(Arena* arena, uint64_t size);
-void arena_clear(Arena* arena);
+void* arena_push(Arena* arena, size_t size);
+void* arena_push_align(Arena* arena, size_t size, size_t align);

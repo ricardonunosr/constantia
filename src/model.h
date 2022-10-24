@@ -12,7 +12,7 @@ struct Vertex
 
   bool operator==(const Vertex& other) const
   {
-      return position == other.position && tex_coords == other.tex_coords;
+    return position == other.position && tex_coords == other.tex_coords;
   }
 };
 

@@ -7,17 +7,17 @@ struct GLFWwindow;
 
 struct Camera
 {
-    idk_mat4 projection;
-    idk_vec3 position;
-    idk_vec3 forward;
-    idk_vec3 right;
-    idk_vec3 up;
-    bool enabled;
-    bool first_mouse;
-    float last_x;
-    float last_y;
-    float yaw;
-    float pitch;
+  idk_mat4 projection;
+  idk_vec3 position;
+  idk_vec3 forward;
+  idk_vec3 right;
+  idk_vec3 up;
+  bool enabled;
+  bool first_mouse;
+  float last_x;
+  float last_y;
+  float yaw;
+  float pitch;
 };
 
 Camera* create_camera(Arena* arena);
