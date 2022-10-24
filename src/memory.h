@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 // Linear Allocator
+// Credits to gingerBill and RyanFleury
 struct Arena
 {
   unsigned char* mem_base;

@@ -48,6 +48,8 @@ void* arena_push_align(Arena* arena, size_t size, size_t align)
   {
     void* memory = &arena->mem_base[offset];
     arena->curr_offset = offset + size;
+    // Zero new memory by default
+    memset(memory, 0, size);
 
     return memory;
   }
