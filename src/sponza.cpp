@@ -72,17 +72,17 @@ void init()
   ReadEntireFile vertex_shader_source = read_entire_file(temp, vertex_shader_path.c_str());
   ReadEntireFile fragment_shader_source = read_entire_file(temp, fragment_shader_path.c_str());
 
-  // TODO(ricardo): how to do arenas with this shader setup
-  sponza->shader = (SponzaShader*)malloc(sizeof(SponzaShader));
+  sponza->shader = (SponzaShader*)opengl_create_shader(arena, vertex_shader_source.content, fragment_shader_source.content);
   SponzaShader* shader = sponza->shader;
-  opengl_create_shader(arena, vertex_shader_source.content, fragment_shader_source.content, &shader->common);
-  shader->light_position = glGetUniformLocation(shader->common.program_id, "light.position");
-  shader->light_ambient = glGetUniformLocation(shader->common.program_id, "light.ambient");
-  shader->light_diffuse = glGetUniformLocation(shader->common.program_id, "light.diffuse");
-  shader->light_specular = glGetUniformLocation(shader->common.program_id, "light.specular");
-  shader->light_constant = glGetUniformLocation(shader->common.program_id, "light.constant");
-  shader->light_linear = glGetUniformLocation(shader->common.program_id, "light.linear");
-  shader->light_quadratic = glGetUniformLocation(shader->common.program_id, "light.quadratic");
+#define SHADER_PUSH_GET_UNIFORM(uniform_location,arena,program_id,uniform_name) arena_push(arena, sizeof(GLint)); \
+                                                                                uniform_location = glGetUniformLocation(program_id, uniform_name);
+  SHADER_PUSH_GET_UNIFORM(shader->light_position, arena, shader->common.program_id, "light.position");
+  SHADER_PUSH_GET_UNIFORM(shader->light_ambient, arena, shader->common.program_id, "light.ambient");
+  SHADER_PUSH_GET_UNIFORM(shader->light_diffuse, arena, shader->common.program_id, "light.diffuse");
+  SHADER_PUSH_GET_UNIFORM(shader->light_specular, arena, shader->common.program_id, "light.specular");
+  SHADER_PUSH_GET_UNIFORM(shader->light_constant, arena, shader->common.program_id, "light.constant");
+  SHADER_PUSH_GET_UNIFORM(shader->light_linear, arena, shader->common.program_id, "light.linear");
+  SHADER_PUSH_GET_UNIFORM(shader->light_quadratic, arena, shader->common.program_id, "light.quadratic");
 
   // Light
   std::string vertex_shader_light_path = base_path_assets + "shaders/light.vert";
@@ -90,9 +90,7 @@ void init()
   ReadEntireFile vertex_shader_light_source = read_entire_file(temp, vertex_shader_light_path.c_str());
   ReadEntireFile fragment_shader_light_source = read_entire_file(temp, fragment_shader_light_path.c_str());
 
-  sponza->light_shader = (OpenGLProgramCommon*)malloc(sizeof(OpenGLProgramCommon));
-  OpenGLProgramCommon* light_shader = sponza->light_shader;
-  opengl_create_shader(arena, vertex_shader_light_source.content, fragment_shader_light_source.content, light_shader);
+  sponza->light_shader = opengl_create_shader(arena, vertex_shader_light_source.content, fragment_shader_light_source.content);
 
   camera = create_camera(arena);
   second_camera = create_camera(arena);

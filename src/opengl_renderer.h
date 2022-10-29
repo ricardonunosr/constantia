@@ -4,6 +4,14 @@
 
 #include <string>
 
+struct ReadEntireFile
+{
+  char* content;
+  uint32_t size;
+};
+
+ReadEntireFile read_entire_file(Arena* arena, const char* file_path);
+
 struct OpenGLProgramCommon
 {
   GLint program_id;
@@ -17,14 +25,7 @@ struct OpenGLProgramCommon
   GLint material_shininess;
 };
 
-struct ReadEntireFile
-{
-  char* content;
-  uint32_t size;
-};
-
-ReadEntireFile read_entire_file(Arena* arena, const char* file_path);
-void opengl_create_shader(Arena* arena, char* vertex_shader_source, char* fragment_shader_source, OpenGLProgramCommon* program);
+OpenGLProgramCommon* opengl_create_shader(Arena* arena, char* vertex_shader_source, char* fragment_shader_source);
 
 enum TextureType
 {

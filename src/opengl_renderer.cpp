@@ -27,8 +27,9 @@ ReadEntireFile read_entire_file(Arena* arena, const char* file_path)
   return result;
 }
 
-void opengl_create_shader(Arena* arena, char* vertex_shader_source, char* fragment_shader_source, OpenGLProgramCommon* program)
+OpenGLProgramCommon* opengl_create_shader(Arena* arena, char* vertex_shader_source, char* fragment_shader_source)
 {
+  OpenGLProgramCommon* program = (OpenGLProgramCommon*)arena_push(arena, sizeof(OpenGLProgramCommon));
   GLchar* vertex_shader_code[] = {vertex_shader_source};
   GLuint vertex_shader_id;
   vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
@@ -75,6 +76,7 @@ void opengl_create_shader(Arena* arena, char* vertex_shader_source, char* fragme
   program->material_texture_diffuse = glGetUniformLocation(program_id, "material.texture_diffuse");
   program->material_texture_specular = glGetUniformLocation(program_id, "material.texture_specular");
   program->material_shininess = glGetUniformLocation(program_id, "material.shininess");
+  return program;
 }
 
 Texture* opengl_create_texture(Arena* arena, const std::string path, TextureType type)
