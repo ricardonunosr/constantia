@@ -54,11 +54,6 @@ struct Sponza
   unsigned int texture_colorbuffer;
 };
 
-#define Bytes(n)      (n)
-#define Kilobytes(n)  (n << 10)
-#define Megabytes(n)  (n << 20)
-#define Gigabytes(n)  (((U64)n) << 30)
-#define Terabytes(n)  (((U64)n) << 40)
 static Arena* arena = arena_alloc(Megabytes(30));
 
 Sponza* sponza = (Sponza*)new Sponza;
@@ -96,18 +91,17 @@ void init()
   ReadEntireFile fragment_shader_light_source = read_entire_file(temp, fragment_shader_light_path.c_str());
 
   sponza->light_shader = (OpenGLProgramCommon*)malloc(sizeof(OpenGLProgramCommon));
-  OpenGLProgramCommon* light_shader = sponza->light_shader; 
+  OpenGLProgramCommon* light_shader = sponza->light_shader;
   opengl_create_shader(arena, vertex_shader_light_source.content, fragment_shader_light_source.content, light_shader);
 
   camera = create_camera(arena);
   second_camera = create_camera(arena);
 
-  // TODO(ricardo): find a better way to define this
   glfwSetCursorPosCallback(app.window, mouse_callback);
   glfwSetMouseButtonCallback(app.window, mouse_button_callback);
 
-  // Main Texture Framebuffer
   //-------------------------
+  // Main Texture Framebuffer
   glGenFramebuffers(1, &sponza->framebuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, sponza->framebuffer);
 

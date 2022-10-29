@@ -61,7 +61,7 @@ void opengl_create_shader(Arena* arena, char* vertex_shader_source, char* fragme
     printf("Vertex errors: %s\n", vertex_errors);
     printf("Fragment errors: %s\n", fragment_errors);
     printf("Program errors: %s\n", program_errors);
-  } 
+  }
 
   glDeleteShader(vertex_shader_id);
   glDeleteShader(fragment_shader_id);

@@ -27,7 +27,7 @@ union idk_vec3
 #ifdef __cplusplus
   inline float& operator[](const int& index)
   {
-    return elements[index];    
+    return elements[index];
   }
 
 #endif
@@ -46,7 +46,7 @@ union idk_vec4
 #ifdef __cplusplus
   inline float& operator[](const int& index)
   {
-    return elements[index];    
+    return elements[index];
   }
 
 #endif
@@ -97,7 +97,7 @@ inline idk_mat4 idk_mat4f(float value)
 
 inline idk_vec3 idk_cross(idk_vec3 a, idk_vec3 b)
 {
-  idk_vec3 result = {}; 
+  idk_vec3 result = {};
   result.x = a.y*b.z - b.y*a.z;
   result.y = a.z*b.x - b.z*a.x;
   result.z = a.x*b.y - b.x*a.y;
@@ -186,7 +186,7 @@ inline idk_vec3 operator*(idk_vec3 a, float b)
 
 inline idk_vec3 operator-(idk_vec3 a)
 {
-  idk_vec3 result = {}; 
+  idk_vec3 result = {};
   result.x = -a.x;
   result.y = -a.y;
   result.z = -a.z;
@@ -195,7 +195,7 @@ inline idk_vec3 operator-(idk_vec3 a)
 
 inline idk_vec3 operator-(idk_vec3 a, idk_vec3 b)
 {
-  idk_vec3 result = {}; 
+  idk_vec3 result = {};
   result.x = a.x - b.x;
   result.y = a.y - b.y;
   result.z = a.z - b.z;
@@ -208,7 +208,7 @@ inline idk_vec3& operator-=(idk_vec3& a, idk_vec3 b) {
 
 inline idk_vec3 operator+(idk_vec3 a, idk_vec3 b)
 {
-  idk_vec3 result = {}; 
+  idk_vec3 result = {};
   result.x = a.x + b.x;
   result.y = a.y + b.y;
   result.z = a.z + b.z;
@@ -234,9 +234,9 @@ inline float idk_vec3_length(idk_vec3 a)
 
 inline idk_vec3 idk_normalize_vec3(idk_vec3 a)
 {
-  idk_vec3 result = {}; 
+  idk_vec3 result = {};
   float vector_length = idk_vec3_length(a);
-  result = (1.0f/vector_length) * a; 
+  result = (1.0f/vector_length) * a;
   return result;
 }
 

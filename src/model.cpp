@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <glad/gl.h>
 #include <string>
+#include <iostream>
+#include <vector>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <vendor/tiny_obj_loader.h>
 
@@ -38,11 +40,12 @@ void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
 
 Model* create_model(Arena* arena, const std::string& path)
 {
-  std::string directory =path.substr(0, path.find_last_of('/'));  
+  std::string directory =path.substr(0, path.find_last_of('/'));
 
   tinyobj::ObjReaderConfig reader_config;
   reader_config.mtl_search_path = directory;
   tinyobj::ObjReader reader;
+
 
   if (!reader.ParseFromFile(path, reader_config))
   {
@@ -58,13 +61,12 @@ Model* create_model(Arena* arena, const std::string& path)
     printf("TinyObjReader: %s", reader.Warning().c_str());
   }
 
-  tinyobj::attrib_t attrib = reader.GetAttrib();
-  std::vector<tinyobj::shape_t> shapes = reader.GetShapes();
-  std::vector<tinyobj::material_t> materials = reader.GetMaterials();
+  const tinyobj::attrib_t& attrib = reader.GetAttrib();
+  const std::vector<tinyobj::shape_t>& shapes = reader.GetShapes();
+  const std::vector<tinyobj::material_t>& materials = reader.GetMaterials();
 
-
-  // TODO(ricardo): replace with arraylist?? or linked list??
-  std::vector<Material> all_materials(materials.size());
+  Arena* temp_arena = arena_alloc(Megabytes(1));
+  Material * all_materials = (Material*)arena_push(temp_arena, materials.size() * sizeof(Material));
   // Load all textures
   for (size_t i = 0; i < materials.size(); i++)
   {
@@ -75,7 +77,7 @@ Model* create_model(Arena* arena, const std::string& path)
       std::replace(diffuse_path.begin(), diffuse_path.end(), '\\', '/');
       std::string diffuse_path_final = directory + "/" + diffuse_path;
       Texture* texture = opengl_create_texture(arena, diffuse_path_final.c_str(), diffuse);
-      all_materials[i].diffuse_tex = texture;
+      (all_materials+i)->diffuse_tex = texture;
     }
     if (!materials[i].specular_texname.empty())
     {
@@ -83,7 +85,7 @@ Model* create_model(Arena* arena, const std::string& path)
       std::replace(specular_path.begin(), specular_path.end(), '\\', '/');
       std::string specular_path_final = directory + "/" + specular_path;
       Texture* texture = opengl_create_texture(arena, specular_path_final.c_str(), specular);
-      all_materials[i].specular_tex = texture;
+      (all_materials+i)->specular_tex = texture;
     }
     else if (!materials[i].bump_texname.empty())
     {
@@ -91,11 +93,11 @@ Model* create_model(Arena* arena, const std::string& path)
       std::replace(bump_path.begin(), bump_path.end(), '\\', '/');
       std::string bump_path_final = directory + "/" + bump_path;
       Texture* texture = opengl_create_texture(arena, bump_path_final.c_str(), specular);
-      all_materials[i].specular_tex = texture;
+      (all_materials+i)->specular_tex = texture;
     }
   }
 
-  Model* model = (Model*)arena_push(arena,sizeof(Model)); 
+  Model* model = (Model*)arena_push(arena,sizeof(Model));
   model->meshes = (MeshNode*)arena_push(arena, sizeof(MeshNode));
   // Head
   MeshNode* mesh = model->meshes;
@@ -145,16 +147,16 @@ Model* create_model(Arena* arena, const std::string& path)
             attrib.normals[3 * index.normal_index + 2]};
         }
 
-        // NOTE(ricardo): if the face_material_id is different we want to make it 
+        // NOTE(ricardo): if the face_material_id is different we want to make it
         // into another mesh
         int face_material_id = shapes[s].mesh.material_ids[f];
         if(previous_face_material_id != -1 &&
             face_material_id != previous_face_material_id)
         {
           uint32_t model_num_vertices = mesh->data->num_vertices;
-          Vertex* newPtrV = mesh->data->vertices + model_num_vertices; 
+          Vertex* newPtrV = mesh->data->vertices + model_num_vertices;
           uint32_t model_num_indices = mesh->data->num_indices;
-          uint32_t* newPtrI = mesh->data->indices + model_num_indices; 
+          uint32_t* newPtrI = mesh->data->indices + model_num_indices;
           mesh_index++;
           previous_face_material_id = shapes[s].mesh.material_ids[f];
 
@@ -165,7 +167,6 @@ Model* create_model(Arena* arena, const std::string& path)
           mesh->data->indices = newPtrI;
           indice = 0;
         }
-
         uint32_t model_num_vertices = mesh->data->num_vertices++;
         *(mesh->data->vertices + model_num_vertices) = vertex;
         uint32_t model_num_indices = mesh->data->num_indices++;

@@ -3,7 +3,6 @@
 #include "memory.h"
 
 #include <string>
-#include <vector>
 
 struct OpenGLProgramCommon
 {

@@ -6,7 +6,7 @@
 Camera* create_camera(Arena* arena)
 {
   Camera* camera = (Camera*)arena_push(arena, sizeof(Camera));
-  camera->enabled =false; 
+  camera->enabled =false;
   camera->first_mouse = true;
   camera->last_x = 1920.0f / 2.0f;
   camera->last_y = 1080.0f / 2.0f;

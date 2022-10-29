@@ -120,12 +120,9 @@ int main(int /*argc*/, char** /*argv*/)
 
   init();
 
-  // printf("Startup Usage %d bytes\n", metrics.current_usage());
   // Main Loop
   while (!(glfwWindowShouldClose(app.window) != 0))
   {
-    metrics.total_allocated = 0;
-    metrics.total_freed = 0;
     float current_frame = static_cast<float>(glfwGetTime());
     app.delta_time = current_frame - app.last_frame;
     app.last_frame = current_frame;
@@ -144,7 +141,6 @@ int main(int /*argc*/, char** /*argv*/)
       ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
-    // printf("Allocated during frame %d bytes\n",metrics.current_usage());
     glfwPollEvents();
     glfwSwapBuffers(app.window);
   }
