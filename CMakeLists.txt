@@ -58,7 +58,6 @@ target_link_libraries(${PROJECT_NAME}
         imgui
         )
 
-# TODO(ricardo): I HATE CMAKE... find better way to add third-party libs
 target_compile_options(glad PRIVATE "-w")
 target_compile_options(glfw PRIVATE "-w")
 target_compile_options(imgui PRIVATE "-w")
