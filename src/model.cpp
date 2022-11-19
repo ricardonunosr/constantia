@@ -170,9 +170,9 @@ Model* create_model(Arena* arena, const std::string& path)
         uint32_t model_num_vertices = mesh->data->num_vertices++;
         *(mesh->data->vertices + model_num_vertices) = vertex;
         uint32_t model_num_indices = mesh->data->num_indices++;
-        // TODO(ricardo): Not doing indices yet, should we do it?
-        // there some duplicate vertex data but this would mean to
+        // There some duplicate vertex data but this would mean to
         // create a hash map for each vertex and store its index, slower?
+        // http://danglingpointers.com/post/mike-actons-dod-workshop-2015/
         *(mesh->data->indices +  model_num_indices) = indice;
         mesh->data->materials.diffuse_tex = all_materials[face_material_id].diffuse_tex;
         mesh->data->materials.specular_tex = all_materials[face_material_id].specular_tex;
