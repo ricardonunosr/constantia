@@ -1,10 +1,78 @@
-#include "opengl_renderer.h"
+// #include "opengl_renderer.h"
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "vendor/stb_image.h"
+
+struct ReadEntireFile
+{
+  char* content;
+  uint32_t size;
+};
+
+struct OpenGLProgramCommon
+{
+  GLint program_id;
+  GLint model;
+  GLint view;
+  GLint projection;
+  GLuint view_pos;
+
+  GLint material_texture_diffuse;
+  GLint material_texture_specular;
+  GLint material_shininess;
+};
+
+enum TextureType
+{
+  diffuse,
+  specular
+};
+
+struct Texture
+{
+  unsigned int id;
+  int width;
+  int height;
+  int nr_channels;
+  TextureType type;
+  std::string name;
+};
+
+enum DataType
+{
+  None = 0,
+  Float,
+  Float2,
+  Float3,
+  Float4,
+  Mat3,
+  Mat4,
+  Int,
+  Int2,
+  Int3,
+  Int4,
+  Bool
+};
+
+struct VertexBuffer
+{
+  unsigned int id;
+};
+
+struct VertexArray
+{
+  unsigned int id;
+  unsigned int enabled_attribs;
+};
+
+struct IndexBuffer
+{
+  unsigned int id;
+  unsigned int count;
+};
 
 ReadEntireFile read_entire_file(Arena* arena, const char* file_path)
 {

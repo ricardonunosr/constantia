@@ -1,9 +1,6 @@
 #include <glad/gl.h>
 
-#include "camera.h"
 #include "imgui.h"
-#include "model.h"
-#include "opengl_renderer.h"
 
 #include <GLFW/glfw3.h>
 #include <iostream>

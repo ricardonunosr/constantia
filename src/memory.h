@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define Bytes(n)      (n)
 #define Kilobytes(n)  (n << 10)

@@ -48,6 +48,12 @@ cd constantia
 ```bash
 mkdir build
 cd build
-cmake .. 
+cmake ..
 make
+```
+
+```bash
+sudo dtrace -x stackframes=100 -n 'profile-997 /arg0/ { @[ustack()] = count(); } tick-60s { exit(0); }' -o out.perf -c ./build/Constantia
+stackcollapse.pl out.perf > out.perf_folded
+flamegraph.pl out.perf_folded > profile.svg
 ```

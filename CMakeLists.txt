@@ -10,7 +10,7 @@ if (MSVC)
     # add_compile_options(/W4 /WX)
 else()
     # lots of warnings and all warnings as errors
-    add_compile_options(-Wall -Wno-unused-parameter -Wno-write-strings -Wno-unused-variable)
+    add_compile_options(-Wall -ftime-trace -Wno-unused-parameter -Wno-write-strings -Wno-unused-variable)
 endif()
 
 #GLFW additions
@@ -20,10 +20,6 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 set(SOURCES
         src/main.cpp
-        src/camera.cpp
-        src/model.cpp
-        src/opengl_renderer.cpp
-        src/memory.cpp
         )
 
 set(HEADERS

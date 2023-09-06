@@ -1,4 +1,4 @@
-#include "model.h"
+// #include "model.h"
 
 #include <algorithm>
 #include <glad/gl.h>
@@ -7,6 +7,53 @@
 #include <vector>
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <vendor/tiny_obj_loader.h>
+
+// #include "opengl_renderer.h"
+// #include "memory.h"
+// #include "idk_math.h"
+
+struct Vertex
+{
+  idk_vec3 position;
+  idk_vec3 normal;
+  idk_vec2 tex_coords;
+
+  bool operator==(const Vertex& other) const
+  {
+    return position == other.position && tex_coords == other.tex_coords;
+  }
+};
+
+struct Material
+{
+  Texture* diffuse_tex;
+  Texture* specular_tex;
+};
+
+struct MeshMaterialGroup
+{
+  Vertex* vertices;
+  uint64_t num_vertices;
+  uint32_t* indices;
+  uint64_t num_indices;
+  Material materials;
+
+  VertexArray* vao;
+  VertexBuffer* vbo;
+  IndexBuffer* ibo;
+};
+
+struct MeshNode
+{
+  MeshMaterialGroup* data;
+  MeshNode* next;
+};
+
+struct Model
+{
+  MeshNode* meshes; // Head of linked list
+};
+
 
 void draw(Model* model, const idk_mat4& transform, OpenGLProgramCommon* shader)
 {
@@ -128,9 +175,9 @@ Model* create_model(Arena* arena, const std::string& path)
         tinyobj::index_t index = shapes[s].mesh.indices[index_offset + v];
         Vertex vertex{};
 
-        vertex.position = {attrib.vertices[3 * index.vertex_index + 0],
+        vertex.position = {{attrib.vertices[3 * index.vertex_index + 0],
           attrib.vertices[3 * index.vertex_index + 1],
-          attrib.vertices[3 * index.vertex_index + 2]};
+          attrib.vertices[3 * index.vertex_index + 2]}};
 
         // Check if it has texture coordinates
         if (index.texcoord_index >= 0)
@@ -142,9 +189,9 @@ Model* create_model(Arena* arena, const std::string& path)
         // Check if it has normals
         if (index.normal_index >= 0)
         {
-          vertex.normal = {attrib.normals[3 * index.normal_index + 0],
+          vertex.normal = {{attrib.normals[3 * index.normal_index + 0],
             attrib.normals[3 * index.normal_index + 1],
-            attrib.normals[3 * index.normal_index + 2]};
+            attrib.normals[3 * index.normal_index + 2]}};
         }
 
         // NOTE(ricardo): if the face_material_id is different we want to make it
